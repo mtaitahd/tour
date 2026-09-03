@@ -1,0 +1,1 @@
+<?php /**PATH C:\xampp\htdocs\tour\vendor\filament\filament\resources\views\components\layouts\app\sidebar\footer.blade.php ENDPATH**/ ?>

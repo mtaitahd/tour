@@ -1,0 +1,109 @@
+2026-08-22 12:12:39 0 [Note] Using unique option prefix 'key_buffer' is error-prone and can break in the future. Please use the full name 'key_buffer_size' instead.
+2026-08-22 12:12:39 0 [Note] Starting MariaDB 10.4.32-MariaDB source revision c4143f909528e3fab0677a28631d10389354c491 as process 18324
+2026-08-22 12:12:39 0 [Note] InnoDB: Mutexes and rw_locks use Windows interlocked functions
+2026-08-22 12:12:39 0 [Note] InnoDB: Uses event mutexes
+2026-08-22 12:12:39 0 [Note] InnoDB: Compressed tables use zlib 1.3
+2026-08-22 12:12:40 0 [Note] InnoDB: Number of pools: 1
+2026-08-22 12:12:40 0 [Note] InnoDB: Using SSE2 crc32 instructions
+2026-08-22 12:12:40 0 [Note] InnoDB: Initializing buffer pool, total size = 16M, instances = 1, chunk size = 16M
+2026-08-22 12:12:40 0 [Note] InnoDB: Completed initialization of buffer pool
+2026-08-22 12:12:42 0 [Note] InnoDB: 128 out of 128 rollback segments are active.
+2026-08-22 12:12:42 0 [Note] InnoDB: Removed temporary tablespace data file: "ibtmp1"
+2026-08-22 12:12:42 0 [Note] InnoDB: Creating shared tablespace for temporary tables
+2026-08-22 12:12:42 0 [Note] InnoDB: Setting file 'C:\xampp\mysql\data\ibtmp1' size to 12 MB. Physically writing the file full; Please wait ...
+2026-08-22 12:12:42 0 [Note] InnoDB: File 'C:\xampp\mysql\data\ibtmp1' size is now 12 MB.
+2026-08-22 12:12:42 0 [Note] InnoDB: Waiting for purge to start
+2026-08-22 12:12:42 0 [Note] InnoDB: 10.4.32 started; log sequence number 58530062; transaction id 46316
+2026-08-22 12:12:42 0 [Note] InnoDB: Loading buffer pool(s) from C:\xampp\mysql\data\ib_buffer_pool
+2026-08-22 12:12:42 0 [Note] Plugin 'FEEDBACK' is disabled.
+2026-08-22 12:12:42 0 [Note] InnoDB: Buffer pool(s) load completed at 260822 12:12:42
+2026-08-22 12:12:42 0 [Note] Server socket created on IP: '::'.
+2026-08-22 12:12:42 6 [ERROR] InnoDB: Table `mysql`.`innodb_table_stats` not found.
+2026-08-22 12:12:42 6 [ERROR] Column count of mysql.gtid_slave_pos is wrong. Expected 4, found 3. The table is probably corrupted
+2026-08-22 12:12:42 6 [Warning] Failed to load slave replication state from table mysql.gtid_slave_pos: 1944: Failed to open mysql.gtid_slave_pos
+2026-08-22 12:12:42 7 [Note] Reading Master_info: 'master-2026@002d08@002d17@002019@003a15@003a43@00200@0020@005bnote@005d@0020reading@0020of@0020all@0020master_info@0020entries@0020succeeded@000d.info'  Relay_info:'relay-log-2026@002d08@002d17@002019@003a15@003a43@00200@0020@005bnote@005d@0020reading@0020of@0020all@0020master_info@0020entries@0020succeeded@000d.info'
+2026-08-22 12:12:42 7 [Warning] Neither --relay-log nor --relay-log-index were used; so replication may break when this MariaDB server acts as a replica and has its hostname changed. Please use '--log-basename=#' or '--relay-log=mysql-relay-bin' to avoid this problem.
+2026-08-22 12:12:42 7 [Note] Initialized Master_info from 'master-2026@002d08@002d17@002019@003a15@003a43@00200@0020@005bnote@005d@0020reading@0020of@0020all@0020master_info@0020entries@0020succeeded@000d.info'
+2026-08-22 12:12:42 7 [Note] Added new Master_info '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded' to hash table
+2026-08-22 12:12:42 7 [Note] Started replication for '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded'
+2026-08-22 12:12:42 9 [Note] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': Slave SQL thread initialized, starting replication in log 'FIRST' at position 0, relay log '.\mysql-relay-bin-2026@002d08@002d17@002019@003a15@003a43@00200@0020@005bnote@005d@0020reading@0020of@0020all@0020master_info@0020entries@0020succeeded@000d.000001' position: 4
+2026-08-22 12:12:42 7 [Note] Reading Master_info: 'master-2026@002d08@002d17@002019@003a15@003a43@00200@0020@005bnote@005d@0020added@0020new@0020master_info@0020@0027@0027@0020to@0020hash@0020table@000d.info'  Relay_info:'relay-log-2026@002d08@002d17@002019@003a15@003a43@00200@0020@005bnote@005d@0020added@0020new@0020master_info@0020@0027@0027@0020to@0020hash@0020table@000d.info'
+2026-08-22 12:12:42 8 [ERROR] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': Column count of mysql.gtid_slave_pos is wrong. Expected 4, found 3. The table is probably corrupted
+2026-08-22 12:12:42 8 [ERROR] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': Slave I/O: Unable to load replication GTID slave state from mysql.gtid_slave_pos: Failed to open mysql.gtid_slave_pos, Internal MariaDB error code: 1944
+2026-08-22 12:12:42 8 [Note] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': Slave I/O thread: Start asynchronous replication to master '@:3306' in log '' at position 4
+2026-08-22 12:12:42 8 [ERROR] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': Slave I/O: Fatal error: Invalid (empty) username when attempting to connect to the master server. Connection attempt terminated. Internal MariaDB error code: 1593
+2026-08-22 12:12:42 9 [ERROR] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': Column count of mysql.gtid_slave_pos is wrong. Expected 4, found 3. The table is probably corrupted
+2026-08-22 12:12:42 8 [Note] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': Slave I/O thread killed while connecting to master
+2026-08-22 12:12:42 9 [ERROR] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': Slave SQL: Unable to load replication GTID slave state from mysql.gtid_slave_pos: Failed to open mysql.gtid_slave_pos, Internal MariaDB error code: 1944
+2026-08-22 12:12:42 8 [Note] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': Slave I/O thread exiting, read up to log 'FIRST', position 4
+2026-08-22 12:12:42 8 [Note] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': master was :3306
+2026-08-22 12:12:42 7 [Note] Initialized Master_info from 'master-2026@002d08@002d17@002019@003a15@003a43@00200@0020@005bnote@005d@0020added@0020new@0020master_info@0020@0027@0027@0020to@0020hash@0020table@000d.info'
+2026-08-22 12:12:42 7 [Note] Added new Master_info '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table' to hash table
+2026-08-22 12:12:42 7 [Note] Started replication for '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table'
+2026-08-22 12:12:42 11 [Note] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': Slave SQL thread initialized, starting replication in log 'FIRST' at position 0, relay log '.\mysql-relay-bin-2026@002d08@002d17@002019@003a15@003a43@00200@0020@005bnote@005d@0020added@0020new@0020master_info@0020@0027@0027@0020to@0020hash@0020table@000d.000001' position: 4
+2026-08-22 12:12:42 7 [Note] Reading Master_info: 'master-2026@002d08@002d17@002019@003a15@003a43@00200@0020@005bnote@005d@0020c@003a@005cxampp@005cmysql@005cbin@005cmysqld@002eexe@003a@0020ready@0020for@0020connections@002e@000d.info'  Relay_info:'relay-log-2026@002d08@002d17@002019@003a15@003a43@00200@0020@005bnote@005d@0020c@003a@005cxampp@005cmysql@005cbin@005cmysqld@002eexe@003a@0020ready@0020for@0020connections@002e@000d.info'
+2026-08-22 12:12:42 10 [ERROR] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': Column count of mysql.gtid_slave_pos is wrong. Expected 4, found 3. The table is probably corrupted
+2026-08-22 12:12:42 10 [ERROR] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': Slave I/O: Unable to load replication GTID slave state from mysql.gtid_slave_pos: Failed to open mysql.gtid_slave_pos, Internal MariaDB error code: 1944
+2026-08-22 12:12:42 11 [ERROR] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': Column count of mysql.gtid_slave_pos is wrong. Expected 4, found 3. The table is probably corrupted
+2026-08-22 12:12:42 10 [Note] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': Slave I/O thread: Start asynchronous replication to master '@:3306' in log '' at position 4
+2026-08-22 12:12:42 11 [ERROR] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': Slave SQL: Unable to load replication GTID slave state from mysql.gtid_slave_pos: Failed to open mysql.gtid_slave_pos, Internal MariaDB error code: 1944
+2026-08-22 12:12:42 10 [ERROR] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': Slave I/O: Fatal error: Invalid (empty) username when attempting to connect to the master server. Connection attempt terminated. Internal MariaDB error code: 1593
+2026-08-22 12:12:42 10 [Note] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': Slave I/O thread killed while connecting to master
+2026-08-22 12:12:42 10 [Note] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': Slave I/O thread exiting, read up to log 'FIRST', position 4
+2026-08-22 12:12:42 10 [Note] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': master was :3306
+2026-08-22 12:12:42 7 [Note] Initialized Master_info from 'master-2026@002d08@002d17@002019@003a15@003a43@00200@0020@005bnote@005d@0020c@003a@005cxampp@005cmysql@005cbin@005cmysqld@002eexe@003a@0020ready@0020for@0020connections@002e@000d.info'
+2026-08-22 12:12:42 7 [Note] Added new Master_info '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.' to hash table
+2026-08-22 12:12:42 7 [Note] Started replication for '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.'
+2026-08-22 12:12:42 13 [Note] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': Slave SQL thread initialized, starting replication in log 'FIRST' at position 0, relay log '.\mysql-relay-bin-2026@002d08@002d17@002019@003a15@003a43@00200@0020@005bnote@005d@0020c@003a@005cxampp@005cmysql@005cbin@005cmysqld@002eexe@003a@0020ready@0020for@0020connections@002e@000d.000001' position: 4
+2026-08-22 12:12:42 7 [Note] Reading Master_info: 'master-version@003a@0020@002710@002e4@002e32@002dmariadb@0027@0020@0020socket@003a@0020@0027@0027@0020@0020port@003a@00203306@0020@0020mariadb@002eorg@0020binary@0020distribution@000d.info'  Relay_info:'relay-log-version@003a@0020@002710@002e4@002e32@002dmariadb@0027@0020@0020socket@003a@0020@0027@0027@0020@0020port@003a@00203306@0020@0020mariadb@002eorg@0020binary@0020distribution@000d.info'
+2026-08-22 12:12:42 12 [ERROR] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': Column count of mysql.gtid_slave_pos is wrong. Expected 4, found 3. The table is probably corrupted
+2026-08-22 12:12:42 12 [ERROR] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': Slave I/O: Unable to load replication GTID slave state from mysql.gtid_slave_pos: Failed to open mysql.gtid_slave_pos, Internal MariaDB error code: 1944
+2026-08-22 12:12:42 12 [Note] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': Slave I/O thread: Start asynchronous replication to master '@:3306' in log '' at position 4
+2026-08-22 12:12:42 13 [ERROR] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': Column count of mysql.gtid_slave_pos is wrong. Expected 4, found 3. The table is probably corrupted
+2026-08-22 12:12:42 12 [ERROR] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': Slave I/O: Fatal error: Invalid (empty) username when attempting to connect to the master server. Connection attempt terminated. Internal MariaDB error code: 1593
+2026-08-22 12:12:42 13 [ERROR] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': Slave SQL: Unable to load replication GTID slave state from mysql.gtid_slave_pos: Failed to open mysql.gtid_slave_pos, Internal MariaDB error code: 1944
+2026-08-22 12:12:42 12 [Note] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': Slave I/O thread killed while connecting to master
+2026-08-22 12:12:42 12 [Note] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': Slave I/O thread exiting, read up to log 'FIRST', position 4
+2026-08-22 12:12:42 12 [Note] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': master was :3306
+2026-08-22 12:12:42 7 [Note] Initialized Master_info from 'master-version@003a@0020@002710@002e4@002e32@002dmariadb@0027@0020@0020socket@003a@0020@0027@0027@0020@0020port@003a@00203306@0020@0020mariadb@002eorg@0020binary@0020distribution@000d.info'
+2026-08-22 12:12:42 7 [Note] Added new Master_info 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution' to hash table
+2026-08-22 12:12:42 7 [Note] Started replication for 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution'
+2026-08-22 12:12:42 15 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave SQL thread initialized, starting replication in log 'FIRST' at position 0, relay log '.\mysql-relay-bin-version@003a@0020@002710@002e4@002e32@002dmariadb@0027@0020@0020socket@003a@0020@0027@0027@0020@0020port@003a@00203306@0020@0020mariadb@002eorg@0020binary@0020distribution@000d.000001' position: 4
+2026-08-22 12:12:42 0 [Note] Reading of all Master_info entries succeeded
+2026-08-22 12:12:42 0 [Note] Added new Master_info '' to hash table
+2026-08-22 12:12:42 14 [ERROR] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Column count of mysql.gtid_slave_pos is wrong. Expected 4, found 3. The table is probably corrupted
+2026-08-22 12:12:42 0 [Note] C:\xampp\mysql\bin\mysqld.exe: ready for connections.
+Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution
+2026-08-22 12:12:42 14 [ERROR] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave I/O: Unable to load replication GTID slave state from mysql.gtid_slave_pos: Failed to open mysql.gtid_slave_pos, Internal MariaDB error code: 1944
+2026-08-22 12:12:42 14 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave I/O thread: Start asynchronous replication to master '@:3306' in log '' at position 4
+2026-08-22 12:12:42 14 [ERROR] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave I/O: Fatal error: Invalid (empty) username when attempting to connect to the master server. Connection attempt terminated. Internal MariaDB error code: 1593
+2026-08-22 12:12:42 15 [ERROR] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Column count of mysql.gtid_slave_pos is wrong. Expected 4, found 3. The table is probably corrupted
+2026-08-22 12:12:42 14 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave I/O thread killed while connecting to master
+2026-08-22 12:12:42 15 [ERROR] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave SQL: Unable to load replication GTID slave state from mysql.gtid_slave_pos: Failed to open mysql.gtid_slave_pos, Internal MariaDB error code: 1944
+2026-08-22 12:12:42 14 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave I/O thread exiting, read up to log 'FIRST', position 4
+2026-08-22 12:12:42 14 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': master was :3306
+2026-08-22 12:19:16 13 [Note] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': Error reading relay log event: slave SQL thread was killed
+2026-08-22 12:19:16 13 [Note] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': Slave SQL thread exiting, replication stopped in log 'FIRST' at position 0
+2026-08-22 12:19:16 13 [Note] Master '2026-08-17 19:15:43 0 [Note] c:\xampp\mysql\bin\mysqld.exe: ready for connections.': master was :3306
+2026-08-22 12:19:16 15 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Error reading relay log event: slave SQL thread was killed
+2026-08-22 12:19:16 15 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': Slave SQL thread exiting, replication stopped in log 'FIRST' at position 0
+2026-08-22 12:19:16 15 [Note] Master 'Version: '10.4.32-MariaDB'  socket: ''  port: 3306  mariadb.org binary distribution': master was :3306
+2026-08-22 12:19:16 11 [Note] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': Error reading relay log event: slave SQL thread was killed
+2026-08-22 12:19:16 11 [Note] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': Slave SQL thread exiting, replication stopped in log 'FIRST' at position 0
+2026-08-22 12:19:16 11 [Note] Master '2026-08-17 19:15:43 0 [Note] Added new Master_info '' to hash table': master was :3306
+2026-08-22 12:19:16 9 [Note] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': Error reading relay log event: slave SQL thread was killed
+2026-08-22 12:19:16 9 [Note] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': Slave SQL thread exiting, replication stopped in log 'FIRST' at position 0
+2026-08-22 12:19:16 9 [Note] Master '2026-08-17 19:15:43 0 [Note] Reading of all Master_info entries succeeded': master was :3306
+2026-08-22 12:19:16 18 [Note] Deleted Master_info file 'C:\xampp\mysql\data\master.info'.
+2026-08-22 12:19:16 18 [Note] Deleted Master_info file 'C:\xampp\mysql\data\relay-log.info'.
+2026-08-22 12:21:13 0 [Note] C:\xampp\mysql\bin\mysqld.exe (initiated by: root[root] @ localhost [::1]): Normal shutdown
+2026-08-22 12:21:13 0 [Note] Event Scheduler: Purging the queue. 0 events
+2026-08-22 12:21:13 0 [Note] InnoDB: FTS optimize thread exiting.
+2026-08-22 12:21:13 0 [Note] InnoDB: Starting shutdown...
+2026-08-22 12:21:13 0 [Note] InnoDB: Dumping buffer pool(s) to C:\xampp\mysql\data\ib_buffer_pool
+2026-08-22 12:21:13 0 [Note] InnoDB: Instance 0, restricted to 250 pages due to innodb_buf_pool_dump_pct=25
+2026-08-22 12:21:13 0 [Note] InnoDB: Buffer pool(s) dump completed at 260822 12:21:13
+2026-08-22 12:21:14 0 [Note] InnoDB: Removed temporary tablespace data file: "ibtmp1"
+2026-08-22 12:21:15 0 [Note] InnoDB: Shutdown completed; log sequence number 58530071; transaction id 46316
+2026-08-22 12:21:15 0 [Note] C:\xampp\mysql\bin\mysqld.exe: Shutdown complete
+

@@ -1,0 +1,85 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Key {
+  - int value
+  + Key(int)
+  + operator<()
+  + operator>()
+  + operator==()
+}
+
+class Row {
+  + int id
+  + string data
+  + Row(int, string)
+}
+
+class BTreeNode {
+  - bool isLeaf
+  - vector<Key> keys
+  - vector<Row> rows
+  - vector<BTreeNode*> children
+  - int order
+  + BTreeNode(int, bool)
+  + insertNonFull(Key, Row)
+  + splitChild(int, BTreeNode*)
+  + search(Key)
+  + remove(Key)
+}
+
+class BTree {
+  - BTreeNode* root
+  - int order
+  + BTree(int)
+  + insert(Key, Row)
+  + search(Key)
+  + remove(Key)
+  + traverse()
+}
+
+abstract class StorageEngine {
+  + {abstract} insert(Key, Row)
+  + {abstract} find(Key)
+  + {abstract} remove(Key)
+  + {abstract} name()
+}
+
+class HeapEngine {
+  - vector<pair<Key,Row>> data
+  + insert(Key, Row) override
+  + find(Key) override
+  + remove(Key) override
+  + name() override
+}
+
+class TreeEngine {
+  - BTree tree
+  + TreeEngine(int)
+  + insert(Key, Row) override
+  + find(Key) override
+  + remove(Key) override
+  + name() override
+}
+
+class QueryPlanner {
+  - StorageEngine* engine
+  + QueryPlanner()
+  + setEngine(StorageEngine*)
+  + executeInsert(Key, Row)
+  + executeFind(Key)
+  + executeRemove(Key)
+}
+
+BTreeNode "1" *-- "many" BTreeNode : children
+BTree "1" *-- "1" BTreeNode : root
+BTreeNode "1" *-- "many" Key
+BTreeNode "1" *-- "many" Row
+
+StorageEngine <|-- HeapEngine
+StorageEngine <|-- TreeEngine
+TreeEngine "1" *-- "1" BTree
+
+QueryPlanner --> StorageEngine : strategy
+
+@enduml

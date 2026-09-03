@@ -1,0 +1,32 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build and Run mini-db",
+			"type": "shell",
+			"command": "g++ -std=c++17 -Iinclude src/BTreeNode.cpp src/BTree.cpp src/HeapEngine.cpp src/TreeEngine.cpp src/QueryPlanner.cpp src/main.cpp -o mini_db.exe && .\\mini_db.exe",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Run mini-db",
+			"type": "shell",
+			"command": "g++ -std=c++17 -Iinclude src/BTreeNode.cpp src/BTree.cpp src/HeapEngine.cpp src/TreeEngine.cpp src/QueryPlanner.cpp src/main.cpp -o mini_db.exe && .\\mini_db.exe",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Build and Run mini-db",
+			"type": "shell",
+			"command": "taskkill /IM mini_db.exe /F 2>nul; g++ -std=c++17 -Iinclude src/BTreeNode.cpp src/BTree.cpp src/HeapEngine.cpp src/TreeEngine.cpp src/QueryPlanner.cpp src/main.cpp -o mini_db.exe && .\\mini_db.exe",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}
