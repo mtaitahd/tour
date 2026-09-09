@@ -163,6 +163,44 @@
                       </div>
                   </div>
 
+                  <div class="row mb-3 mt-4">
+                      <label class="col-sm-3 col-form-label fw-bold">Story Images (Our Story)</label>
+                      <div class="col-sm-9">
+                          <small class="text-muted d-block mb-3">
+                              Add the images for the Our Story section, each with an optional caption.
+                              Use the slots below; leave a slot's image blank to skip it — blank slots are
+                              never shown on the page.
+                          </small>
+
+                          @php
+                              $storyGallery = old('story_gallery', $page->story_gallery ?? []);
+                          @endphp
+
+                          @for ($i = 0; $i < ($storyImageSlots ?? 10); $i++)
+                              @php $storyImage = $storyGallery[$i] ?? []; @endphp
+                              <div class="card mb-3 shadow-sm">
+                                  <div class="card-body">
+                                      <div class="row g-3 align-items-start">
+                                          <div class="col-md-3">
+                                              <label class="form-label small">Image</label>
+                                              <x-media-picker
+                                                  name="story_gallery[{{ $i }}][image_id]"
+                                                  :selected="$storyImage['image_id'] ?? null"
+                                                  label="Select Image"
+                                              />
+                                          </div>
+                                          <div class="col-md-9">
+                                              <label class="form-label small">Caption</label>
+                                              <input type="text" name="story_gallery[{{ $i }}][caption]" class="form-control"
+                                                     placeholder="e.g. Our team at Kilimanjaro base camp" value="{{ $storyImage['caption'] ?? '' }}">
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          @endfor
+                      </div>
+                  </div>
+
                   <div class="row mb-3">
                       <label class="col-sm-3 col-form-label">Why Choose Us Subtitle</label>
                       <div class="col-sm-9">

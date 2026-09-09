@@ -109,6 +109,8 @@ class PageController extends Controller
         'team_members.*.role'          => 'nullable|string|max:255',
         'team_members.*.bio'           => 'nullable|string',
         'team_members.*.photo_image_id' => 'nullable|integer|exists:media,id',
+        'story_gallery.*.image_id'     => 'nullable|integer|exists:media,id',
+        'story_gallery.*.caption'      => 'nullable|string|max:255',
     ]);
 
     // Auto-generate slug if empty
@@ -118,6 +120,7 @@ class PageController extends Controller
 
         $validated['stats_counters'] = $this->encodeStatsCounters($request);
         $validated['custom_data'] = $this->encodeTeamMembers($request);
+        $validated['story_gallery'] = $this->encodeStoryGallery($request);
         $validated['no_robots'] = $request->boolean('no_robots');
 
         return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $validated) {
@@ -161,6 +164,10 @@ class PageController extends Controller
         // individual photos by hand.
         $teamPhotoIds = collect($page->custom_data ?? [])->pluck('photo_image_id')->filter()->values()->all();
         $mediaLibrary->setOrderedUsages($page, 'team_photo', $teamPhotoIds);
+
+        // Our Story gallery images — same ordered-set mechanism (context: story_gallery).
+        $storyGalleryIds = collect($page->story_gallery ?? [])->pluck('image_id')->filter()->values()->all();
+        $mediaLibrary->setOrderedUsages($page, 'story_gallery', $storyGalleryIds);
 
         \App\Services\SitemapGenerator::generate();
 
@@ -213,10 +220,13 @@ class PageController extends Controller
         'team_members.*.role'          => 'nullable|string|max:255',
         'team_members.*.bio'           => 'nullable|string',
         'team_members.*.photo_image_id' => 'nullable|integer|exists:media,id',
+        'story_gallery.*.image_id'     => 'nullable|integer|exists:media,id',
+        'story_gallery.*.caption'      => 'nullable|string|max:255',
     ]);
 
     $validated['stats_counters'] = $this->encodeStatsCounters($request);
     $validated['custom_data'] = $this->encodeTeamMembers($request);
+    $validated['story_gallery'] = $this->encodeStoryGallery($request);
     $validated['no_robots'] = $request->boolean('no_robots');
 
     return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $page, $validated) {
@@ -277,6 +287,10 @@ class PageController extends Controller
         // Team member photos — full replace of the ordered set, same as store().
         $teamPhotoIds = collect($page->custom_data ?? [])->pluck('photo_image_id')->filter()->values()->all();
         $mediaLibrary->setOrderedUsages($page, 'team_photo', $teamPhotoIds);
+
+        // Our Story gallery images — full replace of the ordered set, same as store().
+        $storyGalleryIds = collect($page->story_gallery ?? [])->pluck('image_id')->filter()->values()->all();
+        $mediaLibrary->setOrderedUsages($page, 'story_gallery', $storyGalleryIds);
 
         \App\Services\SitemapGenerator::generate();
 
@@ -353,5 +367,28 @@ class PageController extends Controller
         }
 
         return $members;
+    }
+
+    /**
+     * Build the Story Gallery repeater (About page) as a plain array for
+     * Page::story_gallery. Blank rows (no image selected) are dropped. Same
+     * double-encoding caveat as encodeStatsCounters() above.
+     */
+    private function encodeStoryGallery(Request $request): array
+    {
+        $gallery = [];
+
+        foreach ($request->input('story_gallery', []) as $itemData) {
+            if (empty($itemData['image_id'])) {
+                continue;
+            }
+
+            $gallery[] = [
+                'image_id' => (int) $itemData['image_id'],
+                'caption'  => $itemData['caption'] ?? '',
+            ];
+        }
+
+        return $gallery;
     }
 }

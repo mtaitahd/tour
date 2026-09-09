@@ -39,6 +39,7 @@ class Page extends Model implements HasMedia
         'why_choose_subtitle',
         'stats_counters',
         'custom_data',
+        'story_gallery',
         // Media Library
         'hero_image_id',
         'story_image_id',
@@ -49,8 +50,10 @@ class Page extends Model implements HasMedia
         // custom_data: [{name, role, bio, photo_image_id}, ...] — About page team
         // grid. Both were already in $fillable/validation but had no cast, so they
         // were returned as raw JSON strings rather than usable arrays.
+        // story_gallery: [{image_id, caption}, ...] — About page Our Story images.
         'stats_counters' => 'array',
         'custom_data'    => 'array',
+        'story_gallery'  => 'array',
         'no_robots'      => 'boolean',
     ];
 
@@ -58,11 +61,11 @@ class Page extends Model implements HasMedia
     {
         $this->addMediaCollection('hero')
              ->singleFile()
-             ->useFallbackUrl(asset('assets/img/placeholder-page-hero.jpg'));
+             ->useFallbackUrl(asset('asset/img/placeholder-page-hero.jpg'));
 
         $this->addMediaCollection('story')
              ->singleFile()
-             ->useFallbackUrl(asset('assets/img/placeholder-about.jpg'));
+             ->useFallbackUrl(asset('asset/img/placeholder-about.jpg'));
 
         // Optional: if you want a gallery later
         $this->addMediaCollection('gallery');

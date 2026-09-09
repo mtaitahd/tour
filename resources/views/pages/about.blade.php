@@ -70,6 +70,32 @@
                                 <img src="{{ asset('asset/img/placeholder-about.jpg') }}" alt="About Us">
                             @endif
                         </div>
+
+                        @if(!empty($page->story_gallery))
+                            <div class="row g-4 mt-1">
+                                @foreach($page->story_gallery as $storyImage)
+                                    @php
+                                        $storyGalleryImage = $storyImage['image_id'] ?? null
+                                            ? \App\Models\GalleryImage::find($storyImage['image_id'])
+                                            : null;
+                                    @endphp
+                                    @if($storyGalleryImage)
+                                        <div class="col-6">
+                                            <figure class="mb-0">
+                                                <img src="{{ $storyGalleryImage->getUrl('medium') }}" 
+                                                     alt="{{ $storyImage['caption'] ?? ($page->story_title ?? 'Our Story') }}" 
+                                                     class="img-fluid rounded shadow">
+                                                @if(!empty($storyImage['caption']))
+                                                    <figcaption class="small text-gray-600 text-center mt-2">
+                                                        {{ $storyImage['caption'] }}
+                                                    </figcaption>
+                                                @endif
+                                            </figure>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
 
                     <div class="col-lg-6">
