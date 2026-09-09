@@ -20,7 +20,7 @@
             @if(Auth::user()->hasAvatar())
               <img src="{{ Auth::user()->avatarUrl('thumb') ?: Auth::user()->avatarUrl() }}" alt="Profile" class="rounded-circle" >
             @else
-              <img src="{{ asset('assets/img/default-avatar.png') }}" alt="Profile" class="rounded-circle" >
+              <img src="{{ asset('asset/img/default-avatar.png') }}" alt="Profile" class="rounded-circle" >
             @endif
 
             <h2 class="mt-3">{{ Auth::user()->name }}</h2>

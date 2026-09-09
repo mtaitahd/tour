@@ -41,7 +41,7 @@
                              alt="{{ $page->title }}" 
                              class="img-fluid rounded shadow">
                     @else
-                        <img src="{{ asset('assets/img/placeholder-page-hero.jpg') }}" alt="Default">
+                        <img src="{{ asset('asset/img/placeholder-page-hero.jpg') }}" alt="Default">
                     @endif
                 </div>
 
@@ -67,7 +67,7 @@
                                      alt="{{ $page->story_title ?? 'Our Story' }}" 
                                      class="img-fluid rounded shadow">
                             @else
-                                <img src="{{ asset('assets/img/placeholder-about.jpg') }}" alt="About Us">
+                                <img src="{{ asset('asset/img/placeholder-about.jpg') }}" alt="About Us">
                             @endif
                         </div>
                     </div>

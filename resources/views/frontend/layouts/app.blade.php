@@ -105,7 +105,7 @@
     ">
 
     @php
-        $ogImage = $meta['og_image'] ?? asset('assets/img/og-default.jpg');
+        $ogImage = $meta['og_image'] ?? asset('asset/img/og-default.jpg');
 
         if (isset($post) && $post instanceof \App\Models\BlogPost && $post->hasFeaturedImage()) {
             $ogImage = $post->featuredImageUrl();
@@ -185,7 +185,7 @@
             'name' => $tour->title,
             'description' => $tour->meta_description ?? Str::limit(strip_tags($tour->overview ?? ''), 300),
             'url' => route('tour.show', $tour->slug),
-            'image' => $tour->hasHeroImage() ? $tour->heroUrl() : asset('assets/img/og-default.jpg'),
+            'image' => $tour->hasHeroImage() ? $tour->heroUrl() : asset('asset/img/og-default.jpg'),
             'touristType' => 'Leisure traveler',
             'itinerary' => [
                 '@type' => 'ItemList',
@@ -214,7 +214,7 @@
             'name' => $destination->name,
             'description' => $destination->meta_description ?? Str::limit(strip_tags($destination->description ?? ''), 300),
             'url' => route('destination.show', $destination->slug),
-            'image' => $destination->hasHeroImage() ? $destination->heroUrl() : asset('assets/img/og-default.jpg'),
+            'image' => $destination->hasHeroImage() ? $destination->heroUrl() : asset('asset/img/og-default.jpg'),
             'touristType' => 'Leisure traveler',
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
         </script>
@@ -227,7 +227,7 @@
         '@type' => 'TravelAgency',
         'name' => 'Afro-Vertex Tours & Safaris',
         'url' => config('app.url'),
-        'logo' => asset('assets/img/logo.png'),
+        'logo' => asset('asset/img/logo.png'),
         'contactPoint' => [
             '@type' => 'ContactPoint',
             'telephone' => '+255-760-096-715',
