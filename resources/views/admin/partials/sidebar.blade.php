@@ -68,11 +68,50 @@
 
     {{-- Mega Nav --}}
     @if($can('mega-nav'))
-        <li class="nav-item {{ in_array($currentPage, ['mega-nav']) ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('admin.mega-nav.index') }}">
+        @php
+            $megaItems = \App\Models\NavigationMegaMenuItem::with(['image'])
+                ->where('source_type', \App\Models\NavigationMegaMenuItem::SOURCE_CUSTOM)
+                ->orderBy('parent_menu_key')
+                ->orderBy('display_order')
+                ->orderBy('menu_label')
+                ->get();
+            $megaParents = app(\App\Services\NavigationMegaMenuService::class)->parentDefinitions();
+            $megaGrouped = $megaItems->groupBy(fn ($m) => $m->parent_menu_key);
+        @endphp
+        <li class="nav-item {{ $currentPage === 'mega-nav' ? 'active' : '' }}">
+            <a class="nav-link {{ $currentPage === 'mega-nav' ? '' : 'collapsed' }}"
+               href="#" data-bs-target="#mega-nav" data-bs-toggle="collapse">
                 <i class="fas fa-fw fa-bars"></i>
                 <span>Mega Nav</span>
+                <i class="fas fa-chevron-down ms-auto"></i>
             </a>
+            <div id="mega-nav" class="collapse {{ $currentPage === 'mega-nav' ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
+                @foreach($megaGrouped as $parentKey => $group)
+                    <div class="sidebar-subheading">
+                        {{ $megaParents[$parentKey]['label'] ?? $parentKey }}
+                    </div>
+                    @foreach($group as $megaItem)
+                        <div class="d-flex align-items-center sidebar-mega-item">
+                            <a class="nav-link" href="{{ route('admin.mega-nav.edit', $megaItem) }}">
+                                <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
+                                <span class="text-truncate" title="{{ $megaItem->menu_label }}">{{ $megaItem->menu_label }}</span>
+                            </a>
+                            <form action="{{ route('admin.mega-nav.destroy', $megaItem) }}" method="POST"
+                                  onsubmit="return confirm('Remove Mega Nav item ({{ addslashes($megaItem->menu_label) }})? This cannot be undone.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-link p-0 mx-1 text-danger" title="Delete {{ $megaItem->menu_label }}">
+                                    <i class="fas fa-trash" style="font-size:0.7rem;"></i>
+                                </button>
+                            </form>
+                        </div>
+                    @endforeach
+                @endforeach
+                <a class="nav-link" href="{{ route('admin.mega-nav.create') }}">
+                    <i class="fas fa-fw fa-plus" style="font-size:0.6rem;"></i>
+                    <span>Add New Item</span>
+                </a>
+            </div>
         </li>
     @endif
 
