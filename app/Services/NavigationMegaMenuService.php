@@ -9,20 +9,22 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Single source of truth for the header's three-column mega menus.
  *
  * Previously the header template hard-coded every category, image, link and CTA for
  * Kilimanjaro / Safari / Day Trips. Now the left column is built entirely from
- * navigation_mega_items rows that an administrator activates per tour/page, and the
- * middle/right columns (contextual description/CTA/image) are derived from the same
- * selected source — so the whole panel stays in sync, no reload required.
+ * navigation_mega_items rows. An item is either a standalone entry created in the
+ * dedicated "Mega Nav" admin module (source_type = 'custom' — carries its own title,
+ * heading, description, image and link URL) or a legacy row linked to a tour/page;
+ * the middle/right columns (contextual description/CTA/image) are derived from the
+ * item, so the whole panel stays in sync, no reload required.
  *
  * Public contract ("only what the admin enabled appears"):
  *   - only rows with is_active = true are considered;
- *   - the source must still exist and be published (tours + pages);
+ *   - custom items render on their own; source-linked rows additionally require the
+ *     source to still exist and be published (tours + pages);
  *   - a parent with no qualifying items simply isn't rendered as a mega menu
  *     (its trigger link still works normally);
  *   - all source+image data is eager loaded (no N+1 across columns).
@@ -104,7 +106,8 @@ class NavigationMegaMenuService
             ->where('parent_menu_key', $key)
             ->where('is_active', true)
             ->where(function (Builder $q) {
-                $q->whereHas('tour', fn ($tour) => $tour->where('status', 'published'))
+                $q->where('source_type', NavigationMegaMenuItem::SOURCE_CUSTOM)
+                  ->orWhereHas('tour', fn ($tour) => $tour->where('status', 'published'))
                   ->orWhereHas('page', fn ($page) => $page->where('status', 'published'));
             })
             ->with(['image', 'tour.heroImage', 'page.heroImage'])
@@ -157,7 +160,7 @@ class NavigationMegaMenuService
         return [
             'title'       => $item->menu_label,
             'badge'       => $item->badge_text ?: null,
-            'heading'     => $item->menu_label,
+            'heading'     => $item->heading ?: $item->menu_label,
             'description' => $item->descriptionText(),
             'cta'         => ['label' => $item->buttonLabel(), 'url' => $url],
             'image'       => $item->imageUrl(),
@@ -166,134 +169,7 @@ class NavigationMegaMenuService
         ];
     }
 
-    // ─── Admin persistence ────────────────────────────────────────────────────
-
-    /**
-     * Validation rules for the "Navigation Mega Menu" section of the tour/page
-     * forms. All mega fields are optional; enabling the section then requires the
-     * fields that define an item.
-     */
-    public function megaRules(): array
-    {
-        $parents = implode(',', array_keys($this->parentDefinitions()));
-
-        return [
-            'mega_menu.enabled'              => 'nullable|boolean',
-            'mega_menu.parent_key'           => 'required_if:mega_menu.enabled,true|nullable|string|in:' . $parents,
-            'mega_menu.label'                => 'required_if:mega_menu.enabled,true|nullable|string|max:120',
-            'mega_menu.description'          => 'nullable|string|max:500',
-            'mega_menu.button_label'         => 'nullable|string|max:120',
-            'mega_menu.button_url_override'  => 'nullable|string|max:2048',
-            'mega_menu.image_id'             => 'nullable|integer|exists:media,id',
-            'mega_menu.badge_text'           => 'nullable|string|max:40',
-            'mega_menu.display_order'        => 'nullable|integer|min:0|max:9999',
-        ];
-    }
-
-    /**
-     * Post-validation guard against exceeding the per-parent cap and against
-     * duplicate (parent, source) pairs. Throws a ValidationException so the form
-     * shows the message inline, mirroring pricing validation behaviour.
-     */
-    public function assertCanEnable(string $parentKey, Model $source, int $max): void
-    {
-        $sourceType = $this->sourceTypeFor($source);
-
-        if (! $sourceType) {
-            throw ValidationException::withMessages(['mega_menu' => 'This source type cannot be added to the mega menu.']);
-        }
-
-        $existing = NavigationMegaMenuItem::query()
-            ->where('source_type', $sourceType)
-            ->where('source_id', $source->getKey())
-            ->first();
-
-        // The source's own existing row is fine — persistForSource() deletes it and
-        // recreates it, so an edit of an already-configured item must not be treated
-        // as a duplicate. A genuine duplicate is only possible when the source has no
-        // row yet and something else (e.g. a raced create) already placed it here.
-        $isOwnRow = $existing && $existing->parent_menu_key === $parentKey;
-
-        if (! $isOwnRow && $existing) {
-            throw ValidationException::withMessages([
-                'mega_menu' => 'This source is already added to another menu. Choose the same menu or clear it first.',
-            ]);
-        }
-
-        if ($existing && $existing->parent_menu_key === $parentKey) {
-            return;
-        }
-
-        $current = NavigationMegaMenuItem::query()
-            ->where('parent_menu_key', $parentKey)
-            ->where('source_type', $sourceType)
-            ->where('source_id', '!=', $source->getKey())
-            ->count();
-
-        if ($current >= $max) {
-            throw ValidationException::withMessages([
-                'mega_menu' => "Menu '{$this->parentLabel($parentKey)}' already holds the maximum of {$max} enabled items.",
-            ]);
-        }
-    }
-
-    /**
-     * Save (or clear) the mega-menu entry for one source. Called inside the source
-     * controller's DB transaction so the menu row and the source save commit or
-     * roll back together.
-     *
-     * @param array<string, mixed>|null $mega validated mega_menu.* input, or null
-     *                                     when the form didn't submit the section
-     */
-    public function persistForSource(Model $source, ?array $mega, ?int $actorId): void
-    {
-        $sourceType = $this->sourceTypeFor($source);
-
-        if (! $sourceType) {
-            return;
-        }
-
-        $media = app(MediaLibraryService::class);
-
-        $previous = NavigationMegaMenuItem::query()
-            ->where('source_type', $sourceType)
-            ->where('source_id', $source->getKey())
-            ->first();
-
-        if ($previous && $previous->image_id) {
-            $media->forgetUsage((int) $previous->image_id, $source, self::MEGA_IMAGE_USAGE_CONTEXT);
-        }
-
-        if ($previous) {
-            $previous->delete();
-        }
-
-        if (! is_array($mega) || empty($mega['enabled'])) {
-            return;
-        }
-
-        $imageId = ! empty($mega['image_id']) ? (int) $mega['image_id'] : null;
-
-        NavigationMegaMenuItem::create([
-            'parent_menu_key'     => $mega['parent_key'],
-            'source_type'         => $sourceType,
-            'source_id'           => $source->getKey(),
-            'menu_label'          => $mega['label'],
-            'short_description'   => ! empty($mega['description']) ? $mega['description'] : null,
-            'button_label'        => ! empty($mega['button_label']) ? $mega['button_label'] : null,
-            'button_url_override' => ! empty($mega['button_url_override']) ? trim($mega['button_url_override']) : null,
-            'image_id'            => $imageId,
-            'badge_text'          => ! empty($mega['badge_text']) ? $mega['badge_text'] : null,
-            'display_order'       => isset($mega['display_order']) ? (int) $mega['display_order'] : 0,
-            'is_active'           => true,
-            'created_by'          => $actorId,
-            'updated_by'          => $actorId,
-        ]);
-
-        if ($imageId) {
-            $media->recordUsage($imageId, $source, self::MEGA_IMAGE_USAGE_CONTEXT);
-        }
-    }
+    // ─── Source-linked row cleanup (legacy tour/page items) ────────────────────
 
     /** Remove the menu entry for a source — called from destroy(). */
     public function clearForSource(Model $source): void
@@ -308,53 +184,6 @@ class NavigationMegaMenuService
             ->where('source_type', $sourceType)
             ->where('source_id', $source->getKey())
             ->delete();
-    }
-
-    /**
-     * Current mega-menu values for a source (for pre-filling the admin form),
-     * normalized to form field names so the blade can be shared verbatim between
-     * tour and page create/edit views.
-     *
-     * @return array<string, mixed> Prefixed with 'mega_menu.' keys.
-     */
-    public function formValuesFor(?Model $source): array
-    {
-        $sourceType = $source ? $this->sourceTypeFor($source) : null;
-
-        $row = $sourceType
-            ? NavigationMegaMenuItem::query()
-                ->where('source_type', $sourceType)
-                ->where('source_id', $source->getKey())
-                ->first()
-            : null;
-
-        $values = [
-            'mega_menu.enabled'     => false,
-            'mega_menu.parent_key'  => '',
-            'mega_menu.label'       => '',
-            'mega_menu.description' => '',
-            'mega_menu.button_label' => '',
-            'mega_menu.button_url_override' => '',
-            'mega_menu.image_id'    => '',
-            'mega_menu.badge_text'  => '',
-            'mega_menu.display_order' => 0,
-        ];
-
-        if ($row) {
-            $values = [
-                'mega_menu.enabled'     => true,
-                'mega_menu.parent_key'  => $row->parent_menu_key,
-                'mega_menu.label'       => $row->menu_label,
-                'mega_menu.description' => $row->short_description ?? '',
-                'mega_menu.button_label' => $row->button_label ?? '',
-                'mega_menu.button_url_override' => $row->button_url_override ?? '',
-                'mega_menu.image_id'    => (string) ($row->image_id ?? ''),
-                'mega_menu.badge_text'  => $row->badge_text ?? '',
-                'mega_menu.display_order' => $row->display_order,
-            ];
-        }
-
-        return $values;
     }
 
     protected function sourceTypeFor(?Model $source): ?string

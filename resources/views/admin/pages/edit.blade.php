@@ -360,11 +360,6 @@
                 </div>
               </div>
 
-              @include('admin.partials.mega-menu-section', [
-                  'source' => $page,
-                  'sourceType' => 'page',
-              ])
-
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label"></label>
                 <div class="col-sm-10">

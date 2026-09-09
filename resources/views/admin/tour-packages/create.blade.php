@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 @section('title', 'Create Tour Package')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/vendor/leaflet/leaflet.css') }}" />
+<link rel="stylesheet" href="{{ asset('asset/vendor/leaflet/leaflet.css') }}" />
 <style>
 /* ── Scoped protections for Leaflet so global CSS (Bootstrap img margin,
       max-width / height:auto resets, etc.) cannot break tile layout ── */
@@ -626,11 +626,6 @@ value="{{ old("extra_sections.$index.content", $section['content'] ?? '') }}">
   });
 </script>
 
-@include('admin.partials.mega-menu-section', [
-    'source' => null,
-    'sourceType' => 'tour',
-])
-
 <!-- Submit -->
 <div class="row mb-3">
 <label class="col-sm-2 col-form-label"></label>
@@ -807,7 +802,7 @@ initQuill($('#extra-sections-repeater .quill-editor').last());
 @endsection
 
 @push('scripts')
-<script src="{{ asset('assets/vendor/leaflet/leaflet.js') }}"></script>
+<script src="{{ asset('asset/vendor/leaflet/leaflet.js') }}"></script>
 <script>
 $(document).ready(function () {
     /* ── Itinerary day add/remove ───────────────────────────────────── */

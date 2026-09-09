@@ -94,6 +94,14 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
         Route::resource('tour-categories', \App\Http\Controllers\Admin\TourCategoryController::class);
     });
 
+    // ── Mega Nav (module: mega-nav) ─────────────────────────────────────
+    // Standalone management of the three-column navigation mega menu. Items are
+    // created directly here (source_type = 'custom'), separate from tours/pages.
+    Route::middleware('permission:mega-nav')->group(function () {
+        Route::resource('mega-nav', \App\Http\Controllers\Admin\NavigationMegaMenuController::class)
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    });
+
     // ── Inquiries & Bookings (module: inquiries) ────────────────────────
     Route::middleware('permission:inquiries')->group(function () {
         Route::resource('inquiries', \App\Http\Controllers\Admin\InquiryController::class);

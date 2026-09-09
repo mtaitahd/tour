@@ -120,11 +120,6 @@
                 </div>
               </div>
 
-              @include('admin.partials.mega-menu-section', [
-                  'source' => null,
-                  'sourceType' => 'page',
-              ])
-
               <!-- Submit -->
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label"></label>

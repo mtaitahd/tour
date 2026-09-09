@@ -39,6 +39,13 @@ return [
             'description' => 'Manage tour packages and their categories.',
         ],
 
+        'mega-nav' => [
+            'label'       => 'Mega Nav',
+            'icon'        => 'fa-bars',
+            'route'       => 'admin.mega-nav.index',
+            'description' => 'Manage the title, heading, description, image and links of the site\'s navigation mega menu.',
+        ],
+
         'users' => [
             'label'       => 'User Management',
             'icon'        => 'fa-users',

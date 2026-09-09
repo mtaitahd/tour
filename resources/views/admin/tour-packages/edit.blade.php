@@ -1,7 +1,7 @@
 @extends('admin.layouts.app')
 @section('title', 'Edit Tour Package')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('assets/vendor/leaflet/leaflet.css') }}" />
+<link rel="stylesheet" href="{{ asset('asset/vendor/leaflet/leaflet.css') }}" />
 <style>
 /* ── Scoped protections for Leaflet so global CSS (Bootstrap img margin,
       max-width / height:auto resets, etc.) cannot break tile layout ── */
@@ -975,11 +975,6 @@
                 </div>
               </div>
 
-              @include('admin.partials.mega-menu-section', [
-                  'source' => $tourPackage,
-                  'sourceType' => 'tour',
-              ])
-
               <!-- Submit -->
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label"></label>
@@ -1514,7 +1509,7 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('assets/vendor/leaflet/leaflet.js') }}"></script>
+<script src="{{ asset('asset/vendor/leaflet/leaflet.js') }}"></script>
 <script>
 /* ── Location picker logic (shared with create.blade.php) ───────── */
 window._locMaps = {};

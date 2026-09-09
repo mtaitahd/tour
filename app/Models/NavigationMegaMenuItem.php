@@ -9,10 +9,14 @@ use Illuminate\Support\Str;
 
 /**
  * One admin-configured entry in the three-column desktop mega menu / mobile
- * accordion. Each row points at a single source (TourPackage or Page) and carries
- * the presentation overrides the administrator set for it: menu label, short
- * description, CTA button label/URL, context image, badge, display order, and the
- * Show-in-Mega-Menu toggle.
+ * accordion. Each row is either:
+ *  - a standalone "custom" item (source_type = 'custom', source_id = null) created
+ *    directly in the dedicated "Mega Nav" admin module — it carries its own title,
+ *    heading, short description, image and explicit link URL; or
+ *  - linked to a single source (TourPackage or Page), created from the source's
+ *    legacy mega-menu form, with presentation overrides for menu label, short
+ *    description, CTA button label/URL, context image, badge, display order, and the
+ *    Show-in-Mega-Menu toggle.
  *
  * Public rendering is deliberately strict: an item only appears when is_active is
  * true AND its source still exists AND (for tours) the tour is published, (for
@@ -25,6 +29,7 @@ class NavigationMegaMenuItem extends Model
 
     public const SOURCE_TOUR = 'tour';
     public const SOURCE_PAGE = 'page';
+    public const SOURCE_CUSTOM = 'custom';
 
     protected $table = 'navigation_mega_items';
 
@@ -33,6 +38,7 @@ class NavigationMegaMenuItem extends Model
         'source_type',
         'source_id',
         'menu_label',
+        'heading',
         'short_description',
         'button_label',
         'button_url_override',
@@ -91,12 +97,24 @@ class NavigationMegaMenuItem extends Model
     }
 
     /**
+     * Whether this is a standalone admin-created item with no TourPackage/Page
+     * source behind it (source_type = 'custom', source_id = null).
+     */
+    public function isCustom(): bool
+    {
+        return $this->source_type === self::SOURCE_CUSTOM;
+    }
+
+    /**
      * The live source model (TourPackage or Page), or null when the source no
-     * longer exists. Uses an explicit type check instead of a polymorphic morph
-     * relation so the caller can filter by real foreign keys and status directly.
+     * longer exists — and always null for standalone custom items.
      */
     public function resolveSource(): ?Model
     {
+        if ($this->isCustom()) {
+            return null;
+        }
+
         if ($this->isTour()) {
             return $this->tour;
         }
@@ -109,11 +127,17 @@ class NavigationMegaMenuItem extends Model
     }
 
     /**
-     * Whether the source currently qualifies for public display. Tours must be
-     * 'published' (draft/archived never render); pages must be 'published' too.
+     * Whether the source currently qualifies for public display. Standalone custom
+     * items have no source to check — they only need to be active (which the public
+     * query already enforces). Tours must be 'published' (draft/archived never
+     * render); pages must be 'published' too.
      */
     public function sourceIsPublishable(): bool
     {
+        if ($this->isCustom()) {
+            return true;
+        }
+
         $source = $this->resolveSource();
 
         if (! $source) {
@@ -129,8 +153,10 @@ class NavigationMegaMenuItem extends Model
 
     /**
      * Target URL for this item's card/CTA: an explicit override wins, otherwise the
-     * source's public route. Returns null when the source is gone or has no URL —
-     * callers must skip such items rather than render a broken link.
+     * source's public route. Standalone custom items have no source route, so they
+     * must carry an explicit override (validated on the Mega Nav form). Returns null
+     * when the item has no URL — callers must skip such items rather than render a
+     * broken link.
      */
     public function url(): ?string
     {
@@ -138,6 +164,10 @@ class NavigationMegaMenuItem extends Model
 
         if ($override !== '') {
             return $override;
+        }
+
+        if ($this->isCustom()) {
+            return null;
         }
 
         $source = $this->resolveSource();
@@ -198,7 +228,7 @@ class NavigationMegaMenuItem extends Model
             }
         }
 
-        return (string) asset((string) config('navigation.fallback_image', 'assets/img/placeholder-page-hero.jpg'));
+        return (string) asset((string) config('navigation.fallback_image', 'asset/img/placeholder-page-hero.jpg'));
     }
 
     /**

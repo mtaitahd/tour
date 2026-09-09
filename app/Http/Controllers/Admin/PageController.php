@@ -109,8 +109,6 @@ class PageController extends Controller
         'team_members.*.role'          => 'nullable|string|max:255',
         'team_members.*.bio'           => 'nullable|string',
         'team_members.*.photo_image_id' => 'nullable|integer|exists:media,id',
-        // ── Navigation Mega Menu ─────────────────────────────────────────────────
-        ...$this->megaRules(),
     ]);
 
     // Auto-generate slug if empty
@@ -121,8 +119,6 @@ class PageController extends Controller
         $validated['stats_counters'] = $this->encodeStatsCounters($request);
         $validated['custom_data'] = $this->encodeTeamMembers($request);
         $validated['no_robots'] = $request->boolean('no_robots');
-
-        $this->assertMegaEnableable($request);
 
         return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $validated) {
         // Create the page
@@ -165,8 +161,6 @@ class PageController extends Controller
         // individual photos by hand.
         $teamPhotoIds = collect($page->custom_data ?? [])->pluck('photo_image_id')->filter()->values()->all();
         $mediaLibrary->setOrderedUsages($page, 'team_photo', $teamPhotoIds);
-
-        $this->persistMega($request, $page);
 
         \App\Services\SitemapGenerator::generate();
 
@@ -219,15 +213,11 @@ class PageController extends Controller
         'team_members.*.role'          => 'nullable|string|max:255',
         'team_members.*.bio'           => 'nullable|string',
         'team_members.*.photo_image_id' => 'nullable|integer|exists:media,id',
-        // ── Navigation Mega Menu ─────────────────────────────────────────────────
-        ...$this->megaRules(),
     ]);
 
     $validated['stats_counters'] = $this->encodeStatsCounters($request);
     $validated['custom_data'] = $this->encodeTeamMembers($request);
     $validated['no_robots'] = $request->boolean('no_robots');
-
-    $this->assertMegaEnableable($request);
 
     return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $page, $validated) {
     $mediaLibrary = app(MediaLibraryService::class);
@@ -287,8 +277,6 @@ class PageController extends Controller
         // Team member photos — full replace of the ordered set, same as store().
         $teamPhotoIds = collect($page->custom_data ?? [])->pluck('photo_image_id')->filter()->values()->all();
         $mediaLibrary->setOrderedUsages($page, 'team_photo', $teamPhotoIds);
-
-        $this->persistMega($request, $page);
 
         \App\Services\SitemapGenerator::generate();
 
@@ -365,52 +353,5 @@ class PageController extends Controller
         }
 
         return $members;
-    }
-
-    /**
-     * Validation rules for the "Navigation Mega Menu" section shared by the
-     * store() and update() methods.
-     */
-    protected function megaRules(): array
-    {
-        return app(\App\Services\NavigationMegaMenuService::class)->megaRules();
-    }
-
-    /**
-     * Called after validation (before the DB transaction) to enforce the per-parent
-     * item cap and duplicate-source guard. Only runs when the item is being enabled.
-     */
-    protected function assertMegaEnableable(Request $request): void
-    {
-        $mega = $request->input('mega_menu');
-
-        if (! is_array($mega) || empty($mega['enabled'])) {
-            return;
-        }
-
-        $source = $request->route('page');
-
-        if (! $source) {
-            return;
-        }
-
-        app(\App\Services\NavigationMegaMenuService::class)->assertCanEnable(
-            (string) $mega['parent_key'],
-            $source,
-            app(\App\Services\NavigationMegaMenuService::class)->maxItemsPerMenu(),
-        );
-    }
-
-    /**
-     * Persist (or clear) the mega-menu entry for a page, inside the store/update DB
-     * transaction so the page save and its menu row commit or roll back together.
-     */
-    protected function persistMega(Request $request, Page $page): void
-    {
-        $mega = $request->input('mega_menu');
-        $actorId = $request->user()?->id;
-
-        app(\App\Services\NavigationMegaMenuService::class)
-            ->persistForSource($page, is_array($mega) ? $mega : null, $actorId);
     }
 }

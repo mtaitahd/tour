@@ -95,11 +95,7 @@ class TourPackageController extends Controller
             'manual_prices.*.price_4p'                       => 'required|regex:/^\d{1,10}(\.\d{1,2})?$/|gt:0',
             'manual_prices.*.price_6p'                       => 'required|regex:/^\d{1,10}(\.\d{1,2})?$/|gt:0',
             'manual_currency'                                => 'required_if:pricing_source,manual|nullable|regex:/^[A-Za-z]{3}$/',
-            // ── Navigation Mega Menu ─────────────────────────────────────────────
-            ...$this->megaRules(),
         ]);
-
-        $this->assertMegaEnableable($request);
 
         return DB::transaction(function () use ($request) {
 
@@ -304,8 +300,6 @@ class TourPackageController extends Controller
 // ── Phase 2 Pricing ──────────────────────────────────────────────────
         $this->persistPricing($request, $tourPackage);
 
-        $this->persistMega($request, $tourPackage);
-
         \App\Services\SitemapGenerator::generate();
 
         return redirect()->route('admin.tour-packages.index')
@@ -389,11 +383,7 @@ public function edit(TourPackage $tourPackage)
             'manual_prices.*.price_4p'                       => 'required|regex:/^\d{1,10}(\.\d{1,2})?$/|gt:0',
             'manual_prices.*.price_6p'                       => 'required|regex:/^\d{1,10}(\.\d{1,2})?$/|gt:0',
             'manual_currency'                                => 'required_if:pricing_source,manual|nullable|regex:/^[A-Za-z]{3}$/',
-            // ── Navigation Mega Menu ─────────────────────────────────────────────
-            ...$this->megaRules(),
         ]);
-
-        $this->assertMegaEnableable($request);
 
         return DB::transaction(function () use ($request, $tourPackage) {
 
@@ -657,8 +647,6 @@ public function edit(TourPackage $tourPackage)
 // ── Phase 2 Pricing ──────────────────────────────────────────────────
         $this->persistPricing($request, $tourPackage);
 
-        $this->persistMega($request, $tourPackage);
-
         \App\Services\SitemapGenerator::generate();
 
         return redirect()->route('admin.tour-packages.index')
@@ -903,55 +891,6 @@ $tourPackage->groupDepartures()->delete();
         }
 
         return $rows;
-    }
-
-    /**
-     * Validation rules for the "Navigation Mega Menu" section shared by the
-     * store() and update() methods. A tour is only ever persisted as a mega-menu
-     * item when 'mega_menu.enabled' is true; then the parent/label are required.
-     */
-    protected function megaRules(): array
-    {
-        return app(\App\Services\NavigationMegaMenuService::class)->megaRules();
-    }
-
-    /**
-     * Called after validation (before the DB transaction) to enforce the
-     * per-parent item cap and duplicate-source guard. Only runs when the item is
-     * being enabled. Throws a ValidationException surfaced inline on the form.
-     */
-    protected function assertMegaEnableable(Request $request): void
-    {
-        $mega = $request->input('mega_menu');
-
-        if (! is_array($mega) || empty($mega['enabled'])) {
-            return;
-        }
-
-        $source = $request->route('tour_package');
-
-        if (! $source) {
-            return;
-        }
-
-        app(\App\Services\NavigationMegaMenuService::class)->assertCanEnable(
-            (string) $mega['parent_key'],
-            $source,
-            app(\App\Services\NavigationMegaMenuService::class)->maxItemsPerMenu(),
-        );
-    }
-
-    /**
-     * Persist (or clear) the mega-menu entry for a tour, inside the store/update
-     * DB transaction so the tour save and its menu row commit or roll back together.
-     */
-    protected function persistMega(Request $request, $tourPackage): void
-    {
-        $mega = $request->input('mega_menu');
-        $actorId = $request->user()?->id;
-
-        app(\App\Services\NavigationMegaMenuService::class)
-            ->persistForSource($tourPackage, is_array($mega) ? $mega : null, $actorId);
     }
 
     /**

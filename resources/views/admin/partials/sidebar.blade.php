@@ -29,7 +29,7 @@
         </li>
     @endif
 
-    @if($can('pages') || $can('tours') || $can('users') || $can('blog'))
+    @if($can('pages') || $can('tours') || $can('mega-nav') || $can('users') || $can('blog'))
     <hr class="sidebar-divider">
     <div class="sidebar-heading">Content</div>
     @endif
@@ -63,6 +63,16 @@
                     <span>Categories</span>
                 </a>
             </div>
+        </li>
+    @endif
+
+    {{-- Mega Nav --}}
+    @if($can('mega-nav'))
+        <li class="nav-item {{ in_array($currentPage, ['mega-nav']) ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('admin.mega-nav.index') }}">
+                <i class="fas fa-fw fa-bars"></i>
+                <span>Mega Nav</span>
+            </a>
         </li>
     @endif
 
