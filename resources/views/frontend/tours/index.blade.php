@@ -147,7 +147,7 @@
                                 <i class="isax isax-location5 sfb-safari-control__icon" aria-hidden="true"></i>
                                 <div class="sfb-whereto" data-sfb-wt>
                                     <div class="sfb-safari-field sfb-safari-field--button sfb-whereto__field{{ $headerDestination ? ' has-value' : '' }}" data-sfb-wt-field>
-                                        <span class="sfb-safari-field__label">Where To</span>
+                                        <span class="sfb-safari-field__label"></span>
                                         <input type="text"
                                                class="sfb-safari-field__input sfb-whereto__input"
                                                placeholder="Where To"
@@ -173,7 +173,7 @@
                             <div class="sfb-safari-control">
                                 <i class="isax isax-calendar-15 sfb-safari-control__icon" aria-hidden="true"></i>
                                 <button type="button" class="sfb-safari-field sfb-safari-field--button" data-safpop="date" data-safpop-target="sfb-start-date-value" aria-haspopup="dialog" aria-expanded="false" aria-controls="startDateCalendar">
-                                    <span class="sfb-safari-field__label">Start Date</span>
+                                    <span class="sfb-safari-field__label"></span>
                                     <input type="text" class="sfb-safari-field__input" value="{{ $startDateDisplay }}" placeholder="Start Date" readonly data-safpop-display aria-label="Start Date">
                                     <i class="isax isax-arrow-right-3" aria-hidden="true"></i>
                                 </button>
@@ -183,7 +183,7 @@
                             <div class="sfb-safari-control">
                                 <i class="isax isax-profile-2user5 sfb-safari-control__icon" aria-hidden="true"></i>
                                 <button type="button" class="sfb-safari-field sfb-safari-field--button" data-safpop="trav" data-trav-total="sfb-travellers-total" data-trav-adults="sfb-travellers-adults" data-trav-children="sfb-travellers-children" aria-haspopup="dialog" aria-expanded="false" aria-controls="travellersPopover">
-                                    <span class="sfb-safari-field__label">Travelers</span>
+                                    <span class="sfb-safari-field__label"></span>
                                     <input type="text" class="sfb-safari-field__input" value="{{ $travellersText }}" readonly data-safpop-display aria-label="Travelers">
                                     <span class="sfb-safari-field__remove" aria-hidden="true">&times;</span>
                                 </button>

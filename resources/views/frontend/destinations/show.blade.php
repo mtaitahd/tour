@@ -210,7 +210,7 @@ $photoCardImage = $galleryImages->first()?->getUrl('medium-webp') ?: ($galleryIm
                 <div class="td-quote-fields">
                     <button type="button" class="td-safari-field" data-safpop="date"
                             data-safpop-target="tdStartDate" aria-haspopup="dialog" aria-expanded="false" aria-controls="startDateCalendar">
-                        <span class="td-safari-field__label">Start Date</span>
+                        <span class="td-safari-field__label"></span>
                         <input type="text" placeholder="Start Date" readonly data-safpop-display aria-label="Start Date">
                         <i class="isax isax-calendar-15" aria-hidden="true"></i>
                     </button>
@@ -219,7 +219,7 @@ $photoCardImage = $galleryImages->first()?->getUrl('medium-webp') ?: ($galleryIm
                     <button type="button" class="td-safari-field" data-safpop="trav"
                             data-trav-total="tdTravTotal" data-trav-adults="tdTravAdults" data-trav-children="tdTravChildren"
                             aria-haspopup="dialog" aria-expanded="false" aria-controls="travellersPopover">
-                        <span class="td-safari-field__label">Travelers</span>
+                        <span class="td-safari-field__label"></span>
                         <input type="text" placeholder="Travelers" readonly data-safpop-display aria-label="Travelers">
                         <i class="isax isax-profile-2user5" aria-hidden="true"></i>
                     </button>

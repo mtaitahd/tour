@@ -38,7 +38,6 @@
                                 <label class="afro-search__field-inner" for="afro-destination">
                                     <i class="isax isax-location5 afro-search__icon" id="destinationIcon" aria-hidden="true"></i>
                                     <span class="afro-search__stack">
-                                        <span class="afro-search__label">Where To</span>
                                         <input type="text" id="afro-destination" class="afro-search__input destination-search-input" placeholder="Where To" autocomplete="off" aria-label="Destination" aria-autocomplete="list" aria-expanded="false" aria-controls="destinationList">
                                     </span>
                                 </label>
@@ -63,7 +62,6 @@
                                 <div class="afro-search__input-wrap">
                                     <i class="isax isax-calendar-15 afro-search__icon" aria-hidden="true"></i>
                                     <span class="afro-search__stack">
-                                        <span class="afro-search__label">Start Date</span>
                                         <input type="text" id="afro-date" class="afro-search__input" placeholder="Start Date" readonly autocomplete="off" aria-label="Start date" aria-haspopup="dialog" aria-expanded="false" aria-controls="startDateCalendar">
                                     </span>
                                 </div>
@@ -75,7 +73,6 @@
                                 <div class="afro-search__input-wrap">
                                     <i class="isax isax-profile-2user5 afro-search__icon" aria-hidden="true"></i>
                                     <span class="afro-search__stack">
-                                        <span class="afro-search__label">Travelers</span>
                                         <input type="text" id="afro-travellers" class="afro-search__input" value="2 Adults" readonly autocomplete="off" aria-label="Travelers" aria-haspopup="dialog" aria-expanded="false" aria-controls="travellersPopover">
                                     </span>
                                 </div>
