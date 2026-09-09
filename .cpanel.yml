@@ -3,6 +3,7 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home3/fhlismmy/public_html/
     - /bin/cp -R app $DEPLOYPATH
+    - /bin/cp -R asset $DEPLOYPATH
     - /bin/cp -R bootstrap $DEPLOYPATH
     - /bin/cp -R config $DEPLOYPATH
     - /bin/cp -R database $DEPLOYPATH
