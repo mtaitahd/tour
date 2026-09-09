@@ -17,10 +17,12 @@ use Illuminate\View\View;
  * three-column navigation mega menu.
  *
  * Mega menu items used to be configured from inside the Tour / Page forms; that
- * coupling has been removed. This controller manages the items directly: each row
- * is a standalone entry (source_type = 'custom', source_id = null) carrying the
+ * coupling has been removed. This controller manages the items directly. Each row
+ * may be a standalone entry (source_type = 'custom', source_id = null) carrying the
  * left-column title, middle-column heading, short description, right-column image
- * and an explicit link URL — nothing references a tour or page anymore.
+ * and an explicit link URL, or an existing legacy row still linked to a tour/page —
+ * both kinds are listed, editable and deletable here so the admin controls every
+ * entry in the site's navigation mega menu.
  */
 class NavigationMegaMenuController extends Controller
 {
@@ -30,7 +32,6 @@ class NavigationMegaMenuController extends Controller
     public function index(): View
     {
         $items = NavigationMegaMenuItem::with(['image', 'creator'])
-            ->where('source_type', NavigationMegaMenuItem::SOURCE_CUSTOM)
             ->orderBy('parent_menu_key')
             ->orderBy('display_order')
             ->orderBy('menu_label')
@@ -96,8 +97,6 @@ class NavigationMegaMenuController extends Controller
      */
     public function edit(NavigationMegaMenuItem $megaNav): View
     {
-        $this->assertCustom($megaNav);
-
         $megaNav->load('image');
 
         $parents = app(NavigationMegaMenuService::class)->parentDefinitions();
@@ -110,8 +109,6 @@ class NavigationMegaMenuController extends Controller
      */
     public function update(Request $request, NavigationMegaMenuItem $megaNav): RedirectResponse
     {
-        $this->assertCustom($megaNav);
-
         $parents = app(NavigationMegaMenuService::class)->parentDefinitions();
 
         $validated = $this->validated($request, $parents);
@@ -145,8 +142,6 @@ class NavigationMegaMenuController extends Controller
      */
     public function destroy(NavigationMegaMenuItem $megaNav): RedirectResponse
     {
-        $this->assertCustom($megaNav);
-
         app(MediaLibraryService::class)->forgetAllUsagesFor($megaNav);
 
         $megaNav->delete();
@@ -204,12 +199,6 @@ class NavigationMegaMenuController extends Controller
     private function parentLabel(string $key): string
     {
         return app(NavigationMegaMenuService::class)->parentLabel($key);
-    }
-
-    /** Only standalone items are editable here — legacy tour/page rows are skipped. */
-    private function assertCustom(NavigationMegaMenuItem $megaNav): void
-    {
-        abort_unless($megaNav->isCustom(), 404);
     }
 
     /** Replace the recorded media usage when the admin changes the item's image. */

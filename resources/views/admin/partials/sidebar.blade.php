@@ -70,7 +70,6 @@
     @if($can('mega-nav'))
         @php
             $megaItems = \App\Models\NavigationMegaMenuItem::with(['image'])
-                ->where('source_type', \App\Models\NavigationMegaMenuItem::SOURCE_CUSTOM)
                 ->orderBy('parent_menu_key')
                 ->orderBy('display_order')
                 ->orderBy('menu_label')
