@@ -164,71 +164,102 @@
             </button>
         </div>
     </div>
-</header>
 
-<!-- Mobile drawer -->
+@php
+    // ---- Mobile drawer data (mirrors the desktop mega menu) ----
+    $allToursUrl  = route('tours.index');
+    $mobileSafari = $megaMenu['safari'] ?? null;
+    $mobileKili   = $megaMenu['kilimanjaro'] ?? null;
+    $mobileDay    = $megaMenu['daytrips'] ?? null;
+
+    $safariUrl   = $mobileSafari['trigger_url'] ?? $allToursUrl;
+    $safariItems = $mobileSafari['categories']  ?? [];
+    $kiliUrl     = $mobileKili['trigger_url']   ?? route('tours.category', 'kilimanjaro-climbing');
+    $kiliItems   = $mobileKili['categories']    ?? [];
+    $kiliLabel   = $mobileKili['label']         ?? 'Kilimanjaro';
+    $dayUrl      = $mobileDay['trigger_url']    ?? $allToursUrl;
+    $dayItems    = $mobileDay['categories']     ?? [];
+    $dayLabel    = $mobileDay['label']          ?? 'Day Trips';
+@endphp
+
+<!-- Mobile drawer (drops down directly below the header, above the content) -->
 <div class="av-drawer" id="avDrawer" aria-hidden="true">
-    <div class="av-drawer__overlay" id="avDrawerOverlay"></div>
-    <aside class="av-drawer__panel" role="dialog" aria-modal="true" aria-label="Menu">
-        <div class="av-drawer__head">
-            <a class="av-drawer__logo" href="{{ route('home') }}" aria-label="{{ $siteName }} home">
-                <img src="{{ $logo }}" alt="{{ $siteName }}">
-            </a>
-            <button class="av-drawer__close" id="avDrawerClose" type="button" aria-label="Close menu">
-                <i class="bi bi-x-lg" aria-hidden="true"></i>
-            </button>
-        </div>
+    <nav class="av-drawer__panel" role="dialog" aria-modal="true" aria-label="Mobile navigation">
+        <ul class="av-drawer__list">
+            <li>
+                <a class="av-drawer__link" href="{{ route('home') }}">Home</a>
+            </li>
 
-        <nav class="av-drawer__nav" aria-label="Mobile navigation">
-            <ul class="av-drawer__list">
-                @foreach($parentLabels as $key => $fallback)
-                    @php
-                        $menu = $megaMenu[$key] ?? null;
-                        $items = $menu['categories'] ?? [];
-                        $isActive = $menu['active'] ?? ($key === 'kilimanjaro' ? $kiliActive : ($key === 'safari' ? $safariActive : false));
-                        $trigger = $menu['trigger_url'] ?? $fallback['url'];
-                    @endphp
-                    @if(!empty($items))
-                        <li class="has-dropdown @if($isActive) is-active @endif">
-                            <div class="av-drawer__row">
-                                <a href="{{ $trigger }}">{{ $menu['label'] ?? $fallback['label'] }}</a>
-                                <button class="av-drawer__toggle" type="button" aria-label="Toggle submenu"><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
-                            </div>
-                            <ul class="av-drawer__sub">
-                                @foreach($items as $cat)
-                                    <li>
-                                        <a href="{{ $cat['url'] }}">
-                                            {{ $cat['title'] }}
-                                            @if(!empty($cat['badge']))
-                                                <span class="av-drawer__badge">{{ $cat['badge'] }}</span>
-                                            @endif
-                                        </a>
-                                        @if(!empty($cat['description']))
-                                            <p class="av-drawer__desc">{{ $cat['description'] }}</p>
-                                        @endif
-                                        @if(!empty($cat['image']))
-                                            <img class="av-drawer__img" src="{{ $cat['image'] }}" alt="{{ $cat['image_alt'] }}" loading="lazy">
-                                        @endif
-                                        <a class="av-drawer__cta" href="{{ $cat['cta']['url'] }}">{{ $cat['cta']['label'] }}</a>
-                                    </li>
-                                @endforeach
-                                <li><a href="{{ $trigger }}">View all {{ $menu['label'] ?? $fallback['label'] }}</a></li>
-                            </ul>
-                        </li>
-                    @else
-                        <li><a class="av-drawer__link" href="{{ $trigger }}">{{ $menu['label'] ?? $fallback['label'] }}</a></li>
-                    @endif
-                @endforeach
-            </ul>
-        </nav>
+            @if(!empty($safariItems))
+                <li class="has-dropdown">
+                    <div class="av-drawer__row">
+                        <a href="{{ $safariUrl }}">Safaris</a>
+                        <button class="av-drawer__toggle" type="button" aria-expanded="false" aria-controls="avDrawerSubSafaris" aria-label="Toggle Safaris submenu"><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+                    </div>
+                    <ul class="av-drawer__sub" id="avDrawerSubSafaris">
+                        @foreach($safariItems as $cat)
+                            <li><a href="{{ $cat['url'] }}">{{ $cat['title'] }}</a></li>
+                        @endforeach
+                        <li><a href="{{ $safariUrl }}">View all Safaris</a></li>
+                    </ul>
+                </li>
+            @else
+                <li><a class="av-drawer__link" href="{{ $safariUrl }}">Safaris</a></li>
+            @endif
+
+            @if(!empty($kiliItems) || !empty($dayItems))
+                <li class="has-dropdown">
+                    <div class="av-drawer__row">
+                        <a href="{{ $allToursUrl }}">Tours</a>
+                        <button class="av-drawer__toggle" type="button" aria-expanded="false" aria-controls="avDrawerSubTours" aria-label="Toggle Tours submenu"><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+                    </div>
+                    <ul class="av-drawer__sub" id="avDrawerSubTours">
+                        @if(!empty($kiliItems))
+                            <li class="av-drawer__subhead">{{ $kiliLabel }}</li>
+                            @foreach($kiliItems as $cat)
+                                <li><a href="{{ $cat['url'] }}">{{ $cat['title'] }}</a></li>
+                            @endforeach
+                            <li><a href="{{ $kiliUrl }}">View all {{ $kiliLabel }}</a></li>
+                        @endif
+                        @if(!empty($dayItems))
+                            <li class="av-drawer__subhead">{{ $dayLabel }}</li>
+                            @foreach($dayItems as $cat)
+                                <li><a href="{{ $cat['url'] }}">{{ $cat['title'] }}</a></li>
+                            @endforeach
+                            <li><a href="{{ $dayUrl }}">View all {{ $dayLabel }}</a></li>
+                        @endif
+                        <li><a href="{{ $allToursUrl }}">View all Tours</a></li>
+                    </ul>
+                </li>
+            @else
+                <li><a class="av-drawer__link" href="{{ $allToursUrl }}">Tours</a></li>
+            @endif
+
+            <li>
+                <a class="av-drawer__link" href="{{ route('destinations.index') }}">Destinations</a>
+            </li>
+
+            <li>
+                <a class="av-drawer__link" href="{{ route('page.show', 'about-us') }}">About</a>
+            </li>
+
+            <li>
+                <a class="av-drawer__link" href="{{ route('blog.index') }}">Blog</a>
+            </li>
+
+            <li>
+                <a class="av-drawer__link" href="{{ route('page.show', 'contact') }}">Contact</a>
+            </li>
+        </ul>
 
         <a class="av-drawer__whatsapp" href="{{ $waLink }}" target="_blank" rel="noopener">
             <i class="bi bi-whatsapp" aria-hidden="true"></i> WhatsApp
         </a>
-    </aside>
+    </nav>
 </div>
+</header>
 
-<script>
+<script data-cfasync="false">
 document.addEventListener('DOMContentLoaded', function () {
     var nav = document.querySelector('.av-nav');
 
@@ -368,42 +399,77 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     /* ═══════════════════════════════════════════════════════
-       Mobile drawer
+       Mobile drawer (below-header panel)
        ═══════════════════════════════════════════════════════ */
     var drawer = document.getElementById('avDrawer');
     var burger = document.getElementById('avNavHamburger');
-    var closeBtn = document.getElementById('avDrawerClose');
-    var overlay = document.getElementById('avDrawerOverlay');
+
+    function isOpen() {
+        return !!drawer && drawer.classList.contains('is-open');
+    }
 
     function openDrawer() {
+        if (!drawer) return;
         drawer.classList.add('is-open');
         drawer.setAttribute('aria-hidden', 'false');
-        burger.setAttribute('aria-expanded', 'true');
+        if (burger) {
+            burger.setAttribute('aria-expanded', 'true');
+            burger.setAttribute('aria-label', 'Close menu');
+        }
         document.body.classList.add('av-no-scroll');
     }
+
     function closeDrawer() {
+        if (!drawer) return;
         drawer.classList.remove('is-open');
         drawer.setAttribute('aria-hidden', 'true');
-        burger.setAttribute('aria-expanded', 'false');
+        if (burger) {
+            burger.setAttribute('aria-expanded', 'false');
+            burger.setAttribute('aria-label', 'Open menu');
+        }
         document.body.classList.remove('av-no-scroll');
     }
 
-    if (burger) burger.addEventListener('click', openDrawer);
-    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
-    if (overlay) overlay.addEventListener('click', closeDrawer);
+    if (burger) {
+        burger.addEventListener('click', function () {
+            if (isOpen()) closeDrawer();
+            else openDrawer();
+        });
+    }
 
+    /* Close when tapping outside the drawer or the burger */
+    document.addEventListener('click', function (e) {
+        if (!isOpen()) return;
+        if (burger && e.target.closest('#avNavHamburger')) return;
+        if (drawer && e.target.closest('#avDrawer')) return;
+        closeDrawer();
+    });
+
+    /* Close when any link inside the drawer is tapped */
+    if (drawer) {
+        drawer.addEventListener('click', function (e) {
+            if (e.target.closest('a')) closeDrawer();
+        });
+    }
+
+    /* Close on Escape and return focus to the burger */
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            if (drawer && drawer.classList.contains('is-open')) closeDrawer();
+        if (e.key === 'Escape' && isOpen()) {
+            closeDrawer();
+            if (burger) burger.focus();
         }
     });
 
-    var drawerToggles = document.querySelectorAll('.av-drawer__toggle');
-    drawerToggles.forEach(function (t) {
+    /* Accordion sub-menus */
+    document.querySelectorAll('.av-drawer__toggle').forEach(function (t) {
         t.addEventListener('click', function (e) {
+            e.stopPropagation();
             e.preventDefault();
             var li = t.closest('li');
-            li.classList.toggle('is-open');
+            if (!li) return;
+            var willOpen = !li.classList.contains('is-open');
+            li.classList.toggle('is-open', willOpen);
+            t.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
         });
     });
 });
