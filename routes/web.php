@@ -79,6 +79,12 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
     // ── Static Pages (module: pages) ─────────────────────────────────────
     Route::middleware('permission:pages')->group(function () {
         Route::resource('pages', PageController::class);
+        // Dedicated editor for just the About page "Our Story" section
+        // (story_title heading + story_gallery images/captions).
+        Route::get('our-story', [\App\Http\Controllers\Admin\OurStoryController::class, 'edit'])
+            ->name('our-story.edit');
+        Route::put('our-story', [\App\Http\Controllers\Admin\OurStoryController::class, 'update'])
+            ->name('our-story.update');
     });
 
     // ── Tours & Packages (module: tours) ────────────────────────────────

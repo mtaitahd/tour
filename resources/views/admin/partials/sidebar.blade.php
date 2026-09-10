@@ -36,24 +36,18 @@
 
     {{-- Static Pages --}}
     @if($can('pages'))
-        @php
-            $aboutPage = \App\Models\Page::where('slug', 'about-us')->first();
-            $aboutEditUrl = $aboutPage ? route('admin.pages.edit', $aboutPage) : null;
-        @endphp
-        <li class="nav-item {{ $currentPage === 'pages' ? 'active' : '' }}">
-            <a class="nav-link {{ $currentPage === 'pages' ? '' : 'collapsed' }}"
+        <li class="nav-item {{ in_array($currentPage, ['pages', 'our-story']) ? 'active' : '' }}">
+            <a class="nav-link {{ in_array($currentPage, ['pages', 'our-story']) ? '' : 'collapsed' }}"
                href="#" data-bs-target="#pages-nav" data-bs-toggle="collapse">
                 <i class="fas fa-fw fa-file-alt"></i>
                 <span>Edit About</span>
                 <i class="fas fa-chevron-down ms-auto"></i>
             </a>
-            <div id="pages-nav" class="collapse {{ $currentPage === 'pages' ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
-                @if($aboutEditUrl)
-                    <a class="nav-link" href="{{ $aboutEditUrl }}">
-                        <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
-                        <span>Our Story Images & Captions</span>
-                    </a>
-                @endif
+            <div id="pages-nav" class="collapse {{ in_array($currentPage, ['pages', 'our-story']) ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
+                <a class="nav-link" href="{{ route('admin.our-story.edit') }}">
+                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
+                    <span>Our Story Images & Captions</span>
+                </a>
                 <a class="nav-link" href="{{ route('admin.pages.index') }}">
                     <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
                     <span>All Pages</span>
