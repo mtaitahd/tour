@@ -9,6 +9,10 @@
         ?: \App\Models\Setting::get('social_youtube');
 
     /* ── Your latest videos (max 3 — shown first) ────────────────────
+       Stored in the Setting 'subscribe_videos' (a JSON array) and editable
+       from Admin → Website Content → Subscribe Section. Until the admin saves
+       anything the built-in defaults below are shown, so the section works out
+       of the box.
        'thumbnail' → URL to a 16:9 thumbnail (ideally 1280×720)
                      Tip: https://i.ytimg.com/vi/VIDEO_ID/maxresdefault.jpg
        'title'     → video title
@@ -16,7 +20,7 @@
        'when'      → e.g. "2 weeks ago"
        'url'       → https://www.youtube.com/watch?v=VIDEO_ID
        ──────────────────────────────────────────────────────────── */
-    $ytVideos = [
+    $ytDefaultVideos = [
         [
             'thumbnail' => asset('public/safari-countries/tanzania.webp'),
             'title'     => 'The Great Migration — Serengeti Up Close',
@@ -40,7 +44,14 @@
         ],
     ];
 
-    /* Hard cap at 3 cards regardless of how many are listed above. */
+    // The setting key is present once the admin has saved the section at least
+    // once. A saved-but-empty list intentionally hides the cards; absent key
+    // means "never edited" and falls back to the defaults.
+    $ytVideos = \App\Models\Setting::get('subscribe_videos') === null
+        ? $ytDefaultVideos
+        : \App\Models\Setting::json('subscribe_videos');
+
+    /* Hard cap at 3 cards regardless of how many are configured. */
     $ytVideos = array_slice($ytVideos, 0, 3);
 
     $ytHeading = \App\Models\Setting::get(

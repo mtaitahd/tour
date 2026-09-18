@@ -90,8 +90,14 @@ class HomepageContentController extends Controller
     public function updateSubscribe(Request $request)
     {
         $request->validate([
-            'settings'   => 'required|array',
-            'settings.*' => 'nullable|string|max:1000',
+            'settings'                    => 'required|array',
+            'settings.*'                  => 'nullable|string|max:1000',
+            'subscribe_videos'            => 'nullable|array',
+            'subscribe_videos.*.thumbnail' => 'nullable|string|max:1000',
+            'subscribe_videos.*.title'    => 'nullable|string|max:255',
+            'subscribe_videos.*.views'    => 'nullable|string|max:100',
+            'subscribe_videos.*.when'     => 'nullable|string|max:100',
+            'subscribe_videos.*.url'      => 'nullable|string|max:1000',
         ]);
 
         foreach ($request->settings as $key => $value) {
@@ -100,6 +106,25 @@ class HomepageContentController extends Controller
 
         // Checkbox: always persist an explicit 0/1 so unchecking actually unhides.
         Setting::set('subscribe_hidden', $request->boolean('settings.subscribe_hidden') ? '1' : '0');
+
+        // Video cards shown under the subscribe heading. Stored in the order the
+        // admin arranged them; the frontend only ever displays the first three.
+        if ($request->has('subscribe_videos')) {
+            $videos = [];
+            foreach ($request->input('subscribe_videos', []) as $item) {
+                $video = [
+                    'thumbnail' => trim((string) ($item['thumbnail'] ?? '')),
+                    'title'     => trim((string) ($item['title'] ?? '')),
+                    'views'     => trim((string) ($item['views'] ?? '')),
+                    'when'      => trim((string) ($item['when'] ?? '')),
+                    'url'       => trim((string) ($item['url'] ?? '')),
+                ];
+                if ($video['thumbnail'] !== '' || $video['title'] !== '' || $video['url'] !== '') {
+                    $videos[] = $video;
+                }
+            }
+            Setting::set('subscribe_videos', json_encode($videos));
+        }
 
         return redirect()->route('admin.subscribe-content')
                          ->with('success', 'Subscribe section updated successfully!');
