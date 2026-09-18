@@ -86,7 +86,7 @@
                         $trigger = $menu['trigger_url'] ?? $fallback['url'];
                         $items = $menu['categories'] ?? [];
                     @endphp
-                    <li class="av-nav__item has-mega @if($isActive) is-active @endif">
+                    <li class="av-nav__item @if(!empty($items)) has-mega @endif @if($isActive) is-active @endif">
                         <a class="av-nav__link" href="{{ $trigger }}"
                            aria-haspopup="true"
                            aria-expanded="false"
@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', function () {
         /* Hover — trigger and menu are both inside <li>, so moving the
            cursor between them never leaves the item; the transparent
            ::before bridge covers any rounding gap under the bar. */
-        [link, mega].forEach(function (el) {
+        [link, mega].filter(Boolean).forEach(function (el) {
             el.addEventListener('mouseenter', function () { openMega(item); });
             el.addEventListener('mouseleave', function () { closeMega(item); });
         });

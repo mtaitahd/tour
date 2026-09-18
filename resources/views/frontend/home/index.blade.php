@@ -2450,7 +2450,7 @@
         });
 
         clearBtn.addEventListener('click', function (e) { e.stopPropagation(); clearDest(); });
-        closeBtn.addEventListener('click', function (e) { e.stopPropagation(); closeDropdown(); input.focus(); });
+        closeBtn.addEventListener('click', function (e) { e.stopPropagation(); closeDropdown(); });
         field.addEventListener('click', function (e) {
             if (e.target === clearBtn || e.target === closeBtn) return;
             if (dropdown.hidden) openDropdown();
