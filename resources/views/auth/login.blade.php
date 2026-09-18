@@ -126,14 +126,10 @@
     border-left: 0;
     border-radius: 0;
     padding: 12px 15px;
-    color: var(--login-primary);
+    color: #1e293b;
     font-size: 15px;
-    font-weight: 700;
     height: auto;
-    background: linear-gradient(135deg, #2563EB, #38BDF8);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    background: #ffffff;
   }
   .login-form .form-control::placeholder {
     color: #A5B8D9;
@@ -289,6 +285,13 @@
     <div class="login-form">
       <h5>Login</h5>
       <p class="login-form__sub">Enter your credentials to access the dashboard.</p>
+
+      @if(session('status'))
+        <div class="login-alert" style="background:#eef6ff;color:#1e40af;border-color:#bfdbfe;">
+          <i class="fas fa-info-circle"></i>
+          <span>{{ session('status') }}</span>
+        </div>
+      @endif
 
       @if($errors->any())
         <div class="login-alert">
