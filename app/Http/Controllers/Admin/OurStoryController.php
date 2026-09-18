@@ -19,14 +19,33 @@ class OurStoryController extends Controller
 
     public function edit(): View
     {
-        $page = Page::where('slug', self::ABOUT_PAGE_SLUG)->firstOrFail();
+        $page = $this->aboutPage();
 
         return view('admin.story-gallery.edit', compact('page'));
     }
 
+    /**
+     * The About page that owns the story section, creating a missing placeholder
+     * first. Live deploys sometimes lack the seeded about-us row, and without it
+     * firstOrFail() turned /admin/our-story into a baffling 404 — so we bootstraps
+     * the page instead of failing.
+     */
+    private function aboutPage(): Page
+    {
+        return Page::firstOrCreate(
+            ['slug' => self::ABOUT_PAGE_SLUG],
+            [
+                'title'   => 'About Us',
+                'content' => '',
+                'status'  => 'published',
+                'order'   => 10,
+            ]
+        );
+    }
+
     public function update(Request $request): RedirectResponse
     {
-        $page = Page::where('slug', self::ABOUT_PAGE_SLUG)->firstOrFail();
+        $page = $this->aboutPage();
 
         $validated = $request->validate([
             'story_title'           => ['nullable', 'string', 'max:255'],
