@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Destination;
 use App\Models\Setting;
 use App\Models\TourCategory;
+use App\Models\TourPackage;
 
 /**
  * Admin editors for homepage content that has no dedicated module yet:
