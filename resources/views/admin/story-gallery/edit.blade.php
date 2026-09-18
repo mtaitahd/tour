@@ -13,9 +13,60 @@
     </nav>
   </div>
 
+  @php
+    $checklistRaw = Setting::get('home_about_checklist');
+    if ($checklistRaw) {
+        $checklistItems = array_filter(array_map('trim', explode("\n", $checklistRaw)));
+    } else {
+        $checklistItems = ['Custom Safari Itineraries', '24/7 Customer Support', 'Licensed & Insured', 'Professional Local Guides', 'Best Price Guarantee', 'Sustainable Tourism'];
+    }
+    $homePolaroids = [
+        ['src' => asset('public/111/serengeti-great-migration.webp'), 'caption' => Setting::get('home_about_polaroid_1', 'Wild Encounters')],
+        ['src' => asset('public/114/serengeti-elephants.webp'), 'caption' => Setting::get('home_about_polaroid_2', 'Memories Forever')],
+        ['src' => asset('public/112/serengeti-lions-1.webp'), 'caption' => Setting::get('home_about_polaroid_3', 'Breathtaking Views')],
+    ];
+  @endphp
+
   <section class="section">
     <div class="row">
       <div class="col-lg-12">
+        <div class="card mb-4">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Current Homepage &mdash; About Us / Our Story Section</h5>
+            <a href="{{ route('admin.settings.index') }}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-pencil-square"></i> Edit in Settings
+            </a>
+          </div>
+          <div class="card-body">
+            <p class="text-muted">This is exactly what the homepage "Our Story" section shows right now &mdash; text and images together.</p>
+            <div class="row g-4">
+              <div class="col-lg-7">
+                <span class="badge bg-light text-dark mb-2">{{ Setting::get('home_about_eyebrow', 'Our Story') }}</span>
+                <h4 class="mb-2">{!! Setting::get('home_about_title') ?: 'About Us &ndash; Afro-Vertex Tours &amp; Safaris' !!}</h4>
+                <div class="mb-3">{!! Setting::get('home_about_text') ?: 'Welcome to Afro-Vertex Africa Tanzania Safari LTD, where unforgettable African adventures meet the untamed beauty of nature. Based in Tanzania, we are a trusted safari operator and destination management company dedicated to creating immersive wildlife experiences, tailor-made journeys, mountain adventures, and relaxing beach escapes across East Africa.' !!}</div>
+                <ul class="mb-3" style="columns:2; column-gap:1.5rem;">
+                  @foreach ($checklistItems as $item)
+                    <li class="mb-1">{{ $item }}</li>
+                  @endforeach
+                </ul>
+                <a href="{{ Setting::get('home_about_btn_link') ?: route('page.show', 'about-us') }}" class="btn btn-primary btn-sm">
+                  {{ Setting::get('home_about_btn_text', 'Discover More') }}
+                </a>
+              </div>
+              <div class="col-lg-5">
+                <div class="row g-3">
+                  @foreach ($homePolaroids as $polaroid)
+                    <div class="col-4">
+                      <img src="{{ $polaroid['src'] }}" alt="{{ $polaroid['caption'] }}" class="img-fluid rounded shadow-sm mb-1" loading="lazy">
+                      <small class="d-block text-muted text-center">{{ $polaroid['caption'] }}</small>
+                    </div>
+                  @endforeach
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">Manage Our Story Images &amp; Captions</h5>
