@@ -72,8 +72,8 @@ class DestinationController extends Controller
         // destination page ever grows a second paginated section on the same URL.
         $relatedTours = $destination->tours()
                                     ->where('status', 'published')
-                                    ->orderBy('order')
-                                    ->orderBy('title')
+                                    ->orderBy('tour_packages.order')
+                                    ->orderBy('tour_packages.title')
                                     ->paginate(6, ['*'], 'tours_page')
                                     ->withQueryString();
 
