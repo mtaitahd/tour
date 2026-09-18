@@ -14,6 +14,8 @@
   </div>
 
   @php
+    use App\Models\Setting;
+
     $checklistRaw = Setting::get('home_about_checklist');
     if ($checklistRaw) {
         $checklistItems = array_filter(array_map('trim', explode("\n", $checklistRaw)));
