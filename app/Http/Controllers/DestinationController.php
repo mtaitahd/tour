@@ -9,6 +9,31 @@ class DestinationController extends Controller
 {
     public function indexPublic(Request $request)
     {
+        // Filter metadata computed from the full set so checkboxes show real totals.
+        $countryCounts = Destination::query()
+            ->whereNotNull('country_code')
+            ->groupBy('country_code')
+            ->selectRaw('country_code, count(*) as total')
+            ->pluck('total', 'country_code');
+
+        $typeCounts = Destination::query()
+            ->whereNotNull('type')
+            ->groupBy('type')
+            ->selectRaw('type, count(*) as total')
+            ->pluck('total', 'type');
+
+        $featuredCount = Destination::where('is_featured', true)->count();
+        $destinationsTotal = Destination::count();
+
+        $typeNames = [
+            'national_park' => 'National Park',
+            'mountain'      => 'Mountain',
+            'beach'         => 'Beach',
+            'lake'          => 'Lake',
+            'city'          => 'City',
+            'village'       => 'Village',
+        ];
+
         $query = Destination::query();
 
         // Optional filters
@@ -29,7 +54,14 @@ class DestinationController extends Controller
                               ->paginate(12)
                               ->withQueryString();
 
-        return view('frontend.destinations.index', compact('destinations'));
+        return view('frontend.destinations.index', compact(
+            'destinations',
+            'countryCounts',
+            'typeCounts',
+            'featuredCount',
+            'destinationsTotal',
+            'typeNames'
+        ));
     }
     public function showPublic($slug)
     {

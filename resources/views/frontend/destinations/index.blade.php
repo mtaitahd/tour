@@ -1,200 +1,333 @@
 @extends('frontend.layouts.app')
 
-@section('title', 'Destinations in East Africa | Afro-Vertex Tours & Safaris')
+@php
+    use Illuminate\Support\Str;
+
+    $countryNames = [
+        'TZ' => 'Tanzania', 'KE' => 'Kenya', 'UG' => 'Uganda', 'RW' => 'Rwanda',
+        'ZA' => 'South Africa', 'BW' => 'Botswana', 'ZW' => 'Zimbabwe', 'ZM' => 'Zambia',
+        'CD' => 'DR Congo', 'BI' => 'Burundi', 'MZ' => 'Mozambique', 'SS' => 'South Sudan',
+        'ET' => 'Ethiopia',
+    ];
+
+    $flagFor = function (?string $code): string {
+        if (! $code || strlen($code) !== 2) { return ''; }
+        $code = strtoupper($code);
+        return mb_chr(0x1F1E6 + ord($code[0]) - 65) . mb_chr(0x1F1E6 + ord($code[1]) - 65);
+    };
+
+    $selectedCountry = request('country');
+    $selectedType    = request('type');
+    $selectedFeatured = request()->filled('featured');
+
+    $countryName = $countryNames[$selectedCountry] ?? $selectedCountry ?? '';
+    $typeLabel   = fn ($type) => $typeNames[$type] ?? Str::title(str_replace('_', ' ', (string) $type));
+
+    if ($selectedCountry && isset($countryNames[$selectedCountry])) {
+        $mainTitle = $countryNames[$selectedCountry] . ' Destinations';
+    } elseif ($selectedType) {
+        $mainTitle = $typeLabel($selectedType) . ' Destinations';
+    } else {
+        $mainTitle = 'Destinations in East Africa';
+    }
+
+    $introText = 'Explore the most stunning destinations in Tanzania, Kenya, Uganda and Rwanda — from Serengeti safaris and Ngorongoro craters to Kilimanjaro climbs, Zanzibar beaches and gorilla trekking in Bwindi.';
+
+    $hasSelectedFilters = request()->filled('country')
+        || request()->filled('type')
+        || request()->filled('featured');
+@endphp
+
+@section('body-class', 'is-tours-listing')
+
+@section('title', $mainTitle . ' | Afro-Vertex Tours & Safaris')
+
 @section('extra-head')
-    <meta name="description" content="Explore the most stunning destinations in Tanzania, Kenya, Uganda, and Rwanda. From Serengeti safaris and Kilimanjaro climbs to Zanzibar beaches and gorilla trekking in Bwindi — discover your next adventure.">
+    <meta name="description" content="{{ Str::limit($introText, 160) }}">
     <meta name="keywords" content="east africa destinations, serengeti, ngorongoro, zanzibar, kilimanjaro, bwindi, uganda gorillas, kenya safaris, rwanda tourism">
 @endsection
 
 @section('page-content')
-    <!-- Breadcrumb -->
-    <div class="breadcrumb-bar breadcrumb-bg-02 text-center">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12 col-12">
-                    <h1 class="breadcrumb-title mb-2">Explore Destinations</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb justify-content-center mb-0">
-                            <li class="breadcrumb-item"><a href="{{ route('home') }}"><i class="isax isax-home5"></i></a></li>
-                            <li class="breadcrumb-item active">Destinations</li>
-                        </ol>
-                    </nav>
-                </div>
+    <div class="sfb-listing-page">
+        <nav class="sfb-breadcrumb" aria-label="Breadcrumb">
+            <div class="sfb-container">
+                <a href="{{ route('home') }}">Home</a>
+                <span aria-hidden="true">&rsaquo;</span>
+                <a href="{{ route('destinations.index') }}">Destinations</a>
+                @if($countryName)
+                    <span aria-hidden="true">&rsaquo;</span>
+                    <span>{{ $countryName }}</span>
+                @elseif($selectedType)
+                    <span aria-hidden="true">&rsaquo;</span>
+                    <span>{{ $typeLabel($selectedType) }}</span>
+                @endif
             </div>
-        </div>
-    </div>
+        </nav>
 
-    <!-- Filters & Grid -->
-    <div class="content">
-        <div class="container">
-            <div class="row">
-                <!-- Sidebar Filters -->
-                <div class="col-xl-3 col-lg-4 theiaStickySidebar">
-                    <div class="sticky-top" style="top: 100px;">
-                        <div class="card shadow-none mb-4">
-                            <div class="card-body">
-                                <h5 class="fs-18 mb-4">Filter Destinations</h5>
+        <div class="sfb-container sfb-main-wrap">
+            <button type="button" class="sfb-mobile-filter-toggle" data-sfb-open-filters aria-controls="sfbFilterDrawer" aria-expanded="false">
+                <i class="isax isax-filter" aria-hidden="true"></i>
+                Filter Destinations
+            </button>
 
-                                <form method="GET" action="{{ route('destinations.index') }}">
-                                    <!-- Country -->
-                                    <div class="mb-4">
-                                        <label class="form-label fw-medium">Country</label>
-                                        <select name="country" class="form-select">
-                                            <option value="">All Countries</option>
-                                            <option value="TZ" {{ request('country') == 'TZ' ? 'selected' : '' }}>Tanzania</option>
-                                            <option value="KE" {{ request('country') == 'KE' ? 'selected' : '' }}>Kenya</option>
-                                            <option value="UG" {{ request('country') == 'UG' ? 'selected' : '' }}>Uganda</option>
-                                            <option value="RW" {{ request('country') == 'RW' ? 'selected' : '' }}>Rwanda</option>
-                                        </select>
-                                    </div>
+            <div class="sfb-drawer-backdrop" data-sfb-close-filters hidden></div>
 
-                                    <!-- Type -->
-                                    <div class="mb-4">
-                                        <label class="form-label fw-medium">Type</label>
-                                        <select name="type" class="form-select">
-                                            <option value="">All Types</option>
-                                            <option value="national_park" {{ request('type') == 'national_park' ? 'selected' : '' }}>National Park</option>
-                                            <option value="mountain" {{ request('type') == 'mountain' ? 'selected' : '' }}>Mountain</option>
-                                            <option value="beach" {{ request('type') == 'beach' ? 'selected' : '' }}>Beach</option>
-                                            <option value="lake" {{ request('type') == 'lake' ? 'selected' : '' }}>Lake</option>
-                                            <option value="city" {{ request('type') == 'city' ? 'selected' : '' }}>City</option>
-                                            <option value="village" {{ request('type') == 'village' ? 'selected' : '' }}>Village</option>
-                                            <!-- Add more types as needed -->
-                                        </select>
-                                    </div>
+            <div class="sfb-layout">
+                <aside class="sfb-sidebar" id="sfbFilterDrawer" aria-label="Destination filters" data-sfb-filter-drawer>
+                    <div class="sfb-sidebar__mobile-head">
+                        <strong>Filter Destinations</strong>
+                        <button type="button" data-sfb-close-filters aria-label="Close filters">&times;</button>
+                    </div>
 
-                                    <!-- Featured Only -->
-                                    <div class="mb-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="featured" value="1" id="featured" {{ request('featured') ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="featured">Featured Destinations Only</label>
-                                        </div>
-                                    </div>
-
-                                    <button type="submit" class="btn btn-primary w-100 mb-2">
-                                        Apply Filters
-                                    </button>
-
-                                    <a href="{{ route('destinations.index') }}" class="btn btn-outline-secondary w-100">
-                                        Reset Filters
-                                    </a>
-                                </form>
+                    <form method="GET" action="{{ route('destinations.index') }}" class="sfb-filter-form" data-sfb-filter-form>
+                        <section class="sfb-filter-section" aria-labelledby="filter-dest-country">
+                            <h3 id="filter-dest-country">Country</h3>
+                            <div class="sfb-check-list sfb-check-list--scroll">
+                                @foreach($countryCounts as $code => $count)
+                                    @php $label = $countryNames[$code] ?? $code; @endphp
+                                    <label>
+                                        <input type="checkbox" name="country" value="{{ $code }}" {{ $selectedCountry === $code ? 'checked' : '' }} data-sfb-auto>
+                                        <span>{{ $label }}</span>
+                                        <em>{{ $count }}</em>
+                                    </label>
+                                @endforeach
                             </div>
-                        </div>
-                    </div>
-                </div>
+                        </section>
 
-                <!-- Destinations Grid -->
-                <div class="col-xl-9 col-lg-8">
-                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-                        <h2 class="fs-24 fw-bold mb-0">Our Destinations</h2>
-                        <span class="text-muted">Showing {{ $destinations->firstItem() }}-{{ $destinations->lastItem() }} of {{ $destinations->total() }}</span>
-                        <div class="btn-group">
-                            <button class="btn btn-outline-secondary active grid-view"><i class="bi bi-grid-3x3-gap"></i></button>
-                            <button class="btn btn-outline-secondary list-view"><i class="bi bi-list-ul"></i></button>
+                        <section class="sfb-filter-section" aria-labelledby="filter-dest-type">
+                            <h3 id="filter-dest-type">Type</h3>
+                            <div class="sfb-check-list">
+                                @foreach($typeCounts as $type => $count)
+                                    <label>
+                                        <input type="checkbox" name="type" value="{{ $type }}" {{ $selectedType === $type ? 'checked' : '' }} data-sfb-auto>
+                                        <span>{{ $typeLabel($type) }}</span>
+                                        <em>{{ $count }}</em>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </section>
+
+                        <section class="sfb-filter-section" aria-labelledby="filter-dest-featured">
+                            <h3 id="filter-dest-featured">Features</h3>
+                            <div class="sfb-check-list">
+                                <label>
+                                    <input type="checkbox" name="featured" value="1" {{ $selectedFeatured ? 'checked' : '' }} data-sfb-auto>
+                                    <span>Featured destinations only</span>
+                                </label>
+                            </div>
+                        </section>
+
+                        <div class="sfb-filter-actions">
+                            <button type="submit">{{ number_format($destinationsTotal) }} Destinations</button>
+                            <a href="{{ route('destinations.index') }}">Clear All Filters</a>
                         </div>
+                    </form>
+                </aside>
+
+                <main class="sfb-results" id="sfb-results-start" aria-label="Destination results">
+                    <header class="sfb-results-header">
+                        <h1>{{ $mainTitle }}</h1>
+                        <p>{{ $introText }}</p>
+                    </header>
+
+                    <div class="sfb-selected-filters" aria-label="Selected filters">
+                        <span>Selected filters:</span>
+                        @if(!$hasSelectedFilters)
+                            <span class="sfb-selected-chip sfb-selected-chip--muted">All destinations</span>
+                        @else
+                            @if($selectedCountry)
+                                <a class="sfb-selected-chip sfb-selected-chip--blue" href="{{ route('destinations.index', request()->except(['country', 'page'])) }}">{{ $countryNames[$selectedCountry] ?? $selectedCountry }} <b>&times;</b></a>
+                            @endif
+                            @if($selectedType)
+                                <a class="sfb-selected-chip" href="{{ route('destinations.index', request()->except(['type', 'page'])) }}">{{ $typeLabel($selectedType) }} <b>&times;</b></a>
+                            @endif
+                            @if($selectedFeatured)
+                                <a class="sfb-selected-chip" href="{{ route('destinations.index', request()->except(['featured', 'page'])) }}">Featured only <b>&times;</b></a>
+                            @endif
+                            <a class="sfb-selected-chip sfb-selected-chip--clear" href="{{ route('destinations.index') }}">Clear All Filters</a>
+                        @endif
                     </div>
 
-                    <div class="row g-4 destination-grid">
-                        @forelse ($destinations as $SingleDestination)
-                            <div class="col-lg-4 col-md-6 dest-item">
-                                <div class="destination-card shadow-sm rounded overflow-hidden h-100 bg-white">
-                                    @if($SingleDestination->hasHeroImage())
-                                        <div class="position-relative destination-img">
-                                            <img src="{{ $SingleDestination->heroUrl('medium') }}" 
-                                                 alt="{{ $SingleDestination->name }}" 
-                                                 class="img-fluid w-100" 
-                                                 style="height: 240px; object-fit: cover;">
-                                            @if($SingleDestination->is_featured)
-                                                <span class="badge bg-success position-absolute top-0 start-0 m-3">Featured</span>
-                                            @endif
+                    <div class="sfb-results-info">
+                        <strong>{{ $destinations->firstItem() ?: 0 }}&ndash;{{ $destinations->lastItem() ?: 0 }} of {{ number_format($destinations->total()) }}</strong>
+                    </div>
+
+                    <div class="sfb-tour-grid">
+                        @forelse($destinations as $SingleDestination)
+                            @php
+                                $destName = $SingleDestination->name;
+                                $destCode = strtoupper((string) $SingleDestination->country_code);
+                                $destFlag = $flagFor($destCode);
+                                $destCountry = $countryNames[$destCode] ?? $destCode;
+                                $destType = $SingleDestination->type ? $typeLabel($SingleDestination->type) : '';
+                                $toursCount = $SingleDestination->tours()->where('status', 'published')->count();
+                                $destImage = $SingleDestination->hasHeroImage()
+                                    ? ($SingleDestination->heroUrl('medium') ?: $SingleDestination->heroUrl())
+                                    : asset('front-end/html/assets/img/placeholder-destination.jpg');
+                            @endphp
+                            <article class="sfb-tour-card">
+                                <a class="sfb-tour-card__full-link" href="{{ route('destination.show', $SingleDestination->slug) }}" aria-label="View {{ $destName }}"></a>
+                                <div class="sfb-tour-card__image-wrap">
+                                    <img src="{{ $destImage }}" alt="{{ $destName }}" loading="{{ $loop->index < 4 ? 'eager' : 'lazy' }}">
+                                    <div class="sfb-tour-card__gradient" aria-hidden="true"></div>
+                                    @if($SingleDestination->is_featured)
+                                        <span class="sfb-dest-badge">Featured</span>
+                                    @endif
+                                    <h2>{{ $destName }}</h2>
+                                </div>
+                                <div class="sfb-tour-card__body">
+                                    <div class="sfb-tour-card__meta-grid">
+                                        <div>
+                                            <span>Country</span>
+                                            <strong>{{ $destFlag ? $destFlag . ' ' : '' }}{{ $destCountry ?: 'East Africa' }}</strong>
                                         </div>
+                                        <div>
+                                            <span>Type</span>
+                                            <strong>{{ $destType ?: 'Destination' }}</strong>
+                                        </div>
+                                        <div>
+                                            <span>Available</span>
+                                            <strong>{{ $toursCount }} {{ Str::plural('Tour', $toursCount) }}</strong>
+                                        </div>
+                                    </div>
+
+                                    @if($SingleDestination->description)
+                                        <p class="text-muted sfb-dest-description">
+                                            {{ Str::limit(strip_tags($SingleDestination->description), 130) }}
+                                        </p>
                                     @endif
 
-                                    <div class="p-4 destination-content">
-                                        <h5 class="fs-20 fw-bold mb-2">
-                                            <a href="{{ route('destination.show', $SingleDestination->slug) }}" class="text-dark text-decoration-none">
-                                                {{ $SingleDestination->name }}
-                                            </a>
-                                        </h5>
-
-                                        <div class="d-flex align-items-center mb-3">
-                                            <span class="badge bg-light text-dark me-2">
-                                                {{ strtoupper($SingleDestination->country_code) }}
-                                            </span>
-                                            @if($SingleDestination->type)
-                                                <span class="badge bg-light text-dark">
-                                                    {{ ucfirst(str_replace('_', ' ', $SingleDestination->type)) }}
-                                                </span>
-                                            @endif
-                                        </div>
-
-                                        @if($SingleDestination->description)
-                                            <p class="text-muted mb-3">
-                                                {{ Str::limit(strip_tags($SingleDestination->description), 120) }}
-                                            </p>
-                                        @endif
-
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <a href="{{ route('destination.show', $SingleDestination->slug) }}" class="btn btn-outline-primary btn-sm">
-                                                Explore
-                                            </a>
-                                            <span class="text-primary">
-                                                {{ $SingleDestination->tours()->where('status', 'published')->count() }} Tours
-                                            </span>
-                                        </div>
-                                    </div>
+                                    <a href="{{ route('destination.show', $SingleDestination->slug) }}" class="sfb-tour-card__cta">Explore Destination</a>
                                 </div>
-                            </div>
+                            </article>
                         @empty
-                            <div class="col-12 text-center py-5">
-                                <h4>No destinations found matching your filters.</h4>
-                                <a href="{{ route('destinations.index') }}" class="btn btn-primary mt-3">Clear Filters</a>
+                            <div class="sfb-empty-results">
+                                <h2>No destinations found matching your filters.</h2>
+                                <p>Try clearing one or more filters to see more destinations.</p>
+                                <a href="{{ route('destinations.index') }}">Clear All Filters</a>
                             </div>
                         @endforelse
                     </div>
 
-                    <!-- Pagination -->
-                    <div class="mt-5">
-                        {{ $destinations->links('pagination::bootstrap-5') }}
-                    </div>
-                </div>
+                    @include('frontend.tours.partials.pagination', ['paginator' => $destinations])
+                </main>
             </div>
         </div>
     </div>
-@section('extra-scripts'):
-    <script>
-    $(document).ready(function() {
-        $('.grid-view').click(function() {
-            $('.destination-grid').removeClass('list-view-active').addClass('grid-view-active');
-            $('.grid-view').addClass('active');
-            $('.list-view').removeClass('active');
-        });
 
-        $('.list-view').click(function() {
-            $('.destination-grid').removeClass('grid-view-active').addClass('list-view-active');
-            $('.list-view').addClass('active');
-            $('.grid-view').removeClass('active');
-        });
-    });
-</script>
-
-<style>
-    .destination-grid.list-view-active .dest-item {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
-    .destination-grid.list-view-active .destination-card {
-        display: flex;
-        flex-direction: row;
-    }
-    .destination-grid.list-view-active .destination-img {
-        width: 35%;
-        flex-shrink: 0;
-    }
-    .destination-grid.list-view-active .destination-content {
-        width: 65%;
-    }
-</style>
+    <style>
+        .sfb-dest-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 2;
+            padding: 3px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+            color: #fff;
+            background: #0876a6;
+            border-radius: 3px;
+        }
+        .sfb-dest-description {
+            margin: 0 0 14px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
 @endsection
+
+@section('extra-scripts')
+    <script>
+        (function () {
+            'use strict';
+
+            var form = document.querySelector('[data-sfb-filter-form]');
+            var drawer = document.querySelector('[data-sfb-filter-drawer]');
+            var backdrop = document.querySelector('[data-sfb-close-filters].sfb-drawer-backdrop');
+            var openButton = document.querySelector('[data-sfb-open-filters]');
+            var submitTimer = null;
+
+            function submitSoon() {
+                if (!form) return;
+                window.clearTimeout(submitTimer);
+                submitTimer = window.setTimeout(function () {
+                    if (form.requestSubmit) form.requestSubmit();
+                    else form.submit();
+                }, 250);
+            }
+
+            if (form) {
+                form.querySelectorAll('[data-sfb-auto]').forEach(function (field) {
+                    field.addEventListener('change', submitSoon);
+                });
+            }
+
+            function openDrawer() {
+                if (!drawer || !backdrop || !openButton) return;
+                drawer.classList.add('is-open');
+                backdrop.hidden = false;
+                openButton.setAttribute('aria-expanded', 'true');
+                document.body.classList.add('sfb-filter-lock');
+            }
+
+            function closeDrawer() {
+                if (!drawer || !backdrop || !openButton) return;
+                drawer.classList.remove('is-open');
+                backdrop.hidden = true;
+                openButton.setAttribute('aria-expanded', 'false');
+                document.body.classList.remove('sfb-filter-lock');
+            }
+
+            if (openButton) openButton.addEventListener('click', openDrawer);
+            document.querySelectorAll('[data-sfb-close-filters]').forEach(function (button) {
+                button.addEventListener('click', closeDrawer);
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') closeDrawer();
+            });
+
+            /* Pagination: loading state + smooth scroll back to results */
+            var resultsArea = document.getElementById('sfb-results-start');
+            var SCROLL_OFFSET = 90;
+
+            function scrollToResults(behavior) {
+                if (!resultsArea) return;
+                var top = resultsArea.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
+                window.scrollTo({ top: Math.max(top, 0), behavior: behavior || 'auto' });
+            }
+
+            function markLoading() {
+                if (resultsArea) resultsArea.classList.add('is-loading');
+                document.body.classList.add('sfb-page-transition');
+            }
+
+            function clearLoading() {
+                if (resultsArea) resultsArea.classList.remove('is-loading');
+                document.body.classList.remove('sfb-page-transition');
+            }
+
+            document.querySelectorAll('[data-sfb-page-link]').forEach(function (link) {
+                link.addEventListener('click', function () {
+                    try { sessionStorage.setItem('sfbPageLoading', '1'); } catch (e) {}
+                    markLoading();
+                    window.setTimeout(function () { scrollToResults('smooth'); }, 0);
+                });
+            });
+
+            try {
+                if (sessionStorage.getItem('sfbPageLoading') === '1') {
+                    sessionStorage.removeItem('sfbPageLoading');
+                    scrollToResults('auto');
+                }
+            } catch (e) {}
+
+            clearLoading();
+            window.addEventListener('pageshow', function (event) {
+                if (event.persisted) clearLoading();
+            });
+        })();
+    </script>
 @endsection
