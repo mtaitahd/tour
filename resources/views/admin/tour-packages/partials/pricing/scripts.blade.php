@@ -289,6 +289,9 @@ window.__pricing = {
 
     // ── Editing calculator state from an existing payload ───────────────────
     function restoreFromPayload(payload) {
+        if (typeof payload === 'string') {
+            try { payload = JSON.parse(payload); } catch (e) { return; }
+        }
         if (!payload || !payload.items) return;
         P.duration = payload.package_duration_type || 'multi_day';
         P.category = payload.package_category || (P.duration === 'single_day' ? '' : (Object.keys(P.levelCatalog)[0]));

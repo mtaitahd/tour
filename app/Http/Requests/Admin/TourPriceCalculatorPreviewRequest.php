@@ -17,7 +17,10 @@ class TourPriceCalculatorPreviewRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null && $this->user()->isSuperAdmin();
+        // Matches the permission:tours middleware guarding the route group: the
+        // calculator (and its preview) are usable by any tours-permission holder,
+        // not just super admins. Super admins implicitly pass via canAccess().
+        return $this->user() !== null && $this->user()->canAccess('tours');
     }
 
     /** @return array<string, mixed> */

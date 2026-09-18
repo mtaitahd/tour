@@ -27,6 +27,13 @@
     }
     $manualRows = old('manual_prices', $manualRowsExisting);
     $existingCalculatorPayload = old('calculator_payload', $existingCalculationPayload ?? null);
+    // old('calculator_payload') is the raw JSON string that was submitted, which
+    // the rest of this view expects as a decoded array. Without this, a re-render
+    // after a failed save handed the JS a JSON string, restoreFromPayload() bailed,
+    // and previously-added calculator prices never reappeared in the items/preview.
+    if (is_string($existingCalculatorPayload)) {
+        $existingCalculatorPayload = json_decode($existingCalculatorPayload, true) ?: null;
+    }
 @endphp
 
 <div class="card mb-3">
