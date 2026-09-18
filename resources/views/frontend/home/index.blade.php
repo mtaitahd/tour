@@ -152,27 +152,34 @@
                 </div>
 
                 <!-- Right Column: Photo Stack -->
+                @php
+                    $homePolaroidsSetting = Setting::get('home_about_polaroids');
+                    if ($homePolaroidsSetting === null) {
+                        $homePolaroids = [
+                            ['src' => asset('public/111/serengeti-great-migration.webp'), 'caption' => Setting::get('home_about_polaroid_1') ?: 'Wild Encounters'],
+                            ['src' => asset('public/114/serengeti-elephants.webp'), 'caption' => Setting::get('home_about_polaroid_2') ?: 'Memories Forever'],
+                            ['src' => asset('public/112/serengeti-lions-1.webp'), 'caption' => Setting::get('home_about_polaroid_3') ?: 'Breathtaking Views'],
+                        ];
+                    } else {
+                        $homePolaroids = Setting::json('home_about_polaroids');
+                    }
+                    $polaroidClasses = ['afro-about__polaroid--back', 'afro-about__polaroid--mid', 'afro-about__polaroid--front'];
+                @endphp
+                @if (!empty($homePolaroids))
                 <div class="afro-about__photos wow fadeInUp" data-wow-delay="0.4s">
                     <div class="afro-about__photos-bg" aria-hidden="true"></div>
-                    <div class="afro-about__polaroid afro-about__polaroid--back">
+                    @foreach ($homePolaroids as $i => $polaroid)
+                    <div class="afro-about__polaroid {{ $polaroidClasses[$i % 3] }}">
                         <div class="afro-about__polaroid-img-wrap">
-                            <img src="{{ asset('public/111/serengeti-great-migration.webp') }}" alt="Vast East African savannah landscape at golden hour" class="afro-about__polaroid-img" loading="lazy" width="600" height="450">
+                            <img src="{{ $polaroid['src'] }}" alt="{{ $polaroid['caption'] ?: 'Tanzania safari experience' }}" class="afro-about__polaroid-img" loading="lazy" width="600" height="450">
                         </div>
-                        <span class="afro-about__polaroid-caption">{{ Setting::get('home_about_polaroid_1') ?: 'Wild Encounters' }}</span>
+                        @if (!empty($polaroid['caption']))
+                        <span class="afro-about__polaroid-caption">{{ $polaroid['caption'] }}</span>
+                        @endif
                     </div>
-                    <div class="afro-about__polaroid afro-about__polaroid--mid">
-                        <div class="afro-about__polaroid-img-wrap">
-                            <img src="{{ asset('public/114/serengeti-elephants.webp') }}" alt="Safari vehicle with tourists observing wildlife in Tanzania" class="afro-about__polaroid-img" loading="lazy" width="600" height="450">
-                        </div>
-                        <span class="afro-about__polaroid-caption">{{ Setting::get('home_about_polaroid_2') ?: 'Memories Forever' }}</span>
-                    </div>
-                    <div class="afro-about__polaroid afro-about__polaroid--front">
-                        <div class="afro-about__polaroid-img-wrap">
-                            <img src="{{ asset('public/112/serengeti-lions-1.webp') }}" alt="Majestic wildlife in the Serengeti" class="afro-about__polaroid-img" loading="lazy" width="600" height="450">
-                        </div>
-                        <span class="afro-about__polaroid-caption">{{ Setting::get('home_about_polaroid_3') ?: 'Breathtaking Views' }}</span>
-                    </div>
+                    @endforeach
                 </div>
+                @endif
 
             </div>
         </div>
