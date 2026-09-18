@@ -39,6 +39,7 @@ class TourController extends Controller
             'price_min'       => ['nullable', 'numeric', 'min:0'],
             'price_max'       => ['nullable', 'numeric', 'min:0', 'gte:price_min'],
             'level'           => ['nullable', 'string', 'max:100'],
+            'starting_point'  => ['nullable', 'string', 'max:255'],
             'rating'          => ['nullable', 'integer', 'min:1', 'max:5'],
             'destination'     => ['nullable', 'string', 'max:255'],
             'category'        => ['nullable', 'string', 'max:255'],
@@ -118,6 +119,11 @@ class TourController extends Controller
         // Tour level filter
         if ($request->filled('level')) {
             $query->where('tour_level', $request->input('level'));
+        }
+
+        // Starting point filter (admin-managed list under Website Content → Starting Points)
+        if ($request->filled('starting_point')) {
+            $query->where('starting_point', $request->input('starting_point'));
         }
 
         // Physical rating filter
@@ -381,6 +387,23 @@ class TourController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Starting points for the sidebar filter — the admin-managed list, with a
+        // fallback to the distinct starting points already used by published tours.
+        $startingPoints = collect(Setting::json('starting_points', []))
+            ->map(fn ($point) => trim((string) $point))
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($startingPoints->isEmpty()) {
+            $startingPoints = TourPackage::where('status', 'published')
+                ->whereNotNull('starting_point')
+                ->where('starting_point', '!=', '')
+                ->distinct()
+                ->orderBy('starting_point')
+                ->pluck('starting_point');
+        }
+
         // Centralised "From" prices for the current page of cards (single query).
         $fromPrices = TourPriceResolver::fromPriceMap($tours->getCollection());
 
@@ -389,7 +412,7 @@ class TourController extends Controller
             'allDestinations', 'headerDestination', 'countries',
             'durationCounts', 'priceMin', 'priceMax',
             'avgRating', 'reviewCount', 'tourRatings',
-            'faqs', 'faqExpert', 'totalPublishedTours', 'fromPrices', 'activities'
+            'faqs', 'faqExpert', 'totalPublishedTours', 'fromPrices', 'activities', 'startingPoints'
         ));
     }
 

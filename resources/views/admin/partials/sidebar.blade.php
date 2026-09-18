@@ -232,6 +232,36 @@
                 <span>Sitemap</span>
             </a>
         </li>
+        <li class="nav-item {{ in_array($currentPage, ['homepage-content', 'traveller-stories', 'subscribe', 'footer', 'starting-points']) ? 'active' : '' }}">
+            <a class="nav-link {{ in_array($currentPage, ['homepage-content', 'traveller-stories', 'subscribe', 'footer', 'starting-points']) ? '' : 'collapsed' }}"
+               href="#" data-bs-target="#website-content-nav" data-bs-toggle="collapse">
+                <i class="fas fa-fw fa-layout"></i>
+                <span>Website Content</span>
+                <i class="fas fa-chevron-down ms-auto"></i>
+            </a>
+            <div id="website-content-nav" class="collapse {{ in_array($currentPage, ['homepage-content', 'traveller-stories', 'subscribe', 'footer', 'starting-points']) ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
+                <a class="nav-link" href="{{ route('admin.homepage-content') }}">
+                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
+                    <span>Homepage Buttons & Captions</span>
+                </a>
+                <a class="nav-link" href="{{ route('admin.traveller-stories') }}">
+                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
+                    <span>Traveller Stories</span>
+                </a>
+                <a class="nav-link" href="{{ route('admin.subscribe-content') }}">
+                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
+                    <span>Subscribe Section</span>
+                </a>
+                <a class="nav-link" href="{{ route('admin.footer-settings') }}">
+                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
+                    <span>Footer</span>
+                </a>
+                <a class="nav-link" href="{{ route('admin.starting-points') }}">
+                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
+                    <span>Starting Points</span>
+                </a>
+            </div>
+        </li>
     @endif
 
     {{-- Profile --}}

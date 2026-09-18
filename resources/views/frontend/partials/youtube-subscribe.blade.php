@@ -3,10 +3,12 @@
      Rendered on every frontend page via layouts/app.blade.php
      ════════════════════════════════════════════════════════════════ --}}
 @php
-    /* Channel URL managed from Admin → Settings (social_youtube) */
-    $ytChannel = \App\Models\Setting::get('social_youtube');
+    /* Channel URL managed from Admin → Website Content → Subscribe Section
+       (subscribe_youtube_url), falling back to Settings → social_youtube. */
+    $ytChannel = \App\Models\Setting::get('subscribe_youtube_url')
+        ?: \App\Models\Setting::get('social_youtube');
 
-    /* ── EDIT HERE: your three latest videos ─────────────────────
+    /* ── Your latest videos (max 3 — shown first) ────────────────────
        'thumbnail' → URL to a 16:9 thumbnail (ideally 1280×720)
                      Tip: https://i.ytimg.com/vi/VIDEO_ID/maxresdefault.jpg
        'title'     → video title
@@ -38,6 +40,14 @@
         ],
     ];
 
+    /* Hard cap at 3 cards regardless of how many are listed above. */
+    $ytVideos = array_slice($ytVideos, 0, 3);
+
+    $ytHeading = \App\Models\Setting::get(
+        'subscribe_heading',
+        'Subscribe Afro&#8209;Vertex Tours &amp; Safaris on YouTube'
+    );
+
     /* Channel subscribe-confirmation link — opens YouTube's one-click
        "Confirm channel subscription" prompt in a new tab. */
     $ytSubUrl = $ytChannel ? $ytChannel . (str_contains($ytChannel, '?') ? '&' : '?') . 'sub_confirmation=1' : null;
@@ -49,7 +59,7 @@
 
         {{-- Heading --}}
         <div class="av-yt__head">
-            <h2 class="av-yt__title">Subscribe Afro&#8209;Vertex Tours &amp; Safaris on YouTube</h2>
+            <h2 class="av-yt__title">{!! $ytHeading !!}</h2>
             <span class="av-yt__line" aria-hidden="true"></span>
         </div>
 

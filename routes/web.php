@@ -187,6 +187,23 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
         Route::post('/settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
         Route::get('/sitemap', [\App\Http\Controllers\Admin\SitemapController::class, 'index'])->name('sitemap.index');
         Route::post('/sitemap/generate', [\App\Http\Controllers\Admin\SitemapController::class, 'generate'])->name('sitemap.generate');
+
+        // ── Website Content editors (homepage buttons/captions, Traveller
+        //    Stories, YouTube subscribe, footer links, starting points) ──
+        Route::get('/homepage-content', [\App\Http\Controllers\Admin\HomepageContentController::class, 'home'])->name('homepage-content');
+        Route::post('/homepage-content', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateHome']);
+
+        Route::get('/traveller-stories', [\App\Http\Controllers\Admin\HomepageContentController::class, 'travellers'])->name('traveller-stories');
+        Route::post('/traveller-stories', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateTravellers']);
+
+        Route::get('/subscribe', [\App\Http\Controllers\Admin\HomepageContentController::class, 'subscribe'])->name('subscribe-content');
+        Route::post('/subscribe', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateSubscribe']);
+
+        Route::get('/footer', [\App\Http\Controllers\Admin\HomepageContentController::class, 'footer'])->name('footer-settings');
+        Route::post('/footer', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateFooter']);
+
+        Route::get('/starting-points', [\App\Http\Controllers\Admin\HomepageContentController::class, 'startingPoints'])->name('starting-points');
+        Route::post('/starting-points', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateStartingPoints']);
     });
 });
 // ====================== PUBLIC ROUTES ======================

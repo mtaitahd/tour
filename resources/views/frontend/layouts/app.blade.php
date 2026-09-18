@@ -332,7 +332,9 @@
     <!-- Page content -->
     @yield('page-content')
 
-    @include('frontend.partials.youtube-subscribe')
+    @if (request()->routeIs('home') && !(bool) \App\Models\Setting::get('subscribe_hidden'))
+        @include('frontend.partials.youtube-subscribe')
+    @endif
 
     @include('frontend.partials.footer')
 

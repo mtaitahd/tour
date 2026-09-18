@@ -615,11 +615,11 @@
         <div class="featured-tours-container">
             <div class="ft-head ft-head--split wow fadeInUp" data-wow-delay="0.2s">
                 <div class="section-header-six section-header-six--left">
-                    <h2>Explore Top Destinations<span class="text-primary">.</span></h2>
-                    <p class="section-header-six__desc">Diverse landscapes, iconic wildlife, and cultures that stay with you long after you return home.</p>
+                    <h2>{{ rtrim(Setting::get('home_sec_destinations_title', 'Explore Top Destinations.'), '.') }}<span class="text-primary">.</span></h2>
+                    <p class="section-header-six__desc">{{ Setting::get('home_sec_destinations_subtitle', 'Diverse landscapes, iconic wildlife, and cultures that stay with you long after you return home.') }}</p>
                 </div>
                 <a href="{{ route('destinations.index') }}" class="btn btn-dark sec-head-btn">
-                    View All Destinations <i class="isax isax-arrow-right-3 ms-2"></i>
+                    {{ Setting::get('home_btn_destinations', 'View All Destinations') }} <i class="isax isax-arrow-right-3 ms-2"></i>
                 </a>
             </div>
 
@@ -677,8 +677,8 @@
         <div class="featured-tours-container">
             <div class="ft-head wow fadeInUp" data-wow-delay="0.2s">
                 <div class="section-header-six section-header-six--left">
-                    <h2>Featured Tours Around East Africa<span class="text-primary">.</span></h2>
-                    <p class="section-header-six__desc">Handpicked itineraries across Tanzania, Kenya, Uganda, and Rwanda — designed by locals who know every trail and watering hole.</p>
+                    <h2>{{ rtrim(Setting::get('home_sec_tours_title', 'Featured Tours Around East Africa.'), '.') }}<span class="text-primary">.</span></h2>
+                    <p class="section-header-six__desc">{{ Setting::get('home_sec_tours_subtitle', 'Handpicked itineraries across Tanzania, Kenya, Uganda, and Rwanda — designed by locals who know every trail and watering hole.') }}</p>
                 </div>
             </div>
 
@@ -781,7 +781,7 @@
             </div>
 
             <a href="{{ route('tours.index') }}" class="ft-all-btn">
-                Explore All {{ $toursCount }} Safari Tours
+                {{ str_replace('{count}', $toursCount, Setting::get('home_btn_tours', 'Explore All {count} Safari Tours')) }}
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.16663 10H15.8333M15.8333 10L10.4166 4.58334M15.8333 10L10.4166 15.4167"/></svg>
             </a>
         </div>
@@ -804,9 +804,9 @@
     <section class="wwgt" id="worldwide-group-travellers" aria-labelledby="wwgt-heading">
         <div class="container wwgt__container">
             <div class="wwgt__head wow fadeInUp">
-                <span class="badge badge-soft-primary rounded-pill mb-2 wwgt__eyebrow">Worldwide Group Travellers</span>
-                <h2 class="wwgt__title" id="wwgt-heading">Kilimanjaro Group Tours for Adventurers from Every Country</h2>
-                <p class="wwgt__desc">Our group tours bring together climbers and travellers from around the world. Choose your country to explore relevant travel information and start planning your Kilimanjaro adventure.</p>
+                <span class="badge badge-soft-primary rounded-pill mb-2 wwgt__eyebrow">{{ Setting::get('home_sec_countries_eyebrow', 'Worldwide Group Travellers') }}</span>
+                <h2 class="wwgt__title" id="wwgt-heading">{{ Setting::get('home_sec_countries_title', 'Kilimanjaro Group Tours for Adventurers from Every Country') }}</h2>
+                <p class="wwgt__desc">{{ Setting::get('home_sec_countries_subtitle', 'Our group tours bring together climbers and travellers from around the world. Choose your country to explore relevant travel information and start planning your Kilimanjaro adventure.') }}</p>
             </div>
 
             <div class="wwgt__grid wwgt__grid--more" id="wwgt-grid" role="list" aria-label="Countries">
@@ -831,8 +831,10 @@
             </div>
 
             <div class="wwgt__actions">
-                <button type="button" class="wwgt__toggle" id="wwgt-toggle" aria-expanded="false" aria-controls="wwgt-grid">
-                    <span class="wwgt__toggle-label">View All Countries</span>
+                <button type="button" class="wwgt__toggle" id="wwgt-toggle" aria-expanded="false" aria-controls="wwgt-grid"
+                        data-label-more="{{ Setting::get('home_btn_countries_more', 'View All Countries') }}"
+                        data-label-less="{{ Setting::get('home_btn_countries_less', 'Show Fewer Countries') }}">
+                    <span class="wwgt__toggle-label">{{ Setting::get('home_btn_countries_more', 'View All Countries') }}</span>
                     <span class="wwgt__toggle-icon" aria-hidden="true">▾</span>
                 </button>
             </div>
@@ -944,9 +946,9 @@
             <div class="featured-tours-container">
                 <div class="wow fadeInUp" data-wow-delay="0.2s">
                     <div class="section-header-six section-header-six--left">
-                        <span class="badge badge-soft-primary rounded-pill mb-2">Where You'll Stay</span>
-                        <h2>Relaxing Accommodations<span class="text-primary">.</span></h2>
-                        <p class="section-header-six__desc">Boutique lodges, tented camps, and beach resorts — each stay handpicked for comfort, character, and a front-row seat to the wild.</p>
+                        <span class="badge badge-soft-primary rounded-pill mb-2">{{ Setting::get('home_sec_accommodations_eyebrow', "Where You'll Stay") }}</span>
+                        <h2>{{ rtrim(Setting::get('home_sec_accommodations_title', 'Relaxing Accommodations.'), '.') }}<span class="text-primary">.</span></h2>
+                        <p class="section-header-six__desc">{{ Setting::get('home_sec_accommodations_subtitle', 'Boutique lodges, tented camps, and beach resorts — each stay handpicked for comfort, character, and a front-row seat to the wild.') }}</p>
                     </div>
                 </div>
 
@@ -992,7 +994,7 @@
                 </div>
 
                 <a href="{{ route('accommodations.index') }}" class="ft-all-btn">
-                    View All Accommodations
+                    {{ Setting::get('home_btn_accommodations', 'View All Accommodations') }}
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.16663 10H15.8333M15.8333 10L10.4166 4.58334M15.8333 10L10.4166 15.4167"/></svg>
                 </a>
             </div>
@@ -1143,8 +1145,8 @@
         <div class="latest-blog-container">
             <div class="wow fadeInUp" data-wow-delay="0.1s">
                 <div class="section-header-six section-header-six--left">
-                    <h2>Latest Blog Posts<span class="text-primary">.</span></h2>
-                    <p class="section-header-six__desc">Stories, tips, and field notes from the road — everything you need before your next African adventure.</p>
+                    <h2>{{ rtrim(Setting::get('home_sec_blog_title', 'Latest Blog Posts.'), '.') }}<span class="text-primary">.</span></h2>
+                    <p class="section-header-six__desc">{{ Setting::get('home_sec_blog_subtitle', 'Stories, tips, and field notes from the road — everything you need before your next African adventure.') }}</p>
                 </div>
             </div>
 
@@ -1166,7 +1168,7 @@
             </div>
 
             <a href="{{ route('blog.index') }}" class="all-blog-posts-button">
-                <span>All Blog Posts</span>
+                <span>{{ Setting::get('home_btn_blog', 'All Blog Posts') }}</span>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
             </a>
         </div>
@@ -1188,9 +1190,9 @@
 
             {{-- ── Heading ────────────────────────────────────── --}}
             <header class="scw__header wow fadeInUp" data-wow-delay="0.1s">
-                <p class="scw__eyebrow">The Untamed Archive</p>
-                <h2 class="scw__title">The Afro Gallery</h2>
-                <p class="scw__subtitle">Raw beauty, untold stories, and landscapes that demand to be explored — curated from our travels across the continent.</p>
+                <p class="scw__eyebrow">{{ Setting::get('home_sec_gallery_eyebrow', 'The Untamed Archive') }}</p>
+                <h2 class="scw__title">{{ Setting::get('home_sec_gallery_title', 'The Afro Gallery') }}</h2>
+                <p class="scw__subtitle">{{ Setting::get('home_sec_gallery_subtitle', 'Raw beauty, untold stories, and landscapes that demand to be explored — curated from our travels across the continent.') }}</p>
             </header>
 
             {{-- ── Category Filter Bar ────────────────────────── --}}
@@ -1696,21 +1698,117 @@
     <!-- Testimonials & Reviews -->
     <!-- Customer Reviews -->
     <section class="section testi-sec-six pb-3" id="customer-reviews">
+        <style>
+            .traveller-panel {
+                background: #fff;
+                border: 1px solid #eceff3;
+                border-radius: 16px;
+                padding: 24px;
+                box-shadow: 0 12px 30px rgba(15, 23, 42, .06);
+                display: flex;
+                flex-direction: column;
+            }
+            .traveller-panel__title {
+                font-size: 1.35rem;
+                margin-bottom: 16px;
+            }
+            .traveller-panel__text { color: #556; }
+            .traveller-map {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                min-height: 320px;
+                border-radius: 12px;
+                overflow: hidden;
+                background: #eef2f5;
+            }
+            .traveller-map iframe {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                border: 0;
+            }
+            .traveller-panel__placeholder {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 320px;
+                border: 1px dashed #cfd8e3;
+                border-radius: 12px;
+                color: #8a94a6;
+                background: #f8fafc;
+            }
+            .traveller-panel--tripadvisor { align-items: flex-start; justify-content: center; }
+            .traveller-ta__logo { max-width: 180px; height: auto; margin-bottom: 14px; }
+            .traveller-panel__review-link { color: #0d6efd; font-weight: 600; text-decoration: none; }
+            .traveller-panel__review-link:hover { text-decoration: underline; }
+        </style>
         <div class="container">
             <div class="wow fadeInUp" data-wow-delay="0.2s">
                 <div class="section-header-six section-header-six--left">
-                    <span class="badge badge-soft-primary rounded-pill mb-2">Traveller Stories</span>
-                    <h2>Our Latest Customer Reviews</h2>
+                    <span class="badge badge-soft-primary rounded-pill mb-2">{{ Setting::get('traveller_badge', 'Traveller Stories') }}</span>
+                    <h2>{{ Setting::get('traveller_title', 'Our Latest Customer Reviews') }}</h2>
                 </div>
             </div>
 
-            <div class="text-center mb-4 wow fadeInUp" data-wow-delay="0.25s">
-                <a href="https://g.page/r/CR7qe8CBnNH7EBM/review" target="_blank" rel="noopener" class="btn btn-primary">
-                    Leave a Review <i class="isax isax-edit-2 ms-1"></i>
-                </a>
+            @php
+                $travellerMapEmbed = Setting::get('traveller_map_embed');
+                $travellerMapUrl = null;
+                if ($travellerMapEmbed) {
+                    if (str_contains($travellerMapEmbed, '<iframe')) {
+                        preg_match('/src=["\']([^"\']+)["\']/', $travellerMapEmbed, $travellerMapMatch);
+                        $travellerMapUrl = $travellerMapMatch[1] ?? null;
+                    } else {
+                        $travellerMapUrl = trim($travellerMapEmbed);
+                    }
+                    if ($travellerMapUrl && ! preg_match('#^https://#i', $travellerMapUrl)) {
+                        $travellerMapUrl = null;
+                    }
+                }
+                $travellerTripadvisorLogo = Setting::imageUrl('traveller_tripadvisor_logo_id');
+            @endphp
+
+            <div class="row g-4 align-items-stretch">
+                {{-- Left half — embedded map --}}
+                <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.25s">
+                    <div class="traveller-panel h-100">
+                        <h3 class="traveller-panel__title">{{ Setting::get('traveller_map_heading', 'Where We Are') }}</h3>
+                        @if($travellerMapUrl)
+                            <div class="traveller-map">
+                                <iframe src="{{ $travellerMapUrl }}" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="{{ Setting::get('traveller_map_heading', 'Where We Are') }}"></iframe>
+                            </div>
+                        @else
+                            <div class="traveller-panel__placeholder">Map coming soon.</div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Right half — Tripadvisor --}}
+                <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.3s">
+                    <div class="traveller-panel traveller-panel--tripadvisor h-100">
+                        @if($travellerTripadvisorLogo)
+                            <img src="{{ $travellerTripadvisorLogo }}" alt="Tripadvisor" class="traveller-ta__logo" loading="lazy">
+                        @endif
+                        <h3 class="traveller-panel__title">{{ Setting::get('traveller_tripadvisor_heading', 'Loved by Travellers on Tripadvisor') }}</h3>
+                        @if(Setting::get('traveller_tripadvisor_text'))
+                            <p class="traveller-panel__text">{{ Setting::get('traveller_tripadvisor_text') }}</p>
+                        @endif
+                        @if(Setting::get('traveller_tripadvisor_link'))
+                            <a href="{{ Setting::get('traveller_tripadvisor_link') }}" target="_blank" rel="noopener" class="btn btn-primary">
+                                {{ Setting::get('traveller_tripadvisor_button_text', 'Read Tripadvisor Reviews') }}
+                            </a>
+                        @endif
+                        <div class="mt-3">
+                            <a href="{{ Setting::get('traveller_review_link', 'https://g.page/r/CR7qe8CBnNH7EBM/review') }}" target="_blank" rel="noopener" class="traveller-panel__review-link">
+                                {{ Setting::get('traveller_review_link_text', 'Leave a Review') }} <i class="isax isax-edit-2 ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="testi-carousel-wrap wow fadeInUp" data-wow-delay="0.3s">
+            <div class="testi-carousel-wrap mt-4 wow fadeInUp" data-wow-delay="0.35s">
                 <div class="owl-carousel testi-carousel">
                     @forelse($testimonials as $testimonial)
                         <div class="testi-card">
@@ -2447,7 +2545,7 @@
                 $expand.prop('hidden', !expanded);
                 $toggle.attr('aria-expanded', expanded ? 'true' : 'false');
                 $toggle.find('.wwgt__toggle-label').text(
-                    expanded ? 'Show Fewer Countries' : 'View All Countries'
+                    expanded ? ($toggle.data('label-less') || 'Show Fewer Countries') : ($toggle.data('label-more') || 'View All Countries')
                 );
 
                 if (expanded) {

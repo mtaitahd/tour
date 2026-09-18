@@ -36,8 +36,13 @@
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>Title</th>
-                  <th>Duration</th>
+                  <th>Tour</th>
+                  <th>Country</th>
+                  <th>Days</th>
+                  <th>Level / Budget</th>
+                  <th>Tour Type</th>
+                  <th>Lodge &amp; Camp</th>
+                  <th>Destination</th>
                   <th>Price From</th>
                   <th>Status</th>
                   <th>Featured</th>
@@ -45,11 +50,54 @@
                 </tr>
               </thead>
               <tbody>
+                @php
+                  $countryNames = [
+                    'TZ' => 'Tanzania', 'KE' => 'Kenya', 'UG' => 'Uganda', 'RW' => 'Rwanda',
+                    'ZW' => 'Zimbabwe', 'BW' => 'Botswana', 'ZA' => 'South Africa', 'CD' => 'DR Congo',
+                    'BI' => 'Burundi', 'MZ' => 'Mozambique', 'SS' => 'South Sudan', 'ET' => 'Ethiopia',
+                  ];
+                  $levelLabels = [
+                    'budget_camping' => 'Budget Camping',
+                    'budget_lodge'   => 'Budget Lodge',
+                    'mid_range'      => 'Mid-Range',
+                    'luxury'         => 'Luxury',
+                  ];
+                @endphp
                 @forelse ($tourPackages as $package)
+                  @php
+                    $destinations = $package->destinations;
+                    $countryCodes = $destinations->pluck('country_code')->filter()->unique();
+                    $countryText = $countryCodes->map(fn ($code) => $countryNames[$code] ?? $code)->implode(', ');
+                    $level = strtolower((string) $package->tour_level);
+                    $levelLabel = $levelLabels[$level] ?? ($level ? ucwords(str_replace('_', ' ', $level)) : '—');
+                    if ($level === 'luxury') {
+                        $tourType = 'Luxury';
+                    } elseif ($level === 'mid_range') {
+                        $tourType = 'Mid-Range';
+                    } elseif ($level !== '') {
+                        $tourType = 'Budget';
+                    } else {
+                        $tourType = '—';
+                    }
+                    if (str_contains($level, 'camping')) {
+                        $lodgeCamp = 'Camping';
+                    } elseif (str_contains($level, 'lodge')) {
+                        $lodgeCamp = 'Lodge';
+                    } elseif (in_array($level, ['mid_range', 'luxury'], true)) {
+                        $lodgeCamp = 'Lodge';
+                    } else {
+                        $lodgeCamp = '—';
+                    }
+                  @endphp
                   <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $package->title }}</td>
-                    <td>{{ $package->duration_days }} days</td>
+                    <td>{{ $countryText ?: '—' }}</td>
+                    <td>{{ $package->duration_days ? $package->duration_days . ' days' : '—' }}</td>
+                    <td>{{ $levelLabel }}</td>
+                    <td>{{ $tourType }}</td>
+                    <td>{{ $lodgeCamp }}</td>
+                    <td>{{ $destinations->pluck('name')->implode(', ') ?: '—' }}</td>
                     <td>{{ number_format($package->base_price) }} {{ $package->currency }}</td>
                     <td>
                       @if($package->status === 'published')
@@ -102,7 +150,7 @@
                     </td>
                   </tr>
                 @empty
-                  <tr><td colspan="7" class="text-center py-4">No packages yet.</td></tr>
+                  <tr><td colspan="12" class="text-center py-4">No packages yet.</td></tr>
                 @endforelse
               </tbody>
             </table>

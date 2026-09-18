@@ -292,6 +292,18 @@
                             </div>
                         </section>
 
+                        @if($startingPoints->isNotEmpty())
+                        <section class="sfb-filter-section" aria-labelledby="filter-starting-point">
+                            <h3 id="filter-starting-point">Starting Point</h3>
+                            <select name="starting_point" class="form-select form-select-sm" data-sfb-auto>
+                                <option value="">Any starting point</option>
+                                @foreach($startingPoints as $startingPoint)
+                                    <option value="{{ $startingPoint }}" {{ request('starting_point') === $startingPoint ? 'selected' : '' }}>{{ $startingPoint }}</option>
+                                @endforeach
+                            </select>
+                        </section>
+                        @endif
+
                         @if($activities->isNotEmpty())
                         <section class="sfb-filter-section" aria-labelledby="filter-activities">
                             <h3 id="filter-activities">Activities</h3>
@@ -328,11 +340,6 @@
                 <main class="sfb-results" id="sfb-results-start" aria-label="Safari tour results">
                     <header class="sfb-results-header">
                         <h1>{{ $mainTitle }}</h1>
-                        <div class="sfb-rating-line">
-                            <span class="sfb-stars" aria-label="5 star rating">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-                            <strong>{{ $ratingDisplay }} /5</strong>
-                            <a href="#reviews">{{ number_format($reviewDisplay) }} reviews</a>
-                        </div>
                         <p>{{ $introText }}</p>
                     </header>
 
@@ -405,7 +412,6 @@
 
                     <div class="sfb-results-info">
                         <strong>{{ $tours->firstItem() ?: 0 }}&ndash;{{ $tours->lastItem() ?: 0 }} of {{ number_format($tours->total()) }}</strong>
-                        <span>Rankings are based on performance, relevance and payment. <a href="#sfb-ranking-note">Learn more</a></span>
                     </div>
 
                     <div class="sfb-tour-grid">
@@ -497,8 +503,6 @@
                     </div>
 
                     @include('frontend.tours.partials.pagination', ['paginator' => $tours])
-
-                    <p class="sfb-ranking-note" id="sfb-ranking-note">Ranking signals combine tour relevance, destination match, current availability, editorial ordering and promotional placement.</p>
 
                     @if($activeCategory)
                         @foreach($activeCategory->sectionsBelowGrid as $section)

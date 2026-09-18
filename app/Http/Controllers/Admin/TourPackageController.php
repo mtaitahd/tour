@@ -17,7 +17,7 @@ class TourPackageController extends Controller
 {
     public function index()
     {
-        $tourPackages = TourPackage::orderBy('title')->get();
+        $tourPackages = TourPackage::with('destinations')->orderBy('title')->get();
         return view('admin.tour-packages.index', compact('tourPackages'));
     }
 

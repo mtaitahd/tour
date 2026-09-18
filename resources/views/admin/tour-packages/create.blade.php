@@ -131,6 +131,50 @@
 <small>Leave empty to auto-generate from title</small>
 </div>
 </div>
+<!-- Destinations — multi-select checkbox dropdown -->
+<div class="row mb-3">
+<label class="col-sm-2 col-form-label">Destinations <span class="text-danger">*</span></label>
+<div class="col-sm-10">
+<div class="destination-checkbox-dropdown">
+<button type="button" class="form-select text-start destinations-dropdown-toggle" onclick="this.parentElement.classList.toggle('open')">
+<span class="destinations-selection-label">Select destinations this tour visits…</span>
+<i class="bi bi-chevron-down"></i>
+</button>
+<div class="destination-checkbox-panel">
+@foreach(\App\Models\Destination::orderBy('name')->get() as $dest)
+@php $destChecked = in_array($dest->id, (array) old('destinations', []), true); @endphp
+<label class="form-check destination-checkbox-item">
+<input type="checkbox" class="form-check-input destination-checkbox" name="destinations[]" value="{{ $dest->id }}" {{ $destChecked ? 'checked' : '' }}>
+<span class="form-check-label">{{ $dest->name }} <small class="text-muted">({{ $dest->country_code }})</small></span>
+</label>
+@endforeach
+</div>
+</div>
+<small class="form-text text-muted">Select multiple destinations this tour visits.</small>
+</div>
+</div>
+<style>
+.destination-checkbox-dropdown { position: relative; }
+.destination-checkbox-panel {
+    display: none;
+    position: absolute;
+    z-index: 30;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 2px;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid #dce3ea;
+    border-radius: 8px;
+    background: #fff;
+    padding: 10px 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+.destination-checkbox-dropdown.open .destination-checkbox-panel { display: block; }
+.destination-checkbox-dropdown.open .destinations-dropdown-toggle { border-color: #86b7fe; box-shadow: 0 0 0 .25rem rgba(13,110,253,.25); }
+.destination-checkbox-item { margin-bottom: 4px; }
+</style>
 <div class="row mb-3">
 <label class="col-sm-2 col-form-label">Duration (Days)</label>
 <div class="col-sm-10">
@@ -413,13 +457,6 @@ value="{{ old("exclusions_items.$index", $item) }}">
 <div class="col-sm-10">
 <input type="file" name="gallery_images[]" multiple accept="image/*" class="form-control">
 <small>Upload multiple images. Reorder after save if needed.</small>
-</div>
-</div>
-<div class="row mb-3">
-<label class="col-sm-2 col-form-label">Starting Point</label>
-<div class="col-sm-10">
-<input type="text" name="starting_point" class="form-control"
-value="{{ old('starting_point') }}" placeholder="e.g. Nairobi, Kilimanjaro Airport">
 </div>
 </div>
 <div class="row mb-3">
