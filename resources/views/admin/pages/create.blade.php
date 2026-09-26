@@ -58,13 +58,25 @@
                 </div>
               </div>
 
-              <!-- Hero Image Upload -->
+              <!-- Hero Image (Media Library picker only) -->
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Hero Image</label>
                 <div class="col-sm-10">
-                  <input type="file" name="hero_image" accept="image/*" class="form-control">
-                  <small class="text-muted">Recommended: 1200×800 px, max 5MB. Used as cover in page header and social sharing.</small>
+                  {{--
+                      Picker-only: images come from the Media Library, never from a
+                      device upload. Admin\PageController::store() reads hero_image_id
+                      and records the usage against the page. The controller has no
+                      hasFile()/addMediaFromRequest() branch for 'hero_image' any
+                      more, so a direct file POST is ignored rather than accepted.
+                  --}}
+                  <x-media-picker
+                      name="hero_image_id"
+                      :selected="old('hero_image_id')"
+                      label="Select from Media Library"
+                  />
+                  <small class="text-muted d-block mt-1">Choose an existing image from the library. Used as cover in page header and social sharing.</small>
                 </div>
+              </div>
               </div>
 
               <!-- Status & Order -->

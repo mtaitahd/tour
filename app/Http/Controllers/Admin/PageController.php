@@ -80,8 +80,6 @@ class PageController extends Controller
         'no_robots'         => 'nullable|boolean',
 
         // FIX: file validation (not string!)
-        'hero_image'        => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-        'story_image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
 
         // Media Library picker path — additive alongside the file-upload fields above.
         'hero_image_id'     => 'nullable|integer|exists:media,id',
@@ -127,19 +125,11 @@ class PageController extends Controller
         // Create the page
         $page = Page::create($validated);
 
-        // Upload hero image if provided
-        if ($request->hasFile('hero_image')) {
-            $page->addMediaFromRequest('hero_image')
-                 ->toMediaCollection('hero');
-        }
-
-        // Story image, on create — the original store() never handled this at all
-        // (only update() did), even though the create form's Story Image field exists
-        // for about/about-us pages. Added here for parity with update().
-        if ($request->hasFile('story_image')) {
-            $page->addMediaFromRequest('story_image')
-                 ->toMediaCollection('story');
-        }
+        // Picker-only: images come from the Media Library (hero_image_id /
+        // story_image_id below), never from a device upload, so the old
+        // addMediaFromRequest branches for 'hero_image' and 'story_image' are gone.
+        // Pages created before the picker keep their legacy 'hero'/'story' media
+        // untouched.
 
         // Media Library selections, on create — there's no "previous" usage to forget
         // here since the page didn't exist a moment ago.
@@ -195,8 +185,6 @@ class PageController extends Controller
         'no_robots'         => 'nullable|boolean',
 
         // FIX: file validation (not string!)
-        'hero_image'        => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-        'story_image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
 
         // Media Library picker path — additive alongside the file-upload fields above.
         'hero_image_id'     => 'nullable|integer|exists:media,id',
@@ -270,19 +258,7 @@ class PageController extends Controller
             }
         }
 
-        // Hero image – Spatie
-        if ($request->hasFile('hero_image')) {
-            $page->clearMediaCollection('hero');
-            $page->addMediaFromRequest('hero_image')
-                 ->toMediaCollection('hero');
-        }
-
-        // Story image – Spatie (same as hero)
-        if ($request->hasFile('story_image')) {
-            $page->clearMediaCollection('story');
-            $page->addMediaFromRequest('story_image')
-                 ->toMediaCollection('story');
-        }
+        // Hero / story images – picker-only: see the matching note in store().
 
         // Team member photos — full replace of the ordered set, same as store().
         $teamPhotoIds = collect($page->custom_data ?? [])->pluck('photo_image_id')->filter()->values()->all();

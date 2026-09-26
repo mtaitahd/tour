@@ -118,97 +118,15 @@ editor.save();
 }
 });
 </script>
-<script>
-$(document).ready(function () {
-  let dayIndex = $('.itinerary-day').length;
-
-  $('#add-itinerary-day').on('click', function () {
-    dayIndex++;
-    let newDayHtml = `
-<div class="itinerary-day card mb-3 shadow-sm">
-  <div class="card-header d-flex justify-content-between align-items-center bg-light">
-    <h6 class="mb-0">Day ${dayIndex}</h6>
-    <button type="button" class="btn btn-sm btn-danger remove-day">
-      <i class="bi bi-trash"></i> Remove
-    </button>
-  </div>
-  <div class="card-body">
-    <div class="row g-3">
-      <div class="col-md-12">
-        <label class="form-label">Day Title</label>
-        <input type="text" name="itinerary_days[${dayIndex}][title]" class="form-control">
-      </div>
-      <div class="col-md-12">
-        <label class="form-label">Day Images (at least 3)</label>
-        <input type="file" name="itinerary_days[${dayIndex}][images][]" class="form-control" accept="image/*" multiple>
-        <small class="form-text text-muted">Upload at least 3 images for this day.</small>
-      </div>
-      <div class="col-md-12">
-        <label class="form-label">Description</label>
-        <textarea name="itinerary_days[${dayIndex}][description]" class="form-control" rows="4"></textarea>
-      </div>
-      <div class="col-md-12">
-        <label class="form-label">Accommodation Tiers</label>
-        ${['silver', 'gold', 'platinum'].map((tier) => {
-          const label = tier === 'platinum' ? 'Platinum / Private' : tier.charAt(0).toUpperCase() + tier.slice(1);
-          return `
-            <div class="row g-2 align-items-end mb-2">
-              <div class="col-md-3">
-                <label class="form-label small mb-1">${label}</label>
-                <input type="text" name="itinerary_days[${dayIndex}][accommodation_name_${tier}]" class="form-control" placeholder="${label} accommodation">
-              </div>
-              <div class="col-md-9">
-                <label class="form-label small mb-1">${label} Image</label>
-                <input type="file" name="itinerary_days[${dayIndex}][accommodation_image_${tier}]" class="form-control" accept="image/*">
-              </div>
-            </div>`;
-        }).join('')}
-        <small class="text-muted">Accommodation names and images can be left blank for the final day.</small>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Meals</label>
-        <input type="text" name="itinerary_days[${dayIndex}][meals]" class="form-control">
-      </div>
-    </div>
-  </div>
-</div>`;
-    $('#itinerary-repeater').append(newDayHtml);
-    $(`input[name="itinerary_days[${dayIndex}][title]"]`).focus();
-  });
-
-  $(document).on('click', '.remove-day', function () {
-    $(this).closest('.itinerary-day').remove();
-    $('.itinerary-day').each(function(index) {
-      $(this).find('h6.mb-0').text('Day ' + (index + 1));
-    });
-  });
-
-  $(document).on('click', '.add-accommodation', function () {
-    const dayIndex = $(this).data('day');
-    const wrapper = $(`#accommodation-wrapper-${dayIndex}`);
-    const count = wrapper.find('.accommodation-item').length;
-    if (count >= 3) return;
-    const newItem = `
-<div class="row mb-2 accommodation-item">
-  <div class="col-sm-4">
-    <select name="itinerary_days[${dayIndex}][accommodations][${count}][type]" class="form-select">
-      <option value="SILVER">SILVER</option>
-      <option value="GOLD">GOLD</option>
-      <option value="PLATINUM">PLATINUM</option>
-    </select>
-  </div>
-  <div class="col-sm-4">
-    <input type="text" name="itinerary_days[${dayIndex}][accommodations][${count}][name]" class="form-control" placeholder="Accommodation Name">
-  </div>
-  <div class="col-sm-4">
-    <input type="file" name="itinerary_days[${dayIndex}][accommodations][${count}][image]" class="form-control" accept="image/*">
-  </div>
-</div>`;
-    wrapper.append(newItem);
-  });
-});
-</script>
-
+{{--
+    Removed: a legacy itinerary/accommodation repeater script used to live here.
+    It bound #add-itinerary-day and a document-delegated .add-accommodation
+    handler on EVERY admin page, appending file-input-based rows. Both were
+    superseded by the per-form scripts in tour-packages/{create,edit}.blade.php
+    and the .add-accommodation delegation fired alongside the edit form's own
+    handler, so a single click could append duplicate rows. The forms now own
+    their own repeater logic end to end.
+--}}
 <script>
 tinymce.init({
 selector: '.tinymce-editor-mini',

@@ -440,23 +440,31 @@ value="{{ old("exclusions_items.$index", $item) }}">
 <div class="row mb-3">
 <label class="col-sm-2 col-form-label fw-bold">Hero Image (main cover)</label>
 <div class="col-sm-10">
-<div class="mb-3">
-  <x-media-picker
-      name="hero_image_id"
-      :selected="old('hero_image_id')"
-      label="Select from Media Library"
-  />
-  <small class="text-muted d-block mt-1">Choose an existing image from the library, or upload a new one below.</small>
-</div>
-<input type="file" name="hero_image" accept="image/*" class="form-control">
-<small>Or upload a new image directly. Recommended: 1200&times;800 px</small>
+{{-- Picker-only: the Media Library is the single source of images. --}}
+<x-media-picker
+    name="hero_image_id"
+    :selected="old('hero_image_id')"
+    label="Select from Media Library"
+/>
+<small class="text-muted d-block mt-1">Choose an existing image from the library.</small>
 </div>
 </div>
 <div class="row mb-3">
 <label class="col-sm-2 col-form-label fw-bold">Gallery Images (multiple)</label>
 <div class="col-sm-10">
-<input type="file" name="gallery_images[]" multiple accept="image/*" class="form-control">
-<small>Upload multiple images. Reorder after save if needed.</small>
+{{--
+    Picker-only. This field previously had a gallery_images[] file input here while
+    the controller had already been converted to read gallery_image_ids only, so
+    gallery images could not be set at all on the create form. Now it matches the
+    edit form.
+--}}
+<x-media-picker
+    name="gallery_image_ids"
+    multiple
+    :selected="old('gallery_image_ids', [])"
+    label="Select Gallery Images"
+/>
+<small class="text-muted d-block mt-1">Choose one or more images from the library. Drag to reorder.</small>
 </div>
 </div>
 <div class="row mb-3">
@@ -678,47 +686,14 @@ value="{{ old("extra_sections.$index.content", $section['content'] ?? '') }}">
 </div>
 </section>
 
-<!-- YOUR ORIGINAL SCRIPTS (100% UNCHANGED - Dropzone + TinyMCE re-init kept exactly as you had) -->
-<script>
-Dropzone.autoDiscover = false;
-$(document).ready(function () {
-// Hero Dropzone
-new Dropzone("#hero-dropzone", {
-url: "{{ route('admin.tour-packages.store') }}",
-paramName: "hero_image",
-maxFiles: 1,
-acceptedFiles: "image/*",
-addRemoveLinks: true,
-dictDefaultMessage: "Drag & drop hero image here or click to upload",
-init: function() {
-this.on("success", function(file, response) {
-});
-}
-});
-// Gallery Dropzone
-new Dropzone("#gallery-dropzone", {
-url: "{{ route('admin.tour-packages.store') }}",
-paramName: "gallery_images[]",
-acceptedFiles: "image/*",
-addRemoveLinks: true,
-dictDefaultMessage: "Drag & drop gallery images here or click to upload",
-});
-$('.remove-media').click(function(e) {
-e.preventDefault();
-let mediaId = $(this).data('id');
-if (confirm('Remove this image?')) {
-$.ajax({
-url: '/admin/media/' + mediaId,
-type: 'DELETE',
-data: { _token: '{{ csrf_token() }}' },
-success: function() {
-$(this).closest('.existing-media').remove();
-}
-});
-}
-});
-});
-</script>
+<!--
+    Removed: two legacy Dropzone instances (#hero-dropzone, #gallery-dropzone) that
+    targeted elements which no longer exist in this form and posted straight to the
+    store route via AJAX, plus a .remove-media handler for .existing-media markup
+    that no longer exists either. All tour images now come from the Media Library
+    pickers, and uploads belong to the Media Library's own upload modal.
+-->
+
 <script>
 $(document).ready(function () {
 let sectionIndex = $('#extra-sections-repeater .section-item').length;

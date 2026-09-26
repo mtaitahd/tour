@@ -68,20 +68,27 @@
                             :selected="old('hero_image_id', $page->hero_image_id)"
                             label="Select from Media Library"
                         />
-                        <small class="text-muted d-block mt-1">Choose an existing image from the library, or upload a new one below.</small>
+                        <small class="text-muted d-block mt-1">Choose an existing image from the library.</small>
                       </div>
 
-                      @if($page->getFirstMedia('hero'))
-                          <div class="mb-3">
-                              <img src="{{ $page->getFirstMediaUrl('hero', 'thumb') }}" 
-                                   alt="Current Hero" 
-                                   class="img-thumbnail" 
+                      {{--
+                          Legacy: pages saved before the Media Library picker existed
+                          still have their hero in the Spatie 'hero' collection rather
+                          than hero_image_id. Shown read-only so those pages keep
+                          rendering, but it can no longer be changed from here — pick
+                          a library image above to take over.
+                      --}}
+                      @if(!$page->hero_image_id && $page->getFirstMedia('hero'))
+                          <div class="mb-2">
+                              <img src="{{ $page->getFirstMediaUrl('hero', 'thumb') }}"
+                                   alt="Current Hero"
+                                   class="img-thumbnail"
                                    style="max-height: 180px;">
+                              <small class="text-muted d-block mt-1">
+                                  Legacy uploaded image (read-only). Select a Media Library image above to replace it.
+                              </small>
                           </div>
                       @endif
-
-                      <input type="file" name="hero_image" accept="image/*" class="form-control">
-                      <small>Or upload a new image directly. Recommended: 1200&times;800 px</small>
                   </div>
               </div>
 
@@ -142,7 +149,7 @@
                                 :selected="old('story_image_id', $page->story_image_id)"
                                 label="Select from Media Library"
                             />
-                            <small class="text-muted d-block mt-1">Choose an existing image from the library, or upload a new one below.</small>
+                            <small class="text-muted d-block mt-1">Choose an existing image from the library.</small>
                           </div>
 
                           {{--
@@ -154,12 +161,14 @@
                               below uses that, matching how the Hero Image section above
                               already does it correctly.
                           --}}
-                          @if($page->getFirstMedia('story'))
-                              <img src="{{ $page->getFirstMediaUrl('story', 'thumb') }}" alt="Story Image" style="max-height: 150px;" class="img-thumbnail mt-2">
+                          @if(!$page->story_image_id && $page->getFirstMedia('story'))
+                              <div class="mt-2">
+                                  <img src="{{ $page->getFirstMediaUrl('story', 'thumb') }}" alt="Story Image" style="max-height: 150px;" class="img-thumbnail">
+                                  <small class="text-muted d-block mt-1">
+                                      Legacy uploaded image (read-only). Select a Media Library image above to replace it.
+                                  </small>
+                              </div>
                           @endif
-
-                          <input type="file" name="story_image" accept="image/*" class="form-control mt-2">
-                          <small class="text-muted d-block mt-1">Or upload a new image directly.</small>
                       </div>
                   </div>
 

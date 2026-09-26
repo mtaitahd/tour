@@ -46,7 +46,6 @@ class TourPackageController extends Controller
             'meta_title'                                    => 'nullable|string|max:255',
             'meta_description'                              => 'nullable|string',
             'meta_keywords'                                 => 'nullable|string|max:255',
-            'hero_image'                                    => 'nullable|image|mimes:jpeg,png,jpg,webp',
             'hero_image_id'                                 => 'nullable|integer|exists:media,id',
             'gallery_image_ids'                             => 'nullable|array',
             'gallery_image_ids.*'                           => 'integer|exists:media,id',
@@ -224,12 +223,11 @@ class TourPackageController extends Controller
         ]);
 
         // ── Hero Image ────────────────────────────────────────────────────────
-        if ($request->hasFile('hero_image')) {
-            $tourPackage->clearMediaCollection('hero');
-            $tourPackage->addMediaFromRequest('hero_image')
-                        ->toMediaCollection('hero', 'public');
-        }
-
+        // Picker-only: the Media Library is the single source of tour images, so
+        // the old direct-upload branch (clearMediaCollection + addMediaFromRequest)
+        // is gone. Tours that predate the picker keep their legacy 'hero' media
+        // untouched — clearing the picker selection simply stops re-attaching it.
+        //
         // Media Library selection, on create — no previous usage to forget here.
         if ($request->filled('hero_image_id')) {
             $heroImage = \App\Models\GalleryImage::find($request->input('hero_image_id'));
@@ -334,7 +332,6 @@ public function edit(TourPackage $tourPackage)
             'meta_title'                                    => 'nullable|string|max:255',
             'meta_description'                              => 'nullable|string',
             'meta_keywords'                                 => 'nullable|string|max:255',
-            'hero_image'                                    => 'nullable|image|mimes:jpeg,png,jpg,webp',
             'hero_image_id'                                 => 'nullable|integer|exists:media,id',
             'gallery_image_ids'                             => 'nullable|array',
             'gallery_image_ids.*'                           => 'integer|exists:media,id',
@@ -548,11 +545,8 @@ public function edit(TourPackage $tourPackage)
         );
 
         // ── Hero Image ────────────────────────────────────────────────────────
-        if ($request->hasFile('hero_image')) {
-            $tourPackage->clearMediaCollection('hero');
-            $tourPackage->addMediaFromRequest('hero_image')
-                        ->toMediaCollection('hero', 'public');
-        }
+        // Picker-only: see the matching note in store() — the direct-upload
+        // branch that used to live here is gone.
 
         // ── Safari Car Images ─────────────────────────────────────────────────
         // Picker-only per decision: direct upload removed entirely for this field.
@@ -669,7 +663,30 @@ public function edit(TourPackage $tourPackage)
         });
 
         if (!$hasTierFields) {
-            return array_values($dayData['accommodations'] ?? []);
+            // Legacy array-shaped accommodations (the old repeatable repeater, now
+            // removed from the tour forms). Normalise rather than passing through
+            // verbatim: that pass-through stored whatever the form happened to post
+            // under 'existing_image_id' and never wrote 'image_id', which is the key
+            // every reader (the edit form, the public tour page) actually looks at —
+            // so images picked for these entries were silently dropped. The upload
+            // era's 'image' key is discarded since images are picker-only now.
+            $legacy = [];
+            foreach (($dayData['accommodations'] ?? []) as $entry) {
+                if (! is_array($entry)) {
+                    continue;
+                }
+
+                $imageId = $entry['image_id'] ?? ($entry['existing_image_id'] ?? null);
+
+                $legacy[] = [
+                    'type'       => $entry['type'] ?? '',
+                    'tier_key'   => $entry['tier_key'] ?? null,
+                    'name'       => trim((string) ($entry['name'] ?? '')),
+                    'image_id'   => $imageId ?: null,
+                ];
+            }
+
+            return $legacy;
         }
 
         $accommodations = [];

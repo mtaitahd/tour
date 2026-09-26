@@ -436,89 +436,6 @@
                                 <small class="text-muted">Leave the last day blank if no accommodation is needed.</small>
                               </div>
 
-                              <div class="col-md-6 d-none">
-                                <label class="form-label">Accommodation</label>
-                                <div id="accommodation-wrapper-{{ $index }}">
-                                  @if(!empty($day['accommodations']))
-                                    @foreach($day['accommodations'] as $accIdx => $acc)
-                                      <div class="row mb-2 accommodation-item">
-                                        <div class="col-sm-3">
-                                          <select name="itinerary_days[{{ $index }}][accommodations][{{ $accIdx }}][type]" class="form-select">
-                                            @foreach(['SILVER','GOLD','PLATINUM'] as $accType)
-                                              <option value="{{ $accType }}" {{ ($acc['type'] ?? '') === $accType ? 'selected' : '' }}>{{ $accType }}</option>
-                                            @endforeach
-                                          </select>
-                                        </div>
-                                        <div class="col-sm-4">
-                                          <input type="text"
-                                                 name="itinerary_days[{{ $index }}][accommodations][{{ $accIdx }}][name]"
-                                                 class="form-control"
-                                                 placeholder="Accommodation Name"
-                                                 value="{{ $acc['name'] ?? '' }}">
-                                        </div>
-                                        <div class="col-sm-5">
-                                          {{-- ▼ MODIFIED: accommodation image with remove button --}}
-                                          @if(!empty($acc['image_id']))
-                                            @php $accMedia = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($acc['image_id']); @endphp
-                                            @if($accMedia)
-                                              <div class="position-relative d-inline-block mb-1 acc-img-wrapper"
-                                                   id="acc-img-wrapper-{{ $index }}-{{ $accIdx }}">
-                                                <img src="{{ $accMedia->getUrl('thumb') }}"
-                                                     class="img-thumbnail"
-                                                     style="height:50px;object-fit:cover;">
-                                                {{-- ▼ NEW: remove button for accommodation image --}}
-                                                <button type="button"
-                                                        class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-acc-image"
-                                                        style="padding:1px 5px;font-size:10px;line-height:1.4;"
-                                                        data-day="{{ $index }}"
-                                                        data-acc="{{ $accIdx }}"
-                                                        title="Remove this image">
-                                                  <i class="bi bi-x-lg"></i>
-                                                </button>
-                                              </div>
-                                            @endif
-                                            {{-- existing_image_id: cleared by JS when user removes --}}
-                                            <input type="hidden"
-                                                   name="itinerary_days[{{ $index }}][accommodations][{{ $accIdx }}][existing_image_id]"
-                                                   id="acc-existing-img-{{ $index }}-{{ $accIdx }}"
-                                                   value="{{ $acc['image_id'] }}">
-                                            {{-- ▼ NEW: flag set to 1 by JS to tell server to delete this image --}}
-                                            <input type="hidden"
-                                                   name="itinerary_days[{{ $index }}][accommodations][{{ $accIdx }}][remove_existing_image]"
-                                                   id="acc-remove-flag-{{ $index }}-{{ $accIdx }}"
-                                                   value="0">
-                                          @endif
-                                          {{-- ▲ END MODIFIED accommodation image --}}
-                                          <input type="file"
-                                                 name="itinerary_days[{{ $index }}][accommodations][{{ $accIdx }}][image]"
-                                                 class="form-control"
-                                                 accept="image/*">
-                                        </div>
-                                      </div>
-                                    @endforeach
-                                  @else
-                                    <div class="row mb-2 accommodation-item">
-                                      <div class="col-sm-3">
-                                        <select name="itinerary_days[{{ $index }}][accommodations][0][type]" class="form-select">
-                                          <option value="SILVER">SILVER</option>
-                                          <option value="GOLD">GOLD</option>
-                                          <option value="PLATINUM">PLATINUM</option>
-                                        </select>
-                                      </div>
-                                      <div class="col-sm-4">
-                                        <input type="text" name="itinerary_days[{{ $index }}][accommodations][0][name]" class="form-control" placeholder="Accommodation Name">
-                                      </div>
-                                      <div class="col-sm-5">
-                                        <input type="file" name="itinerary_days[{{ $index }}][accommodations][0][image]" class="form-control" accept="image/*">
-                                      </div>
-                                    </div>
-                                  @endif
-                                </div>
-                                <button type="button" class="btn btn-sm btn-primary mt-2 add-accommodation" data-day="{{ $index }}">
-                                  Add Accommodation
-                                </button>
-                              </div>
-
                               <div class="col-md-6">
                                 <label class="form-label">Meals</label>
                                 <input type="text" name="itinerary_days[{{ $index }}][meals]"
@@ -631,20 +548,29 @@
                 <label class="col-sm-2 col-form-label fw-bold">Hero Image (main cover)</label>
                 <div class="col-sm-10">
                   <div class="mb-3">
+                    {{-- Picker-only: the Media Library is the single source of images. --}}
                     <x-media-picker
                         name="hero_image_id"
                         :selected="old('hero_image_id', $tourPackage->hero_image_id)"
                         label="Select from Media Library"
                     />
-                    <small class="text-muted d-block mt-1">Choose an existing image from the library, or upload a new one below.</small>
+                    <small class="text-muted d-block mt-1">Choose an existing image from the library.</small>
                   </div>
-                  @if($tourPackage->getFirstMedia('hero'))
+                  {{--
+                      Legacy: tours created before the Media Library picker have their
+                      hero in the Spatie 'hero' collection rather than hero_image_id.
+                      Shown read-only so those tours keep rendering, but it can no
+                      longer be changed from here — pick a library image above to
+                      take over.
+                  --}}
+                  @if(!$tourPackage->hero_image_id && $tourPackage->getFirstMedia('hero'))
                     <div class="mb-2">
                       <img src="{{ $tourPackage->getFirstMediaUrl('hero', 'thumb') }}" alt="Hero" style="max-height: 200px;">
+                      <small class="text-muted d-block mt-1">
+                        Legacy uploaded image (read-only). Select a Media Library image above to replace it.
+                      </small>
                     </div>
                   @endif
-                  <input type="file" name="hero_image" accept="image/*" class="form-control">
-                  <small>Or upload a new image directly. Recommended: 1200&times;800 px</small>
                 </div>
               </div>
 
@@ -1043,29 +969,6 @@
 
       return;
     }
-
-    const btn = e.target.closest('.remove-acc-image');
-    if (!btn) return;
-    if (!confirm('Remove this accommodation image? It will be permanently deleted when you save.')) return;
-
-    const dayIndex = btn.getAttribute('data-day');
-    const accIndex = btn.getAttribute('data-acc');
-
-    // Hide the image preview wrapper
-    const imgWrapper = document.getElementById('acc-img-wrapper-' + dayIndex + '-' + accIndex);
-    if (imgWrapper) {
-      imgWrapper.style.transition = 'opacity 0.3s';
-      imgWrapper.style.opacity = '0';
-      setTimeout(() => imgWrapper.remove(), 300);
-    }
-
-    // Clear the existing_image_id so server doesn't re-attach it
-    const existingInput = document.getElementById('acc-existing-img-' + dayIndex + '-' + accIndex);
-    if (existingInput) existingInput.value = '';
-
-    // Set the remove flag so the server knows to delete it
-    const removeFlag = document.getElementById('acc-remove-flag-' + dayIndex + '-' + accIndex);
-    if (removeFlag) removeFlag.value = '1';
   });
 </script>
 
@@ -1379,30 +1282,6 @@
       }
       $day.remove();
       reindexDays();
-    });
-
-    $(document).on('click', '.add-accommodation', function () {
-      const dIdx = $(this).data('day');
-      const wrapper = $(`#accommodation-wrapper-${dIdx}`);
-      const count = wrapper.find('.accommodation-item').length;
-      if (count >= 3) return;
-      const newItem = `
-        <div class="row mb-2 accommodation-item">
-          <div class="col-sm-3">
-            <select name="itinerary_days[${dIdx}][accommodations][${count}][type]" class="form-select">
-              <option value="SILVER">SILVER</option>
-              <option value="GOLD">GOLD</option>
-              <option value="PLATINUM">PLATINUM</option>
-            </select>
-          </div>
-          <div class="col-sm-4">
-            <input type="text" name="itinerary_days[${dIdx}][accommodations][${count}][name]" class="form-control" placeholder="Accommodation Name">
-          </div>
-          <div class="col-sm-5">
-            <input type="file" name="itinerary_days[${dIdx}][accommodations][${count}][image]" class="form-control" accept="image/*">
-          </div>
-        </div>`;
-      wrapper.append(newItem);
     });
   });
 </script>
