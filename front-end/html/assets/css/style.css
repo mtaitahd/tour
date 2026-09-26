@@ -33914,111 +33914,74 @@ body.td-lock {
 
 /* ------------------------------------------------------------------
    Pages listing (/pages).
-   The cards are the /tours cards: frontend/pages/index.blade.php renders
-   the real .sfb-tour-grid > .sfb-tour-card anatomy defined above, so this
-   file only carries the two things /tours has no equivalent for — the
-   keyword search bar and the .visually-hidden utility. No .sfb-page-card
-   rules exist, by design: the two listings must not drift apart.
+
+   The page now uses the /tours layout wholesale: .sfb-layout with the
+   430px .sfb-sidebar on the left and .sfb-results on the right, the same
+   .sfb-tour-grid > .sfb-tour-card cards, and the same pagination partial.
+   frontend/pages/index.blade.php renders that markup directly, so there is
+   no page-specific card styling here at all — the two listings cannot drift
+   apart, and the earlier 3-column .sfb-tour-grid override is gone because it
+   only existed to compensate for /pages having no sidebar.
+
+   All that remains is the A-Z jump list, which has no /tours equivalent. It
+   reuses the .sfb-check-list grid so it lines up with the checkbox lists
+   above it. The earlier standalone keyword-search-bar rules (.sfb-page-search)
+   and the .visually-hidden utility were removed along with that bar: the
+   search box now lives inside the sidebar using the standard
+   .sfb-safari-field styling, and nothing referenced either of them any more.
    ------------------------------------------------------------------ */
 
-.visually-hidden {
-  position: absolute !important;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+.sfb-az-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px;
 }
 
-.sfb-page-search {
-  display: flex;
-  align-items: stretch;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.sfb-page-search__field {
-  position: relative;
-  flex: 1 1 320px;
+.sfb-az-link {
   display: flex;
   align-items: center;
-  min-height: 54px;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 7px 6px;
   background: #fff;
-  border: 1px solid #dfe5eb;
+  border: 1px solid #e3e8ee;
   border-radius: 3px;
-}
-
-.sfb-page-search__field i {
-  flex: 0 0 auto;
-  margin: 0 14px 0 18px;
-  color: #727d88;
-  font-size: 18px;
-}
-
-.sfb-page-search__field input {
-  flex: 1 1 auto;
-  min-width: 0;
-  height: 100%;
-  padding: 0 18px 0 0;
-  background: transparent;
-  border: 0;
-  outline: 0;
   color: #2f363e;
   font-family: 'Montserrat', 'Inter', sans-serif;
-  font-size: 16px;
-}
-
-.sfb-page-search__field:focus-within {
-  border-color: #0876a6;
-  box-shadow: 0 0 0 3px rgba(8, 118, 166, .12);
-}
-
-.sfb-page-search > button {
-  min-height: 54px;
-  padding: 0 34px;
-  background: #0876a6;
-  color: #fff;
-  border: 0;
-  border-radius: 3px;
-  font-family: 'Montserrat', 'Inter', sans-serif;
-  font-size: 16px;
-  font-weight: 900;
-  cursor: pointer;
-  transition: background .2s ease;
-}
-
-.sfb-page-search > button:hover {
-  background: #075b82;
-}
-
-.sfb-page-search__clear {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 6px;
-  color: #0876a6;
-  font-family: 'Montserrat', 'Inter', sans-serif;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 800;
+  line-height: 1;
   text-decoration: none;
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
 }
 
-.sfb-page-search__clear:hover {
-  text-decoration: underline;
+.sfb-az-link em {
+  color: #727d88;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
 }
 
-/* Layout adaptation only — not a new card style.
-   On /tours the .sfb-results column sits beside a 430px .sfb-sidebar, so its
-   2-column .sfb-tour-grid produces cards roughly 420-680px wide. /pages has no
-   sidebar, so .sfb-results spans the full container (max 1840px) and the same
-   2 columns would stretch each card to ~900px — the same design, wrong
-   proportions. A third column on wide screens keeps each /pages card within
-   ~10% of the /tours card width, so the two listings read identically. */
-@media (min-width: 1400px) {
-  body.is-pages-listing .sfb-tour-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.sfb-az-link:hover {
+  border-color: #0876a6;
+  color: #0876a6;
+}
+
+.sfb-az-link.is-active {
+  background: #0876a6;
+  border-color: #0876a6;
+  color: #fff;
+}
+
+.sfb-az-link.is-active em {
+  color: #fff;
+}
+
+/* No page starts with this letter. Kept in place and dimmed rather than
+   removed, so the alphabet keeps its full A-Z shape instead of reflowing. */
+.sfb-az-link.is-empty {
+  background: #f7f9fb;
+  border-color: #eef1f5;
+  color: #b9c1cb;
+  cursor: default;
 }

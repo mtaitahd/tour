@@ -25,6 +25,18 @@ class PageController extends Controller
      */
     public const PAGES_PER_PAGE = 12;
 
+    /**
+     * Letters offered by the A–Z jump filter.
+     *
+     * A page whose title does not begin with a letter (or begins with a digit or
+     * symbol) is reachable through the search box and the Clear action, but not
+     * through the alphabet, since there is no letter to file it under.
+     */
+    public const A_Z_LETTERS = [
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+        'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    ];
+
     public function index(Request $request)
     {
         // Same guard rails as TourController::index(): a bad query string must
@@ -34,6 +46,7 @@ class PageController extends Controller
         $validator = Validator::make($request->query(), [
             'page'   => ['nullable', 'integer', 'min:1'],
             'search' => ['nullable', 'string', 'max:255'],
+            'letter' => ['nullable', 'string', 'size:1'],
         ]);
 
         if ($validator->fails()) {
@@ -53,12 +66,26 @@ class PageController extends Controller
             return redirect()->to($request->fullUrlWithoutQuery(['page']), 302);
         }
 
-        $query = Page::where('status', 'published')
-                     ->with('heroImage')
-                     ->orderBy('order')
-                     ->orderBy('title');
-
         $search = trim((string) $request->query('search', ''));
+        $letter = strtoupper(trim((string) $request->query('letter', '')));
+
+        // Anything outside A–Z is not a letter we offer, so treat it as no
+        // filter rather than building a LIKE clause that can never match.
+        if (! in_array($letter, self::A_Z_LETTERS, true)) {
+            $letter = '';
+        }
+
+        // Published-only, with no way to ask for drafts. A status filter here
+        // would be a content leak: /pages is a public route, so ?status=draft
+        // would render unpublished pages to anyone who typed it. Drafts are
+        // managed in the admin, not browsed here.
+        $query = Page::where('status', 'published')
+                     ->with('heroImage');
+
+        if ($letter !== '') {
+            $query->where('title', 'like', $letter . '%');
+        }
+
         if ($search !== '') {
             $term = '%' . $search . '%';
             $query->where(function ($q) use ($term) {
@@ -68,11 +95,32 @@ class PageController extends Controller
             });
         }
 
+        $query->orderBy('title');
+
         $pages = $query->paginate(self::PAGES_PER_PAGE)->withQueryString();
 
+        // How many pages actually start with each letter, so the sidebar can
+        // grey out letters that would return nothing instead of letting the
+        // reader click into an empty result set. Counted on the same
+        // search scope as the listing so the numbers cannot disagree with what
+        // a click produces.
+        $counts = (clone $query)
+            ->reorder()
+            ->selectRaw('UPPER(LEFT(title, 1)) AS letter, COUNT(*) AS total')
+            ->groupByRaw('UPPER(LEFT(title, 1))')
+            ->pluck('total', 'letter');
+
+        $letterCounts = [];
+        foreach (self::A_Z_LETTERS as $candidate) {
+            $letterCounts[$candidate] = (int) ($counts[$candidate] ?? 0);
+        }
+
         return view('frontend.pages.index', [
-            'pages'  => $pages,
-            'search' => $search,
+            'pages'        => $pages,
+            'search'       => $search,
+            'letter'       => $letter,
+            'letterCounts' => $letterCounts,
+            'alphabet'     => self::A_Z_LETTERS,
         ]);
     }
 }

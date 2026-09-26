@@ -96,6 +96,27 @@
         </li>
     @endif
 
+    {{-- Site Information (About Us, Why Choose Us, Contact Us, Terms and Conditions).
+         Sits directly below Mega Nav. These are excluded from Pages → All Pages,
+         so this is the only place they are edited. Gated on the same 'pages'
+         permission: without it the user can reach neither list. --}}
+    @if($can('pages'))
+        <li class="nav-item {{ $currentPage === 'site-pages' ? 'active' : '' }}">
+            <a class="nav-link {{ $currentPage === 'site-pages' ? '' : 'collapsed' }}"
+               href="#" data-bs-target="#site-pages-nav" data-bs-toggle="collapse">
+                <i class="fas fa-fw fa-info-circle"></i>
+                <span>Site Information</span>
+                <i class="fas fa-chevron-down ms-auto"></i>
+            </a>
+            <div id="site-pages-nav" class="collapse {{ $currentPage === 'site-pages' ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
+                <a class="nav-link {{ $currentPage === 'site-pages' ? 'active' : '' }}" href="{{ route('admin.site-pages.index') }}">
+                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
+                    <span>About, Contact &amp; Terms</span>
+                </a>
+            </div>
+        </li>
+    @endif
+
     {{-- User Management --}}
     @if($can('users'))
         <li class="nav-item {{ $currentPage === 'users' ? 'active' : '' }}">

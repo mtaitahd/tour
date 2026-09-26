@@ -2,12 +2,29 @@
 @section('title', 'Edit Page')
 
 @section('content')
+  @php
+      // When this form is reached from the Site Information screen, the save and
+      // the Cancel button both point back at that screen instead of the generic
+      // pages list, so the user never lands somewhere that no longer contains
+      // the page they just edited. $editingSiteInfo is set by SitePageController.
+      $editingSiteInfo = $editingSiteInfo ?? false;
+      $backUrl = $editingSiteInfo
+          ? route('admin.site-pages.index')
+          : route('admin.pages.index');
+      $formAction = $editingSiteInfo
+          ? route('admin.site-pages.update', $page->slug)
+          : route('admin.pages.update', $page->id);
+  @endphp
   <div class="pagetitle">
     <h1>Edit Page</h1>
     <nav>
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('admin.pages.index') }}">Pages</a></li>
+        @if ($editingSiteInfo)
+          <li class="breadcrumb-item"><a href="{{ $backUrl }}">Site Information</a></li>
+        @else
+          <li class="breadcrumb-item"><a href="{{ route('admin.pages.index') }}">Pages</a></li>
+        @endif
         <li class="breadcrumb-item active">Edit: {{ Str::limit($page->title, 30) }}</li>
       </ol>
     </nav>
@@ -38,7 +55,7 @@
               </div>
             @endif
 
-            <form method="POST" action="{{ route('admin.pages.update', $page->id) }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ $formAction }}" enctype="multipart/form-data">
               @csrf
               @method('PUT')
 
@@ -411,7 +428,7 @@
                 <label class="col-sm-2 col-form-label"></label>
                 <div class="col-sm-10">
                   <button type="submit" class="btn btn-primary">Update Page</button>
-                  <a href="{{ route('admin.pages.index') }}" class="btn btn-secondary ms-2">Cancel</a>
+                  <a href="{{ $backUrl }}" class="btn btn-secondary ms-2">Cancel</a>
                 </div>
               </div>
             </form>

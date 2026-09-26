@@ -1,24 +1,34 @@
 @extends('frontend.layouts.app')
 
 {{--
-    Public /pages listing — the index of every published standalone page.
+    Public /pages listing.
 
-    Deliberately built from the EXACT same sfb- structure and class names as
-    /tours (frontend/tours/index.blade.php) so both listings share one design
-    system: .sfb-listing-page > .sfb-breadcrumb > .sfb-container.sfb-main-wrap >
-    .sfb-layout > main.sfb-results, then .sfb-results-header, .sfb-selected-filters,
-    .sfb-results-info, .sfb-tour-grid > article.sfb-tour-card (with the full
+    Layout is the /tours listing layout, element for element:
+        .sfb-listing-page > .sfb-breadcrumb > .sfb-container.sfb-main-wrap >
+        .sfb-layout > aside.sfb-sidebar + main.sfb-results
+    and .sfb-results then holds .sfb-results-header, .sfb-selected-filters,
+    .sfb-results-info, .sfb-tour-grid > article.sfb-tour-card (the full
     __image-wrap / __body / __meta-grid / __operator / __footer / __cta anatomy),
-    .sfb-empty-results, and the shared pagination partial.
+    .sfb-empty-results and the shared pagination partial.
 
-    The only additions over /tours are the keyword search bar (pages have no
-    filter sidebar) and the page-specific values inside the meta grid / footer.
-    There is deliberately NO bespoke .sfb-page-card CSS — the cards are the
-    tours cards, so the two listings cannot drift apart visually.
+    Because the grid and cards are literally the tours markup, the two listings
+    cannot drift apart visually. There is deliberately no bespoke
+    .sfb-page-card CSS.
+
+    The sidebar offers only filters that are meaningful for text pages: a
+    keyword search and an A-Z jump. It deliberately does NOT offer the tours
+    facets (length, price, country, park, accommodation) because the pages table
+    has no such columns — the tours filters are hard-coded to tour fields, and
+    faking them for pages would mean inventing database columns for every page.
+    Nor is there a status filter: /pages is public, so a ?status=draft style
+    filter would render unpublished pages to anyone who typed it.
 
     Expects from the controller:
-        - $pages   (LengthAwarePaginator of App\Models\Page)
-        - $search  (current keyword, '' when empty)
+        - $pages        LengthAwarePaginator of App\Models\Page
+        - $search       current keyword, '' when empty
+        - $letter       current A-Z letter, '' when empty
+        - $letterCounts letter => number of matching pages
+        - $alphabet     the offered letters
 --}}
 
 @php
@@ -37,6 +47,14 @@
     // Pages with no hero image still get a real photo rather than a broken
     // <img>; Page::registerMediaCollections() supplies this same fallback.
     $fallbackImage = asset('assets/images/safari-hero.jpg');
+
+    $hasSelectedFilters = $search !== '' || $letter !== '';
+
+    // Drop one filter while keeping the others, and always reset to page 1 —
+    // staying on page 4 of a set that just shrank shows an empty grid.
+    $withoutParam = function (string $key) {
+        return route('pages.index', array_diff_key(request()->except(['page']), [$key => true]));
+    };
 @endphp
 
 @section('body-class', 'is-pages-listing is-tours-listing')
@@ -58,43 +76,99 @@
         </nav>
 
         <div class="sfb-container sfb-main-wrap">
-            {{--
-                .sfb-layout is kept (rather than dropping it) even though /pages has
-                no filter sidebar: it is a flex row whose only child is
-                .sfb-results (flex: 1 1 auto), so the results column spans the full
-                container width while inheriting every /tours layout rule and
-                breakpoint.
-            --}}
+            <button type="button" class="sfb-filter-toggle" data-sfb-open-filters aria-expanded="false" aria-controls="sfbFilterDrawer">
+                <i class="isax isax-filter" aria-hidden="true"></i>
+                Filter Pages
+            </button>
+
+            <div class="sfb-drawer-backdrop" data-sfb-close-filters hidden></div>
+
             <div class="sfb-layout">
+                <aside class="sfb-sidebar" id="sfbFilterDrawer" aria-label="Page filters" data-sfb-filter-drawer>
+                    <div class="sfb-sidebar__mobile-head">
+                        <strong>Filter Pages</strong>
+                        <button type="button" data-sfb-close-filters aria-label="Close filters">&times;</button>
+                    </div>
+
+                    <form method="GET" action="{{ route('pages.index') }}" class="sfb-filter-form" data-sfb-filter-form>
+                        <section class="sfb-safari-panel" aria-labelledby="pages-search-title">
+                            <h2 id="pages-search-title">Search Pages</h2>
+
+                            <div class="sfb-safari-control">
+                                <i class="isax isax-search-1 sfb-safari-control__icon" aria-hidden="true"></i>
+                                <div class="sfb-safari-field sfb-safari-field--button{{ $search !== '' ? ' has-value' : '' }}">
+                                    <input type="search"
+                                           name="search"
+                                           class="sfb-safari-field__input"
+                                           placeholder="Search pages, e.g. refund policy"
+                                           value="{{ $search }}"
+                                           autocomplete="off"
+                                           aria-label="Search pages">
+                                </div>
+                            </div>
+
+                            @if($letter !== '')
+                                {{-- Keep the active letter when the search box is
+                                     submitted, otherwise typing a new keyword would
+                                     silently drop the A-Z filter. --}}
+                                <input type="hidden" name="letter" value="{{ $letter }}">
+                            @endif
+
+                            <button type="submit" class="sfb-show-tours">
+                                Show <b>{{ number_format($pages->total()) }}</b> {{ Str::plural('Page', $pages->total()) }}
+                            </button>
+                        </section>
+
+                        <section class="sfb-filter-section" aria-labelledby="filter-letter">
+                            <h3 id="filter-letter">Browse A-Z</h3>
+                            <div class="sfb-check-list sfb-az-list" role="group" aria-label="Browse pages alphabetically">
+                                @foreach($alphabet as $candidate)
+                                    @php $count = $letterCounts[$candidate] ?? 0; @endphp
+                                    @if($count > 0)
+                                        <a class="sfb-az-link{{ $letter === $candidate ? ' is-active' : '' }}"
+                                           href="{{ $letter === $candidate ? $withoutParam('letter') : route('pages.index', array_merge(request()->except(['page']), ['letter' => $candidate])) }}"
+                                           @if($letter === $candidate) aria-current="true" @endif>
+                                            <span>{{ $candidate }}</span>
+                                            <em>{{ $count }}</em>
+                                        </a>
+                                    @else
+                                        {{-- No page starts with this letter: rendered
+                                             disabled rather than hidden, so the
+                                             alphabet keeps its full A-Z shape. --}}
+                                        <span class="sfb-az-link is-empty" aria-disabled="true">
+                                            <span>{{ $candidate }}</span>
+                                        </span>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </section>
+
+                        <div class="sfb-filter-actions">
+                            <button type="submit">Apply Filters</button>
+                            <a href="{{ route('pages.index') }}">Clear All Filters</a>
+                        </div>
+                    </form>
+                </aside>
+
                 <main class="sfb-results" id="sfb-results-start" aria-label="Site pages">
                     <header class="sfb-results-header">
                         <h1>{{ $listingTitle }}</h1>
                         <p>{{ $listingIntro }}</p>
                     </header>
 
-                    <form method="GET" action="{{ route('pages.index') }}" class="sfb-page-search" role="search">
-                        <label class="sfb-page-search__field">
-                            <span class="visually-hidden">Search pages</span>
-                            <i class="bi bi-search" aria-hidden="true"></i>
-                            <input type="search"
-                                   name="search"
-                                   value="{{ $search }}"
-                                   placeholder="Search pages, e.g. refund policy"
-                                   autocomplete="off">
-                        </label>
-                        <button type="submit">Search</button>
-                        @if($search !== '')
-                            <a class="sfb-page-search__clear" href="{{ route('pages.index') }}">Clear</a>
+                    <div class="sfb-selected-filters" aria-label="Selected filters">
+                        <span>Selected filters:</span>
+                        @if(!$hasSelectedFilters)
+                            <span class="sfb-selected-chip sfb-selected-chip--muted">All pages</span>
+                        @else
+                            @if($letter !== '')
+                                <a class="sfb-selected-chip" href="{{ $withoutParam('letter') }}">{{ $letter }} <b>&times;</b></a>
+                            @endif
+                            @if($search !== '')
+                                <a class="sfb-selected-chip" href="{{ $withoutParam('search') }}">&ldquo;{{ $search }}&rdquo; <b>&times;</b></a>
+                            @endif
                         @endif
-                    </form>
-
-                    @if($search !== '')
-                        <div class="sfb-selected-filters" aria-label="Selected filters">
-                            <span>Selected filters:</span>
-                            <a class="sfb-selected-chip" href="{{ route('pages.index') }}">{{ $search }} <b>&times;</b></a>
-                            <a class="sfb-selected-chip sfb-selected-chip--clear" href="{{ route('pages.index') }}">Clear All Filters</a>
-                        </div>
-                    @endif
+                    </div>
 
                     <div class="sfb-results-info">
                         <strong>{{ $pages->firstItem() ?: 0 }}&ndash;{{ $pages->lastItem() ?: 0 }} of {{ number_format($pages->total()) }}</strong>
@@ -167,8 +241,8 @@
                             </article>
                         @empty
                             <div class="sfb-empty-results">
-                                <h2>{{ $search !== '' ? 'No pages found matching "' . $search . '".' : 'No pages have been published yet.' }}</h2>
-                                <p>{{ $search !== '' ? 'Try a different keyword, or browse the full list of pages.' : 'Please check back soon.' }}</p>
+                                <h2>{{ $search !== '' ? 'No pages found matching "' . $search . '".' : ($letter !== '' ? 'No pages starting with "' . $letter . '".' : 'No pages have been published yet.') }}</h2>
+                                <p>{{ $hasSelectedFilters ? 'Try a different keyword or letter, or browse the full list of pages.' : 'Please check back soon.' }}</p>
                                 <a href="{{ route('pages.index') }}">Clear All Filters</a>
                             </div>
                         @endforelse
@@ -179,4 +253,63 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('extra-scripts')
+<script>
+    (function () {
+        'use strict';
+
+        // Same drawer/auto-submit behaviour as the /tours filter sidebar, so the
+        // mobile "Filter Pages" button and the instant-apply fields behave
+        // identically on both listings. Kept local rather than extracted to a
+        // partial because the tours copy is heavily specialised (ranges,
+        // calendar, travellers popovers) and only the generic parts apply here.
+        var form = document.querySelector('[data-sfb-filter-form]');
+        var drawer = document.querySelector('[data-sfb-filter-drawer]');
+        var backdrop = document.querySelector('[data-sfb-close-filters].sfb-drawer-backdrop');
+        var openButton = document.querySelector('[data-sfb-open-filters]');
+        var submitTimer = null;
+
+        function submitSoon() {
+            if (!form) return;
+            window.clearTimeout(submitTimer);
+            submitTimer = window.setTimeout(function () {
+                if (form.requestSubmit) form.requestSubmit();
+                else form.submit();
+            }, 250);
+        }
+
+        if (form) {
+            form.querySelectorAll('[data-sfb-auto]').forEach(function (field) {
+                field.addEventListener('change', submitSoon);
+            });
+        }
+
+        function openDrawer() {
+            if (!drawer || !backdrop || !openButton) return;
+            drawer.classList.add('is-open');
+            backdrop.hidden = false;
+            openButton.setAttribute('aria-expanded', 'true');
+            document.body.classList.add('sfb-filter-lock');
+        }
+
+        function closeDrawer() {
+            if (!drawer || !backdrop || !openButton) return;
+            drawer.classList.remove('is-open');
+            backdrop.hidden = true;
+            openButton.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('sfb-filter-lock');
+        }
+
+        if (openButton) openButton.addEventListener('click', openDrawer);
+        document.querySelectorAll('[data-sfb-close-filters]').forEach(function (button) {
+            button.addEventListener('click', closeDrawer);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') closeDrawer();
+        });
+    })();
+</script>
 @endsection

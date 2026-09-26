@@ -53,7 +53,15 @@ class PageController extends Controller
 
     public function index()
     {
-        $pages = Page::orderBy('order')->orderBy('title')->get();
+        // Site Information pages (About Us, Why Choose Us, Contact Us, Terms and
+        // Conditions) are managed on their own screen — see SitePageController —
+        // so they are kept out of this list to avoid two competing edit paths for
+        // the same record.
+        $pages = Page::whereNotIn('slug', Page::siteInfoSlugs())
+                     ->orderBy('order')
+                     ->orderBy('title')
+                     ->get();
+
         return view('admin.pages.index', compact('pages'));
     }
 
@@ -168,10 +176,25 @@ class PageController extends Controller
 
     public function edit(Page $page)
     {
+        // A site-information page has its own editor. Send anyone who reaches it
+        // through the generic pages route to that screen, so there is only ever
+        // one place to edit it from.
+        if ($page->isSiteInfo()) {
+            return redirect()->route('admin.site-pages.index');
+        }
+
         return view('admin.pages.edit', compact('page'));
     }
 
-    public function update(Request $request, Page $page)
+    /**
+     * @param string|null $redirectTo Route name to return to after a successful
+     *                                save. Null = the generic pages list, which
+     *                                is what the resource route passes. The Site
+     *                                Information screen passes its own name so the
+     *                                user lands back on the screen they started
+     *                                from rather than an empty list.
+     */
+    public function update(Request $request, Page $page, ?string $redirectTo = null)
     {
         $validated = $request->validate([
         'title'             => 'required|string|max:255',
@@ -270,7 +293,7 @@ class PageController extends Controller
 
         \App\Services\SitemapGenerator::generate();
 
-        return redirect()->route('admin.pages.index')
+        return redirect()->route($redirectTo ?? 'admin.pages.index')
                          ->with('success', 'Page updated successfully!');
         });
     }
@@ -278,6 +301,15 @@ class PageController extends Controller
     
     public function destroy(Page $page)
     {
+        // Site Information pages are load-bearing: they are linked from the
+        // header/footer and are the reason the Site Information screen exists.
+        // Deleting one would 404 every link to it and leave a permanent hole in
+        // that screen, so they can only be unpublished, never deleted.
+        if ($page->isSiteInfo()) {
+            return redirect()->route('admin.site-pages.index')
+                             ->with('error', 'Site Information pages cannot be deleted. Set the page to Draft to take it off the site.');
+        }
+
         // See TourPackageController::destroy() for the full rationale — without this,
         // deleting a page leaves orphaned media_usages rows pointing at a model_id
         // that no longer exists, which would keep its hero/story images incorrectly

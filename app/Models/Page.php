@@ -17,6 +17,39 @@ class Page extends Model implements HasMedia
         HasStandardMediaConversions::registerMediaConversions insteadof InteractsWithMedia;
     }
 
+    /**
+     * The fixed set of "site information" pages.
+     *
+     * These describe the site itself (who we are, how to reach us, the legal
+     * terms) rather than being standalone content, so they are managed on their
+     * own admin screen (Site Information) instead of being mixed in with the
+     * ordinary pages under Admin → Pages → All Pages.
+     *
+     * The slug is the identity here — these rows already exist and are already
+     * linked from the footer/header, so membership is keyed on slug rather than
+     * on a new database flag. This stays the single source of truth: the admin
+     * listing, the site-information screen and the redirect guard all read it.
+     *
+     * @var array<string, string> slug => human label
+     */
+    public const SITE_INFO_PAGES = [
+        'about-us'             => 'About Us',
+        'why-choose-us'        => 'Why Choose Us',
+        'contact'              => 'Contact Us',
+        'terms-and-conditions' => 'Terms and Conditions',
+    ];
+
+    /** @return array<int, string> */
+    public static function siteInfoSlugs(): array
+    {
+        return array_keys(self::SITE_INFO_PAGES);
+    }
+
+    public function isSiteInfo(): bool
+    {
+        return array_key_exists($this->slug, self::SITE_INFO_PAGES);
+    }
+
     protected $fillable = [
         'title',
         'slug',

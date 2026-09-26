@@ -82,6 +82,22 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
 
     // ── Static Pages (module: pages) ─────────────────────────────────────
     Route::middleware('permission:pages')->group(function () {
+        // NOTE: registered before the 'pages' resource below. The resource
+        // declares pages/{page}, which would otherwise also match the literal
+        // segments 'site-pages' only if a page row had that id — it cannot — but
+        // keeping these first makes the precedence explicit rather than relying
+        // on that coincidence.
+        //
+        // Site Information (About Us, Why Choose Us, Contact Us, Terms and
+        // Conditions): edited here instead of under Pages → All Pages. The slug
+        // is the identity, so a missing row is a 404 rather than a create form.
+        Route::get('site-pages', [\App\Http\Controllers\Admin\SitePageController::class, 'index'])
+            ->name('site-pages.index');
+        Route::get('site-pages/{slug}', [\App\Http\Controllers\Admin\SitePageController::class, 'edit'])
+            ->name('site-pages.edit');
+        Route::put('site-pages/{slug}', [\App\Http\Controllers\Admin\SitePageController::class, 'update'])
+            ->name('site-pages.update');
+
         Route::resource('pages', PageController::class);
         // Dedicated editor for just the About page "Our Story" section
         // (story_title heading + story_gallery images/captions).
