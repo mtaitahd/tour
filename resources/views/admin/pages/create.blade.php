@@ -38,14 +38,14 @@
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Title <span class="text-danger">*</span></label>
                 <div class="col-sm-10">
-                  <input type="text" name="title" class="form-control" required value="{{ old('title') }}">
+                  <input type="text" name="title" class="form-control" required value="{{ old('title', request('title')) }}">
                 </div>
               </div>
 
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Slug</label>
                 <div class="col-sm-10">
-                  <input type="text" name="slug" class="form-control" value="{{ old('slug') }}">
+                  <input type="text" name="slug" class="form-control" value="{{ old('slug', request('slug')) }}">
                   <small class="text-muted">Leave empty to auto-generate from title</small>
                 </div>
               </div>

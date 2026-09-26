@@ -32,6 +32,7 @@
 --}}
 
 @php
+    use App\Models\Page;
     use App\Models\Setting;
     use Illuminate\Support\Str;
 
@@ -45,8 +46,13 @@
     $operatorLogo = Setting::logoUrlOrDefault();
 
     // Pages with no hero image still get a real photo rather than a broken
-    // <img>; Page::registerMediaCollections() supplies this same fallback.
-    $fallbackImage = asset('assets/images/safari-hero.jpg');
+    // <img>. Routed through the same candidate list as
+    // Page::registerMediaCollections() so the card and the Media Library
+    // agree on the fallback instead of each hardcoding their own path.
+    $fallbackImage = Page::firstExistingPublicAsset(
+        'assets/images/safari-hero.jpg',
+        'front-end/html/assets/images/safari-hero.jpg',
+    );
 
     $hasSelectedFilters = $search !== '' || $letter !== '';
 
