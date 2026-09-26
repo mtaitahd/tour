@@ -33913,11 +33913,12 @@ body.td-lock {
 
 
 /* ------------------------------------------------------------------
-   Pages listing (/pages) — same design language as the /tours listing.
-   Reuses .sfb-listing-page / .sfb-container / .sfb-breadcrumb /
-   .sfb-main-wrap / .sfb-results* / .sfb-page-btn* from above, and
-   mirrors .sfb-tour-card's box, shadow, hover lift, image treatment
-   and CTA so the two listings read as the same system.
+   Pages listing (/pages).
+   The cards are the /tours cards: frontend/pages/index.blade.php renders
+   the real .sfb-tour-grid > .sfb-tour-card anatomy defined above, so this
+   file only carries the two things /tours has no equivalent for — the
+   keyword search bar and the .visually-hidden utility. No .sfb-page-card
+   rules exist, by design: the two listings must not drift apart.
    ------------------------------------------------------------------ */
 
 .visually-hidden {
@@ -34009,203 +34010,15 @@ body.td-lock {
   text-decoration: underline;
 }
 
-.sfb-page-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
-}
-
-.sfb-page-card {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-  border: 1px solid #dfe5eb;
-  border-radius: 5px;
-  box-shadow: 0 2px 8px rgba(23, 38, 52, 0.06);
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-
-.sfb-page-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(23, 38, 52, 0.12);
-}
-
-.sfb-page-card__full-link {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  text-decoration: none;
-}
-
-.sfb-page-card__image-wrap {
-  position: relative;
-  min-height: 210px;
-  height: clamp(210px, 15vw, 250px);
-  overflow: hidden;
-  background: #202a32;
-}
-
-.sfb-page-card__image-wrap img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-  object-position: center;
-  transition: transform .35s ease;
-}
-
-.sfb-page-card:hover .sfb-page-card__image-wrap img {
-  transform: scale(1.035);
-}
-
-.sfb-page-card__gradient {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.02) 15%, rgba(0, 0, 0, 0.18) 55%, rgba(0, 0, 0, 0.88) 100%);
-}
-
-.sfb-page-card__image-wrap h2 {
-  position: absolute;
-  left: 20px;
-  right: 20px;
-  bottom: 20px;
-  z-index: 2;
-  margin: 0;
-  color: #fff;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(26px, 1.9vw, 34px);
-  line-height: 1.06;
-  font-weight: 700;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, .45);
-}
-
-.sfb-page-card__body {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-}
-
-.sfb-page-card__excerpt {
-  margin: 0;
-  color: #48525d;
-  font-family: 'Montserrat', 'Inter', sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
-}
-
-.sfb-page-card__footer {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 20px;
-  padding-top: 18px;
-  border-top: 1px solid #edf0f2;
-}
-
-.sfb-page-card__meta span {
-  display: block;
-  color: #727d88;
-  font-family: 'Montserrat', 'Inter', sans-serif;
-  font-size: 13px;
-  line-height: 1.3;
-}
-
-.sfb-page-card__meta strong {
-  display: block;
-  margin-top: 3px;
-  color: #2f363e;
-  font-family: 'Montserrat', 'Inter', sans-serif;
-  font-size: 16px;
-  line-height: 1.35;
-  font-weight: 800;
-}
-
-.sfb-page-card__status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #727d88;
-  font-family: 'Montserrat', 'Inter', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.sfb-page-card__status i {
-  color: #0876a6;
-  font-size: 17px;
-}
-
-.sfb-page-card__cta {
-  position: relative;
-  z-index: 4;
-  min-height: 48px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  margin-top: 18px;
-  background: #0876a6;
-  color: #fff;
-  border-radius: 3px;
-  font-family: 'Montserrat', 'Inter', sans-serif;
-  font-size: 16px;
-  font-weight: 900;
-  text-decoration: none;
-  transition: background .2s ease;
-}
-
-.sfb-page-card__cta:hover {
-  background: #075b82;
-  color: #fff;
-}
-
-@media (max-width: 1199.98px) {
-  .sfb-page-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 991.98px) {
-  .sfb-page-grid {
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  }
-}
-
-@media (max-width: 767.98px) {
-  .sfb-page-search > button {
-    flex: 1 1 auto;
-  }
-}
-
-@media (max-width: 575.98px) {
-  .sfb-page-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .sfb-page-card__image-wrap {
-    min-height: 190px;
-    height: 62vw;
-    max-height: 280px;
-  }
-
-  .sfb-page-card__image-wrap h2 {
-    left: 16px;
-    right: 16px;
-    bottom: 16px;
-    font-size: clamp(24px, 7vw, 32px);
-  }
-
-  .sfb-page-card__body {
-    padding: 16px;
-  }
-
-  .sfb-page-card__footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+/* Layout adaptation only — not a new card style.
+   On /tours the .sfb-results column sits beside a 430px .sfb-sidebar, so its
+   2-column .sfb-tour-grid produces cards roughly 420-680px wide. /pages has no
+   sidebar, so .sfb-results spans the full container (max 1840px) and the same
+   2 columns would stretch each card to ~900px — the same design, wrong
+   proportions. A third column on wide screens keeps each /pages card within
+   ~10% of the /tours card width, so the two listings read identically. */
+@media (min-width: 1400px) {
+  body.is-pages-listing .sfb-tour-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
