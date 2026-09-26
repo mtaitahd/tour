@@ -34,11 +34,16 @@ trait ResolvesPublicFallbackAsset
         $candidates = [$first, ...$rest];
 
         foreach ($candidates as $candidate) {
-            if (isset(static::$resolvedPublicAssets[$candidate])) {
+            // array_key_exists rather than isset: a candidate that does not exist is
+            // cached as null, and isset() reports null as unset, which would re-stat
+            // the same missing path on every call.
+            if (array_key_exists($candidate, static::$resolvedPublicAssets)) {
                 $resolved = static::$resolvedPublicAssets[$candidate];
+
                 if ($resolved !== null) {
                     return $resolved;
                 }
+
                 continue;
             }
 

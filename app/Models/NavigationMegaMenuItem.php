@@ -230,14 +230,15 @@ class NavigationMegaMenuItem extends Model
             }
         }
 
-        // The configured default named 'asset/img/placeholder-page-hero.jpg', which
-        // is not in the repo and 404s in production. An explicit config value is
-        // still honoured, but the built-in default now resolves to a bundled
-        // asset that is actually deployed.
+        // The configured default named 'asset/img/placeholder-page-hero.jpg' is
+        // not tracked and 404s on production. Honour an explicit configured
+        // path if it exists on disk; otherwise fall back to bundled assets.
         $configured = config('navigation.fallback_image');
 
         if (is_string($configured) && $configured !== '') {
-            return (string) asset($configured);
+            if (file_exists(public_path($configured))) {
+                return (string) asset($configured);
+            }
         }
 
         return Setting::firstExistingPublicAsset(
