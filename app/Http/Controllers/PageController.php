@@ -8,9 +8,14 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 /**
- * Public "Pages" listing (/pages) — the single index of every published
- * standalone page (About, Contact, Terms, Privacy, etc.), built and styled to
- * match the /tours listing.
+ * Public "Pages" listing (/pages) — the index of published standalone content
+ * pages (Privacy, Kilimanjaro Tours, etc.), built and styled to match the
+ * /tours listing.
+ *
+ * The fixed site-information pages (About Us, Why Choose Us, Contact Us,
+ * Terms and Conditions) are excluded from this index on purpose; they are
+ * managed under Site Information and linked from the header/footer. Their
+ * individual URLs still work.
  *
  * NOTE: the public show() for /pages/{slug} still lives in
  * App\Http\Controllers\Admin\PageController (see routes/web.php) — that is
@@ -81,6 +86,16 @@ class PageController extends Controller
         // managed in the admin, not browsed here.
         $query = Page::where('status', 'published')
                      ->with('heroImage');
+
+        // The fixed site-information pages (About Us, Why Choose Us, Contact
+        // Us, Terms and Conditions) are deliberately kept OUT of this listing.
+        // They are chrome, not standalone content: they are managed on the
+        // dedicated Site Information admin screen and are reached from the
+        // header/footer, so /pages is reserved for the ordinary content pages.
+        // The individual pages stay reachable by direct URL — only the index
+        // omits them. Applied before the filters below so the A-Z counts are
+        // scoped identically to the grid and cannot disagree with it.
+        $query->whereNotIn('slug', Page::siteInfoSlugs());
 
         if ($letter !== '') {
             $query->where('title', 'like', $letter . '%');

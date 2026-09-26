@@ -38,9 +38,12 @@
 
     $listingTitle = 'Help & Information';
     $introSource  = Setting::get('pages_listing_intro');
+    // Default copy deliberately does not advertise Terms or Contact details:
+    // those are site-information pages and are no longer part of this listing.
+    // They are still one click away in the header and footer.
     $listingIntro = $introSource
         ? Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($introSource))), 540)
-        : 'Find booking terms, refund and privacy policies, contact details and everything else you need to know before travelling with Afro-Vertex Tours & Safaris.';
+        : 'Browse everything Afro-Vertex has published on travelling with us — trip information, policies and practical guidance. Our About, Contact and Terms pages are a click away in the menu.';
 
     $operatorName = Setting::get('site_name', 'Afro-Vertex Tours & Safaris');
     $operatorLogo = Setting::logoUrlOrDefault();
