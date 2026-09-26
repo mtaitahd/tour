@@ -5,7 +5,7 @@
     use Illuminate\Support\Facades\Route;
 
     $siteName = Setting::get('site_name', 'Afro-Vertex Tours & Safaris');
-    $logo     = Setting::logoUrl() ?: asset('front-end/html/assets/img/logo-1.webp');
+    $logo     = Setting::logoUrlOrDefault();
 
     $wa = Setting::get('whatsapp_number');
     $waDigits = $wa ? preg_replace('/[^0-9]/', '', $wa) : '';

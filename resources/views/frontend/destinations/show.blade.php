@@ -18,9 +18,15 @@ $flagFor = function (?string $code): string {
 $countryName = $countryNames[$destination->country_code] ?? '';
 $countryFlag = $flagFor($destination->country_code);
 
-$heroUrl = $destination->hasHeroImage()
-    ? ($destination->heroUrl('large-webp') ?: $destination->heroUrl())
-    : asset('front-end/html/assets/img/placeholder-destination.jpg');
+  // The old fallback path
+  // 'front-end/html/assets/img/placeholder-destination.jpg' 404s in production
+  // and is not in the repo, so an imageless destination rendered a broken hero.
+  $heroUrl = $destination->hasHeroImage()
+      ? ($destination->heroUrl('large-webp') ?: $destination->heroUrl())
+      : Setting::firstExistingPublicAsset(
+          'assets/images/safari-hero.jpg',
+          'front-end/html/assets/images/safari-hero.jpg',
+      );
 
 $galleryImages = $destination->galleryImages();
 
@@ -32,7 +38,7 @@ $mapEmbedUrl = ($lat && $lng)
 
 $operator = [
     'name'      => Setting::get('site_name', 'Afro-Vertex Tours & Safaris'),
-    'logo'      => Setting::logoUrl() ?: asset('front-end/html/assets/img/logo-1.webp'),
+    'logo'      => Setting::logoUrlOrDefault(),
     'link'      => Setting::get('faq_expert_link', route('home')),
     'location'  => Setting::get('footer_address', ''),
     'founded'   => Setting::get('operator_founded_year', ''),

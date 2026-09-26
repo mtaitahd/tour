@@ -4,7 +4,7 @@
     use App\Models\GalleryImage;
 
     $siteName   = Setting::get('site_name', 'Afro-Vertex Tours & Safaris');
-    $logo       = Setting::logoUrl() ?: asset('front-end/html/assets/img/logo-1.webp');
+    $logo       = Setting::logoUrlOrDefault();
 
     // ---- Footer text (admin-editable via Website Content → Footer) ----
     $footerAboutHeading = Setting::get('footer_about_heading') ?: 'About ' . $siteName;

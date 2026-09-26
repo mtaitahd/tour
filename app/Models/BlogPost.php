@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\AutoCurrentYearTitle;
 use App\Models\Concerns\HasStandardMediaConversions;
+use App\Models\Concerns\ResolvesPublicFallbackAsset;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class BlogPost extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, HasStandardMediaConversions, AutoCurrentYearTitle {
+    use HasFactory, InteractsWithMedia, HasStandardMediaConversions, AutoCurrentYearTitle, ResolvesPublicFallbackAsset {
         HasStandardMediaConversions::registerMediaConversions insteadof InteractsWithMedia;
     }
 
@@ -47,7 +48,18 @@ class BlogPost extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('featured_image')->singleFile();
+        // featured_image had no fallback URL, so featuredImageUrl() returned null
+        // and templates had to supply their own placeholder — they all pointed at
+        // 'front-end/html/assets/img/blog/blog-placeholder.jpg', which is not in
+        // the repo and 404s in production. Registering the fallback here means
+        // featuredImageUrl() always returns a real image, and the template-level
+        // @else branches become unnecessary.
+        $this->addMediaCollection('featured_image')
+             ->singleFile()
+             ->useFallbackUrl(static::firstExistingPublicAsset(
+                 'assets/images/safari-hero.jpg',
+                 'front-end/html/assets/images/safari-hero.jpg',
+             ));
         $this->addMediaCollection('gallery');
     }
 

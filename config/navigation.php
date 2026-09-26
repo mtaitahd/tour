@@ -50,8 +50,15 @@ return [
     /*
     | Right-column image shown when neither a menu image nor a source hero image
     | exists. Evaluated through asset() by the renderer.
+    |
+    | Left null deliberately: the previous value,
+    | 'asset/img/placeholder-page-hero.jpg', names a file that was never committed
+    | and 404s in production, so the mega-menu column rendered a broken image.
+    | With null, NavigationMegaMenuItem::imageUrl() falls through to
+    | Setting::firstExistingPublicAsset(), which picks a bundled asset based on
+    | what is actually deployed. Set a path here only if you add the file.
     */
-    'fallback_image' => 'assets/img/placeholder-page-hero.jpg',
+    'fallback_image' => null,
 
     /*
     | Badge pill CSS variants — mirrors the classes the header style sheet provides.

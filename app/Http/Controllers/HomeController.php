@@ -198,7 +198,7 @@ class HomeController extends Controller
             $faqExpert = [
                 'name'  => $faqExpertName,
                 'image' => Setting::imageUrl('faq_expert_image_id')
-                    ?: (Setting::logoUrl() ?: asset('front-end/html/assets/img/logo-1.webp')),
+                    ?: (Setting::logoUrlOrDefault()),
                 'bio'   => Setting::get('faq_expert_bio',
                     'Born and raised in northern Tanzania, our safari experts have planned hundreds of trips across the Serengeti, Ngorongoro and Kilimanjaro regions. Every answer below reflects years of first-hand guiding experience.'),
                 'link'  => Setting::get('faq_expert_link', route('home')),

@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesPublicFallbackAsset;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Setting extends Model
 {
     use HasFactory;
+    use ResolvesPublicFallbackAsset;
 
     protected $fillable = ['key', 'value', 'type', 'group', 'label', 'description'];
 
@@ -86,5 +88,24 @@ class Setting extends Model
     public static function hasLogo(): bool
     {
         return (bool) self::logoUrl();
+    }
+
+    /**
+     * Site logo URL for templates that must always render an <img>, with the
+     * bundled static logo as the last resort.
+     *
+     * This replaces ten copies of
+     *     Setting::logoUrl() ?: asset('front-end/html/assets/img/logo-1.webp')
+     * which all hard-coded a single location for the logo and so only rendered
+     * on whichever server happened to have that layout. Both known locations are
+     * now offered to firstExistingPublicAsset(), which picks whichever is
+     * actually present, so a fresh clone and the production server both work.
+     */
+    public static function logoUrlOrDefault(string $conversion = ''): string
+    {
+        return self::logoUrl($conversion) ?: self::firstExistingPublicAsset(
+            'assets/img/logo-1.webp',
+            'front-end/html/assets/img/logo-1.webp',
+        );
     }
 }

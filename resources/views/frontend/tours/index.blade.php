@@ -44,7 +44,7 @@
     $ratingDisplay = $avgRating ? number_format($avgRating, 1) : '4.8';
     $reviewDisplay = $reviewCount ?: $tours->total();
     $operatorName = Setting::get('site_name', 'Afro-Vertex Tours & Safaris');
-    $operatorLogo = Setting::logoUrl() ?: asset('front-end/html/assets/img/logo-1.webp');
+    $operatorLogo = Setting::logoUrlOrDefault();
 
     $durationData = $durationCounts->toArray();
     $durationUpper = max(array_keys($durationData ?: [14 => 1]));

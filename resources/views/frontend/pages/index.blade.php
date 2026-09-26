@@ -32,13 +32,10 @@
         : 'Find booking terms, refund and privacy policies, contact details and everything else you need to know before travelling with Afro-Vertex Tours & Safaris.';
 
     $operatorName = Setting::get('site_name', 'Afro-Vertex Tours & Safaris');
-    // NB: the /tours operator fallback points at 'front-end/html/assets/img/logo-1.webp',
-    // which does not exist in public/ — this uses the real asset so the card
-    // operator row never renders a broken image.
-    $operatorLogo = Setting::logoUrl() ?: asset('assets/img/logo-1.webp');
+    $operatorLogo = Setting::logoUrlOrDefault();
 
-    // Page::registerMediaCollections() falls back to 'asset/img/placeholder-page-hero.jpg',
-    // which also does not exist, so imageless pages are guarded explicitly here.
+    // Pages with no hero image still get a real photo rather than a broken
+    // <img>; Page::registerMediaCollections() supplies this same fallback.
     $fallbackImage = asset('assets/images/safari-hero.jpg');
 @endphp
 

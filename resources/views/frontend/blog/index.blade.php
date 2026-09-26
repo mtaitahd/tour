@@ -33,15 +33,14 @@
                             <div class="col-xl-12">
                                 <div class="blog-item mb-4 wow fadeInUp" data-wow-delay="0.2s">
                                     <a href="{{ route('blog.show', $SinglePost->slug) }}" class="blog-img">
-                                        @if($SinglePost->hasFeaturedImage())
-                                            <img src="{{ $SinglePost->featuredImageUrl('medium') }}" 
-                                                 class="w-100" 
-                                                 alt="{{ $SinglePost->title }}">
-                                        @else
-                                            <img src="{{ asset('front-end/html/assets/img/blog/blog-placeholder.jpg') }}" 
-                                                 class="w-100" 
-                                                 alt="{{ $SinglePost->title }}">
-                                        @endif
+                                          {{-- No @else needed: BlogPost::featuredImageUrl()
+                                               returns the registered collection fallback
+                                               when no image is set. The old @else pointed
+                                               at a path that is not in the repo and 404s
+                                               in production. --}}
+                                          <img src="{{ $SinglePost->featuredImageUrl('medium') }}"
+                                               class="w-100"
+                                               alt="{{ $SinglePost->title }}">
                                     </a>
 
                                     <span class="badge bg-primary fs-13 fw-medium">
@@ -53,8 +52,8 @@
                                             <div class="d-inline-flex align-items-center border-end pe-3 me-3 mb-2">
                                                 <a href="javascript:void(0);" class="d-flex align-items-center">
                                                     <span class="avatar avatar-sm me-2">
-                                                        <img src="{{ asset('front-end/html/assets/img/users/user-01.jpg') }}" 
-                                                             class="rounded-circle border border-white" 
+                                                        <img src="{{ asset('front-end/html/assets/img/users/user-01.jpg') }}"
+                                                             class="rounded-circle border border-white"
                                                              alt="Author">
                                                     </span>
                                                     <p>Admin</p> <!-- Replace with real author later -->
@@ -106,8 +105,8 @@
                                         <span class="input-icon-addon">
                                             <i class="isax isax-search-normal-1 fs-14"></i>
                                         </span>
-                                        <input type="text" name="search" class="form-control" 
-                                               placeholder="Search" 
+                                        <input type="text" name="search" class="form-control"
+                                               placeholder="Search"
                                                value="{{ request('search') }}">
                                     </div>
                                 </div>
@@ -150,13 +149,10 @@
                                 <div class="blog-post mb-3">
                                     <div class="d-flex align-items-center">
                                         <a href="{{ route('blog.show', $recent->slug) }}" class="avatar avatar-xxl flex-shrink-0 me-2">
-                                            @if($recent->hasFeaturedImage())
-                                                <img src="{{ $recent->featuredImageUrl('thumb') }}" 
-                                                     class="rounded" alt="{{ $recent->title }}">
-                                            @else
-                                                <img src="{{ asset('front-end/html/assets/img/blog/blog-placeholder.jpg') }}" 
-                                                     class="rounded" alt="{{ $recent->title }}">
-                                            @endif
+                                              {{-- Same reasoning as above: the collection
+                                                   fallback means this always renders. --}}
+                                                  <img src="{{ $recent->featuredImageUrl('thumb') }}"
+                                                       class="rounded" alt="{{ $recent->title }}">
                                         </a>
                                         <div>
                                             <a href="{{ route('blog.show', $recent->slug) }}" class="two-line-ellipsis fs-14 fw-medium">
@@ -165,7 +161,7 @@
                                             <div class="d-flex align-items-center mt-2">
                                                 <a href="javascript:void(0);" class="d-flex align-items-center border-end pe-2 me-2">
                                                     <span class="avatar avatar-xs me-1">
-                                                        <img src="{{ asset('front-end/html/assets/img/users/user-01.jpg') }}" 
+                                                        <img src="{{ asset('front-end/html/assets/img/users/user-01.jpg') }}"
                                                              class="blog-user-img rounded-circle border border-light" alt="img">
                                                     </span>
                                                     <p class="fs-14 text-truncate">Admin</p>

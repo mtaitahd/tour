@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\AutoCurrentYearTitle;
 use App\Models\Concerns\HasStandardMediaConversions;
+use App\Models\Concerns\ResolvesPublicFallbackAsset;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Page extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, HasStandardMediaConversions, AutoCurrentYearTitle {
+    use HasFactory, InteractsWithMedia, HasStandardMediaConversions, AutoCurrentYearTitle, ResolvesPublicFallbackAsset {
         HasStandardMediaConversions::registerMediaConversions insteadof InteractsWithMedia;
     }
 
@@ -59,13 +60,25 @@ class Page extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
+        // These fallbacks used to name 'asset/img/placeholder-page-hero.jpg' and
+        // 'asset/img/placeholder-about.jpg', but neither file was ever committed
+        // under public/ — the whole 'asset/' (singular) directory does not exist
+        // in the repo, and production 404s on it too, so a page without a hero or
+        // story image rendered a broken <img>. They now resolve against a bundled
+        // asset that is actually deployed, trying both known locations of it.
         $this->addMediaCollection('hero')
              ->singleFile()
-             ->useFallbackUrl(asset('asset/img/placeholder-page-hero.jpg'));
+             ->useFallbackUrl(static::firstExistingPublicAsset(
+                 'assets/images/safari-hero.jpg',
+                 'front-end/html/assets/images/safari-hero.jpg',
+             ));
 
         $this->addMediaCollection('story')
              ->singleFile()
-             ->useFallbackUrl(asset('asset/img/placeholder-about.jpg'));
+             ->useFallbackUrl(static::firstExistingPublicAsset(
+                 'assets/images/safari-hero.jpg',
+                 'front-end/html/assets/images/safari-hero.jpg',
+             ));
 
         // Optional: if you want a gallery later
         $this->addMediaCollection('gallery');

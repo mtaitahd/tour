@@ -8,8 +8,14 @@ use App\Models\GalleryImage;
 
 $siteName = Setting::get('site_name', 'Afro-Vertex Tours & Safaris');
 
-$heroUrl = ($page->heroUrl('large-webp') ?: $page->heroUrl())
-    ?: asset('front-end/html/assets/img/placeholder-destination.jpg');
+  // The old fallback path
+  // 'front-end/html/assets/img/placeholder-destination.jpg' 404s in production
+  // and is not in the repo, so an imageless page rendered a broken hero.
+  $heroUrl = ($page->heroUrl('large-webp') ?: $page->heroUrl())
+      ?: Setting::firstExistingPublicAsset(
+          'assets/images/safari-hero.jpg',
+          'front-end/html/assets/images/safari-hero.jpg',
+      );
 
 $galleryItems  = is_array($page->story_gallery) ? $page->story_gallery : [];
 $galleryIds    = collect($galleryItems)->pluck('image_id')->filter()->values()->all();
@@ -25,7 +31,7 @@ if ($heroUrl) { $tdGallery['page'][] = ['u' => $heroUrl, 'c' => $page->title]; }
 
 $operator = [
     'name'      => $siteName,
-    'logo'      => Setting::logoUrl() ?: asset('front-end/html/assets/img/logo-1.webp'),
+    'logo'      => Setting::logoUrlOrDefault(),
     'link'      => Setting::get('faq_expert_link', route('home')),
     'location'  => Setting::get('footer_address', ''),
     'founded'   => Setting::get('operator_founded_year', ''),

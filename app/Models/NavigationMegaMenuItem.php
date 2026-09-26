@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Setting;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -228,7 +230,20 @@ class NavigationMegaMenuItem extends Model
             }
         }
 
-        return (string) asset((string) config('navigation.fallback_image', 'asset/img/placeholder-page-hero.jpg'));
+        // The configured default named 'asset/img/placeholder-page-hero.jpg', which
+        // is not in the repo and 404s in production. An explicit config value is
+        // still honoured, but the built-in default now resolves to a bundled
+        // asset that is actually deployed.
+        $configured = config('navigation.fallback_image');
+
+        if (is_string($configured) && $configured !== '') {
+            return (string) asset($configured);
+        }
+
+        return Setting::firstExistingPublicAsset(
+            'assets/images/safari-hero.jpg',
+            'front-end/html/assets/images/safari-hero.jpg',
+        );
     }
 
     /**

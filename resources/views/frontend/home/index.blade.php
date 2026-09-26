@@ -767,7 +767,7 @@
                         </div>
 
                         <footer class="afro-tour-card__foot">
-                            <img src="{{ Setting::logoUrl() ?: asset('front-end/html/assets/img/logo-1.webp') }}" alt="Afro-Vertex Tours &amp; Safaris logo" width="34" height="34" loading="lazy"
+                            <img src="{{ Setting::logoUrlOrDefault() }}" alt="Afro-Vertex Tours &amp; Safaris logo" width="34" height="34" loading="lazy"
                                  onerror="this.onerror=null;this.src='{{ asset('public/assets/images/logo-icon.png') }}';">
                             <div class="afro-tour-card__foot-info">
                                 <strong>Afro-Vertex Tours &amp; Safaris</strong>

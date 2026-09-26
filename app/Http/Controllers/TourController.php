@@ -371,7 +371,7 @@ class TourController extends Controller
         $faqExpert = [
             'name'  => $faqExpertName,
             'image' => Setting::imageUrl('faq_expert_image_id')
-                ?: (Setting::logoUrl() ?: asset('front-end/html/assets/img/logo-1.webp')),
+                ?: (Setting::logoUrlOrDefault()),
             'bio'   => Setting::get('faq_expert_bio',
                 'Born and raised in northern Tanzania, our safari experts have planned hundreds of trips across the Serengeti, Ngorongoro and Kilimanjaro regions. Every answer below reflects years of first-hand guiding experience.'),
             'link'  => Setting::get('faq_expert_link', route('home')),
@@ -728,7 +728,7 @@ class TourController extends Controller
         /* ── Operator (the site owner — real data from Settings) ────────────── */
         $operator = [
             'name'      => Setting::get('site_name', 'Afro-Vertex Tours & Safaris'),
-            'logo'      => Setting::logoUrl() ?: asset('front-end/html/assets/img/logo-1.webp'),
+            'logo'      => Setting::logoUrlOrDefault(),
             'link'      => Setting::get('faq_expert_link', route('home')),
             'location'  => Setting::get('footer_address', ''),
             'founded'   => Setting::get('operator_founded_year', ''),
@@ -818,7 +818,7 @@ class TourController extends Controller
         $faqExpert = [
             'name'  => $faqExpertName,
             'image' => Setting::imageUrl('faq_expert_image_id')
-                ?: (Setting::logoUrl() ?: asset('front-end/html/assets/img/logo-1.webp')),
+                ?: (Setting::logoUrlOrDefault()),
             'bio'   => Setting::get('faq_expert_bio',
                 'Born and raised in northern Tanzania, our safari experts have planned hundreds of trips across the Serengeti, Ngorongoro and Kilimanjaro regions. Every answer below reflects years of first-hand guiding experience.'),
             'link'  => Setting::get('faq_expert_link', route('home')),

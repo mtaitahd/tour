@@ -161,9 +161,16 @@
                                 $destCountry = $countryNames[$destCode] ?? $destCode;
                                 $destType = $SingleDestination->type ? $typeLabel($SingleDestination->type) : '';
                                 $toursCount = $SingleDestination->tours()->where('status', 'published')->count();
-                                $destImage = $SingleDestination->hasHeroImage()
-                                    ? ($SingleDestination->heroUrl('medium') ?: $SingleDestination->heroUrl())
-                                    : asset('front-end/html/assets/img/placeholder-destination.jpg');
+                                  // The old fallback path
+                                  // 'front-end/html/assets/img/placeholder-destination.jpg'
+                                  // 404s in production and is not in the repo, so
+                                  // imageless destinations rendered a broken card.
+                                  $destImage = $SingleDestination->hasHeroImage()
+                                      ? ($SingleDestination->heroUrl('medium') ?: $SingleDestination->heroUrl())
+                                      : \App\Models\Setting::firstExistingPublicAsset(
+                                          'assets/images/safari-hero.jpg',
+                                          'front-end/html/assets/images/safari-hero.jpg',
+                                      );
                             @endphp
                             <article class="sfb-tour-card">
                                 <a class="sfb-tour-card__full-link" href="{{ route('destination.show', $SingleDestination->slug) }}" aria-label="View {{ $destName }}"></a>

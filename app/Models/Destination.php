@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasStandardMediaConversions;
+use App\Models\Concerns\ResolvesPublicFallbackAsset;
 use App\Services\MediaLibraryService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Destination extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, HasStandardMediaConversions {
+    use HasFactory, InteractsWithMedia, HasStandardMediaConversions, ResolvesPublicFallbackAsset {
         HasStandardMediaConversions::registerMediaConversions insteadof InteractsWithMedia;
     }
 
@@ -33,12 +34,24 @@ class Destination extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
+        // These fallbacks used to name 'assets/img/placeholder-destination.jpg'
+        // and 'assets/img/placeholder.jpg', but no such file was ever committed
+        // under public/ (nor under the singular 'asset/img/' spelling a later
+        // edit introduced) — so a destination without a hero or gallery image
+        // rendered a broken <img>. They now resolve against a bundled asset that
+        // is actually deployed, trying both known locations of it.
         $this->addMediaCollection('hero')
              ->singleFile()                             // only one hero image
-             ->useFallbackUrl(asset('assets/img/placeholder-destination.jpg'));
+             ->useFallbackUrl(static::firstExistingPublicAsset(
+                 'assets/images/safari-hero.jpg',
+                 'front-end/html/assets/images/safari-hero.jpg',
+             ));
 
         $this->addMediaCollection('gallery')
-             ->useFallbackUrl(asset('assets/img/placeholder.jpg'));
+             ->useFallbackUrl(static::firstExistingPublicAsset(
+                 'assets/images/safari-hero.jpg',
+                 'front-end/html/assets/images/safari-hero.jpg',
+             ));
     }
 
     public function tours()

@@ -36,13 +36,14 @@
             <!-- Hero / Intro Section -->
             <section class="about-hero mb-5">
                 <div class="about-hero-img d-none justify-content-center align-items-center mb-4">
-                    @if($page->hasHeroImage())
-                        <img src="{{ $page->heroUrl('medium') }}" 
-                             alt="{{ $page->title }}" 
+                        {{-- No @else needed: Page::heroUrl() returns the registered
+                             collection fallback when no hero image is set, so this
+                             always renders a real image. The old @else pointed at
+                             'asset/img/placeholder-page-hero.jpg', which does not
+                             exist and 404s in production. --}}
+                        <img src="{{ $page->heroUrl('medium') }}"
+                             alt="{{ $page->title }}"
                              class="img-fluid rounded shadow">
-                    @else
-                        <img src="{{ asset('asset/img/placeholder-page-hero.jpg') }}" alt="Default">
-                    @endif
                 </div>
 
                 <div class="row justify-content-center">
@@ -62,13 +63,11 @@
                 <div class="row align-items-center">
                     <div class="col-lg-6 mb-4 mb-lg-0">
                         <div class="about-img">
-                            @if($page->hasStoryImage())
-                                <img src="{{ $page->storyUrl('medium') }}" 
-                                     alt="{{ $page->story_title ?? 'Our Story' }}" 
-                                     class="img-fluid rounded shadow">
-                            @else
-                                <img src="{{ asset('asset/img/placeholder-about.jpg') }}" alt="About Us">
-                            @endif
+                            {{-- Same reasoning as the hero above: storyUrl() already
+                                 falls back to the collection's placeholder. --}}
+                            <img src="{{ $page->storyUrl('medium') }}"
+                                 alt="{{ $page->story_title ?? 'Our Story' }}"
+                                 class="img-fluid rounded shadow">
                         </div>
 
                         @if(!empty($page->story_gallery))
@@ -82,8 +81,8 @@
                                     @if($storyGalleryImage)
                                         <div class="col-6">
                                             <figure class="mb-0">
-                                                <img src="{{ $storyGalleryImage->getUrl('medium') }}" 
-                                                     alt="{{ $storyImage['caption'] ?? ($page->story_title ?? 'Our Story') }}" 
+                                                <img src="{{ $storyGalleryImage->getUrl('medium') }}"
+                                                     alt="{{ $storyImage['caption'] ?? ($page->story_title ?? 'Our Story') }}"
                                                      class="img-fluid rounded shadow">
                                                 @if(!empty($storyImage['caption']))
                                                     <figcaption class="small text-gray-600 text-center mt-2">
