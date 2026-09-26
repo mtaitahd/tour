@@ -55,6 +55,11 @@ class AppServiceProvider extends ServiceProvider
                 $meta['description'] = 'Discover East Africa’s most breathtaking destinations – Serengeti, Ngorongoro, Zanzibar, Kilimanjaro, and more.';
                 $meta['keywords'] = 'serengeti national park, ngorongoro crater, zanzibar islands, kilimanjaro, east africa destinations';
                 $meta['canonical']   = route('destinations.index');
+            } elseif (request()->routeIs('pages.index')) {
+                $meta['title'] = 'Help & Information | Afro-Vertex Tours & Safaris';
+                $meta['description'] = 'Booking terms, refund and privacy policies, contact details and everything else you need to know before travelling with Afro-Vertex Tours & Safaris.';
+                $meta['keywords'] = 'booking terms, refund policy, privacy policy, travel information, tanzania safari faq';
+                $meta['canonical']   = route('pages.index'); // always point to clean /pages
             }
             elseif (request()->routeIs('home')) {
                 $meta['title'] = 'Afro-Vertex Tours & Safaris - Best Africa Safaris & Adventures';

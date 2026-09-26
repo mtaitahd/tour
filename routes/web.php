@@ -14,6 +14,10 @@ use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\BlogPostController;
 use App\Http\Controllers\Admin\PageController;
+// Aliased: the bare PageController import above is the ADMIN controller (which
+// also happens to serve the public /pages/{slug} show action), so the public
+// /pages listing needs its own, unambiguous reference.
+use App\Http\Controllers\PageController as PublicPageController;
 use App\Http\Controllers\ContactController;
 use App\Models\Setting;
 use App\Models\TourPackage;
@@ -215,6 +219,11 @@ Route::get('/sitemap.xml', function () {
         ->header('Content-Type', 'application/xml');
 });
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
+// Public listing of every published standalone page (About, Contact, Terms,
+// Privacy, …) — styled after /tours. MUST stay registered before
+// /pages/{slug} below, otherwise the index would be swallowed by that
+// parameterised show route and 404 on the literal slug "pages".
+Route::get('/pages', [PublicPageController::class, 'index'])->name('pages.index');
 Route::get('/pages/{slug}', [PageController::class, 'show'])->name('page.show');
 Route::get('/tours', [TourController::class, 'index'])->name('tours.index');
 Route::get('/tours/search-destinations', [TourController::class, 'searchDestinations'])->name('tours.searchDestinations');
