@@ -147,7 +147,16 @@
       form.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        var current = form.dataset.current || 'your custom text';
+        // dataset.current holds admin-entered copy, so it is untrusted. The
+        // Blade attribute escaped it once on the way into the attribute, but
+        // that only protects the attribute — it is raw text once read back
+        // out, and SweetAlert's `html` option parses it as markup. Escape it
+        // again for an HTML context, or copy such as "a <b>b</b>" (or
+        // "a <img src=x onerror=...>") would be injected into the dialog.
+        var raw = form.dataset.current || '';
+        var escaped = document.createElement('div');
+        escaped.textContent = raw;
+        var current = escaped.innerHTML;
 
         Swal.fire({
           icon: 'warning',

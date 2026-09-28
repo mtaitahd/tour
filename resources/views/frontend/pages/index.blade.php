@@ -12,8 +12,9 @@
     .sfb-empty-results and the shared pagination partial.
 
     Because the grid and cards are literally the tours markup, the two listings
-    cannot drift apart visually. There is deliberately no bespoke
-    .sfb-page-card layout CSS — only spacing refinements.
+    cannot drift apart visually. The .sfb-page-card class on the article is a
+    marker for this template only — it carries no CSS, because there is nothing
+    to override.
 
     THE SIDEBAR is a filter panel, not a directory. It used to hold a keyword
     search plus a "Browse A-Z" alphabet jump; the A-Z block is gone entirely
@@ -31,11 +32,18 @@
     because the pages table has no such columns, and there is no status filter
     because /pages is public and ?status=draft would render drafts to anyone.
 
-    The panel is one white card with hairline dividers between groups rather
-    than a stack of separate cards, and it is sticky on desktop so it stays
-    with the reader. Under 992px the same markup becomes a slide-in drawer
-    behind the "Filter Pages" button (.sfb-mobile-filter-toggle), which is the
-    class /tours already uses, so the two drawers behave identically.
+    The panel is the /tours filter markup, reused rather than restyled:
+    .sfb-safari-panel, .sfb-safari-control, .sfb-filter-section, .sfb-check-list
+    and .sfb-filter-actions. The options are native checkboxes and radios, so
+    they are keyboard operable and get the shared accent-color tint without any
+    custom mark. Two things are pages-only: .sfb-pages-search__input, because
+    the tours search is a submit button and a text input needs its own font and
+    placeholder rules, and .sfb-pages-filters__hint for the "N pages match" line.
+
+    The panel is sticky on desktop so it stays with the reader. Under 992px the
+    same markup becomes a slide-in drawer behind the "Filter Pages" button
+    (.sfb-mobile-filter-toggle), which is the class /tours already uses, so the
+    two drawers behave identically.
 
     Expects from the controller:
         - $pages          LengthAwarePaginator of App\Models\Page
@@ -183,90 +191,87 @@
                     {{-- A plain GET form: unchecked boxes simply do not submit,
                          so removing a filter needs no JavaScript. The
                          data-sfb-auto fields re-submit on change for the instant
-                         feel, and the buttons below still work without it. --}}
-                    <form method="GET" action="{{ route('pages.index') }}" class="sfb-pages-filters" data-sfb-filter-form>
-                        <div class="sfb-pages-filters__panel">
+                         feel, and the buttons below still work without it.
 
-                            <section class="sfb-pages-filters__section sfb-pages-filters__section--search" aria-labelledby="pages-search-title">
-                                <h2 class="sfb-pages-filters__title" id="pages-search-title">Search Pages</h2>
+                         The section/card/option classes are the /tours ones
+                         (.sfb-safari-panel, .sfb-filter-section, .sfb-check-list,
+                         .sfb-filter-actions) so both sidebars render from the
+                         same CSS and cannot drift apart. Only the filters
+                         themselves differ: pages have no duration, price,
+                         country or category to filter on. --}}
+                    <form method="GET" action="{{ route('pages.index') }}" class="sfb-filter-form" data-sfb-filter-form>
+                        <section class="sfb-safari-panel" aria-labelledby="pages-search-title">
+                            <h2 id="pages-search-title">Search Pages</h2>
 
-                                <div class="sfb-pages-filters__search">
-                                    <i class="isax isax-search-1" aria-hidden="true"></i>
+                            <div class="sfb-safari-control">
+                                <i class="isax isax-search-1 sfb-safari-control__icon" aria-hidden="true"></i>
+                                <div class="sfb-pages-search">
                                     <input type="search"
                                            name="search"
-                                           class="sfb-pages-filters__search-input"
+                                           class="sfb-pages-search__input"
                                            placeholder="Search pages, e.g. refund policy"
                                            value="{{ $search }}"
                                            autocomplete="off"
                                            aria-label="Search pages">
                                 </div>
-
-                                <button type="submit" class="sfb-pages-filters__submit">Search</button>
-
-                                <p class="sfb-pages-filters__hint" aria-live="polite">
-                                    <strong>{{ number_format($pages->total()) }}</strong>
-                                    {{ Str::plural('page', $pages->total()) }} {{ $hasSelectedFilters ? 'match your filters' : 'available' }}
-                                </p>
-                            </section>
-
-                            @if($readOptions)
-                                <section class="sfb-pages-filters__section" aria-labelledby="filter-read">
-                                    <h3 class="sfb-pages-filters__heading" id="filter-read">Reading time</h3>
-                                    <ul class="sfb-pages-filters__options">
-                                        @foreach($readOptions as $value => $count)
-                                            <li>
-                                                <label>
-                                                    <input type="checkbox" name="read[]" value="{{ $value }}"
-                                                           @checked(in_array($value, $readFilters, true)) data-sfb-auto>
-                                                    <span class="sfb-pages-filters__mark" aria-hidden="true"></span>
-                                                    <span class="sfb-pages-filters__label">{{ $readLabels[$value] }}</span>
-                                                    <em>{{ $count }}</em>
-                                                </label>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </section>
-                            @endif
-
-                            @if($updatedOptions)
-                                <section class="sfb-pages-filters__section" aria-labelledby="filter-updated">
-                                    <h3 class="sfb-pages-filters__heading" id="filter-updated">Last updated</h3>
-                                    <ul class="sfb-pages-filters__options">
-                                        @foreach($updatedOptions as $value => $count)
-                                            <li>
-                                                <label>
-                                                    <input type="checkbox" name="updated[]" value="{{ $value }}"
-                                                           @checked(in_array($value, $updatedFilters, true)) data-sfb-auto>
-                                                    <span class="sfb-pages-filters__mark" aria-hidden="true"></span>
-                                                    <span class="sfb-pages-filters__label">{{ $updatedLabels[$value] }}</span>
-                                                    <em>{{ $count }}</em>
-                                                </label>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </section>
-                            @endif
-
-                            <section class="sfb-pages-filters__section" aria-labelledby="filter-sort">
-                                <h3 class="sfb-pages-filters__heading" id="filter-sort">Sort results by</h3>
-                                <ul class="sfb-pages-filters__options sfb-pages-filters__options--radio">
-                                    @foreach($sortLabels as $value => $label)
-                                        <li>
-                                            <label>
-                                                <input type="radio" name="sort" value="{{ $value }}"
-                                                       @checked($activeSort === $value) data-sfb-auto>
-                                                <span class="sfb-pages-filters__mark" aria-hidden="true"></span>
-                                                <span class="sfb-pages-filters__label">{{ $label }}</span>
-                                            </label>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </section>
-
-                            <div class="sfb-pages-filters__actions">
-                                <button type="submit">Apply Filters</button>
-                                <a href="{{ route('pages.index') }}">Clear all filters</a>
                             </div>
+
+                            <button type="submit" class="sfb-show-tours">Search Pages</button>
+
+                            <p class="sfb-pages-filters__hint" aria-live="polite">
+                                <strong>{{ number_format($pages->total()) }}</strong>
+                                {{ Str::plural('page', $pages->total()) }} {{ $hasSelectedFilters ? 'match your filters' : 'available' }}
+                            </p>
+                        </section>
+
+                        @if($readOptions)
+                            <section class="sfb-filter-section" aria-labelledby="filter-read">
+                                <h3 id="filter-read">Reading time</h3>
+                                <div class="sfb-check-list">
+                                    @foreach($readOptions as $value => $count)
+                                        <label>
+                                            <input type="checkbox" name="read[]" value="{{ $value }}"
+                                                   @checked(in_array($value, $readFilters, true)) data-sfb-auto>
+                                            <span>{{ $readLabels[$value] }}</span>
+                                            <em>{{ $count }}</em>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </section>
+                        @endif
+
+                        @if($updatedOptions)
+                            <section class="sfb-filter-section" aria-labelledby="filter-updated">
+                                <h3 id="filter-updated">Last updated</h3>
+                                <div class="sfb-check-list">
+                                    @foreach($updatedOptions as $value => $count)
+                                        <label>
+                                            <input type="checkbox" name="updated[]" value="{{ $value }}"
+                                                   @checked(in_array($value, $updatedFilters, true)) data-sfb-auto>
+                                            <span>{{ $updatedLabels[$value] }}</span>
+                                            <em>{{ $count }}</em>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </section>
+                        @endif
+
+                        <section class="sfb-filter-section" aria-labelledby="filter-sort">
+                            <h3 id="filter-sort">Sort results by</h3>
+                            <div class="sfb-check-list">
+                                @foreach($sortLabels as $value => $label)
+                                    <label>
+                                        <input type="radio" name="sort" value="{{ $value }}"
+                                               @checked($activeSort === $value) data-sfb-auto>
+                                        <span>{{ $label }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </section>
+
+                        <div class="sfb-filter-actions">
+                            <button type="submit">Apply Filters</button>
+                            <a href="{{ route('pages.index') }}">Clear all filters</a>
                         </div>
                     </form>
                 </aside>
