@@ -26856,6 +26856,36 @@ table.table.dataTable > thead > tr th {
   accent-color: #0B6B3A;
 }
 
+/* A global rule earlier in this file paints every range track
+   `background-color: #E4EBF1`. Setting a track background replaces the
+   browser's accent-coloured fill, so on these two filters the green would
+   stop at the thumb and the "active" stretch of the track would stay grey.
+   Re-declaring the track here keeps it green, and ::-moz-range-progress
+   gives Firefox a real filled section (WebKit has no equivalent
+   pseudo-element, so there the thumb carries the green). */
+.sfb-range-stack input[type="range"]::-webkit-slider-runnable-track {
+  background: #F3F8F5;
+  border-radius: 999px;
+}
+
+.sfb-range-stack input[type="range"]::-webkit-slider-thumb {
+  background: #0B6B3A;
+}
+
+.sfb-range-stack input[type="range"]::-moz-range-track {
+  background: #F3F8F5;
+  border-radius: 999px;
+}
+
+.sfb-range-stack input[type="range"]::-moz-range-progress {
+  background: #0B6B3A;
+}
+
+.sfb-range-stack input[type="range"]::-moz-range-thumb {
+  background: #0B6B3A;
+  border: 0;
+}
+
 .sfb-number-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -27925,15 +27955,15 @@ body.sfb-filter-lock {
   align-items: center;
   justify-content: center;
   background: #fff;
-  border: 1px solid #d8d8d8;
+  border: 1px solid #B7D5C4;
   border-radius: 2px;
   cursor: pointer;
-  color: #067A62;
+  color: #0B6B3A;
   transition: background .2s ease;
 }
 
 .sdc-nav-btn--next {
-  color: #067A62;
+  color: #0B6B3A;
 }
 
 .sdc-nav-btn:hover:not(:disabled) {
@@ -27991,7 +28021,7 @@ body.sfb-filter-lock {
   justify-content: center;
   font-family: 'Montserrat', 'Inter', sans-serif;
   font-size: 20px;
-  background: #eef8fa;
+  background: #F3F8F5;
   color: #08552F;
   border: 1px solid #d5d5d5;
   margin: -1px 0 0 -1px;
@@ -28001,7 +28031,7 @@ body.sfb-filter-lock {
 }
 
 .calendar-day:hover:not(:disabled):not(.is-selected) {
-  background: #d9eff5;
+  background: #F3F8F5;
 }
 
 .calendar-day:focus-visible {
@@ -28017,10 +28047,15 @@ body.sfb-filter-lock {
 
 .calendar-day.is-selected,
 .calendar-day.is-selected:hover {
-  background: #0B6B4F;
+  background: #0B6B3A;
   color: #fff;
   font-weight: 700;
   box-shadow: none;
+}
+
+/* The selected day deepens on hover instead of staying flat. */
+.calendar-day.is-selected:hover {
+  background: #08552F;
 }
 
 /* Past dates — muted with a thin red diagonal slash */
@@ -28063,7 +28098,7 @@ body.sfb-filter-lock {
   width: 26px;
   height: 26px;
   flex-shrink: 0;
-  accent-color: #0B6B4F;
+  accent-color: #0B6B3A;
   cursor: pointer;
 }
 
@@ -28116,8 +28151,8 @@ body.sfb-filter-lock {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #eef8fa;
-  color: #067A62;
+  background: #F3F8F5;
+  color: #0B6B3A;
   border: 1px solid #d8d8d8;
   cursor: pointer;
   transition: background .15s ease;
@@ -28132,7 +28167,7 @@ body.sfb-filter-lock {
 }
 
 .tp-counter__btn:hover:not(:disabled) {
-  background: #d9eff5;
+  background: #F3F8F5;
 }
 
 .tp-counter__btn:focus-visible {
@@ -28174,8 +28209,8 @@ body.sfb-filter-lock {
   min-width: 175px;
   min-height: 58px;
   background: #fff;
-  color: #067A62;
-  border: 1px solid #d8d8d8;
+  color: #0B6B3A;
+  border: 1px solid #B7D5C4;
   border-radius: 2px;
   box-shadow: 0 3px 8px rgba(15, 30, 45, 0.12);
   font-family: 'Montserrat', 'Inter', sans-serif;
@@ -28186,7 +28221,7 @@ body.sfb-filter-lock {
 }
 
 .tp-done:hover {
-  background: #f6fbf9;
+  background: #F3F8F5;
   transform: translateY(-1px);
 }
 
@@ -28900,7 +28935,7 @@ body.sfb-filter-lock {
   position: absolute;
   z-index: 10560;
   background: #fff;
-  border: 1px solid #e3e8ed;
+  border: 1px solid #B7D5C4;
   border-radius: 6px;
   box-shadow: 0 18px 44px rgba(15, 30, 45, 0.18);
   overflow: visible;
