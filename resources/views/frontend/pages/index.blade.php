@@ -1,7 +1,7 @@
 @extends('frontend.layouts.app')
 
 {{--
-    Public /pages listing.
+    Public /pages listing — "Travel Information".
 
     Layout is the /tours listing layout, element for element:
         .sfb-listing-page > .sfb-breadcrumb > .sfb-container.sfb-main-wrap >
@@ -13,37 +13,53 @@
 
     Because the grid and cards are literally the tours markup, the two listings
     cannot drift apart visually. There is deliberately no bespoke
-    .sfb-page-card CSS.
+    .sfb-page-card layout CSS — only spacing refinements.
 
-    The sidebar offers only filters that are meaningful for text pages: a
-    keyword search and an A-Z jump. It deliberately does NOT offer the tours
-    facets (length, price, country, park, accommodation) because the pages table
-    has no such columns — the tours filters are hard-coded to tour fields, and
-    faking them for pages would mean inventing database columns for every page.
-    Nor is there a status filter: /pages is public, so a ?status=draft style
-    filter would render unpublished pages to anyone who typed it.
+    THE SIDEBAR is a filter panel, not a directory. It used to hold a keyword
+    search plus a "Browse A-Z" alphabet jump; the A-Z block is gone entirely
+    (no alphabet, no initials, nothing in its place) and is replaced by filter
+    groups, each of which is a real predicate on a real column and is backed by
+    a live facet count:
+
+        Reading time   — from the content length (Page::estimateReadingMinutes)
+        Last updated   — from updated_at
+        Sort by        — order / title / updated_at
+
+    A group is only rendered when at least one of its options would actually
+    return something, so the panel can never offer a decorative checkbox. The
+    tours facets (duration, price, country, park, accommodation) are absent
+    because the pages table has no such columns, and there is no status filter
+    because /pages is public and ?status=draft would render drafts to anyone.
+
+    The panel is one white card with hairline dividers between groups rather
+    than a stack of separate cards, and it is sticky on desktop so it stays
+    with the reader. Under 992px the same markup becomes a slide-in drawer
+    behind the "Filter Pages" button (.sfb-mobile-filter-toggle), which is the
+    class /tours already uses, so the two drawers behave identically.
 
     Expects from the controller:
-        - $pages        LengthAwarePaginator of App\Models\Page
-        - $search       current keyword, '' when empty
-        - $letter       current A-Z letter, '' when empty
-        - $letterCounts letter => number of matching pages
-        - $alphabet     the offered letters
+        - $pages          LengthAwarePaginator of App\Models\Page
+        - $search         current keyword, '' when empty
+        - $readFilters    selected reading-time buckets
+        - $updatedFilters selected recency buckets
+        - $sort           selected sort mode, '' when untouched
+        - $readLabels     bucket => label
+        - $updatedLabels  bucket => label
+        - $readCounts     bucket => pages that would match
+        - $updatedCounts  bucket => pages that would match
 --}}
 
 @php
     use App\Models\Page;
     use App\Models\Setting;
+    use App\Services\ListingTitles;
     use Illuminate\Support\Str;
 
-    $listingTitle = 'Help & Information';
-    $introSource  = Setting::get('pages_listing_intro');
-    // Default copy deliberately does not advertise Terms or Contact details:
-    // those are site-information pages and are no longer part of this listing.
-    // They are still one click away in the header and footer.
-    $listingIntro = $introSource
-        ? Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($introSource))), 540)
-        : 'Browse everything Afro-Vertex has published on travelling with us — trip information, policies and practical guidance. Our About, Contact and Terms pages are a click away in the menu.';
+    // Heading and intro are editable at Admin → Listing Titles; the shipped
+    // values below are what renders when no override has been saved.
+    $listingTitle = ListingTitles::title('pages_listing_title', 'Travel Information');
+    $listingIntro = ListingTitles::intro('pages_listing_intro')
+        ?? 'Explore useful travel information, destination guides, safari insights, policies and practical resources to help you plan your journey with Afro-Vertex Tours & Safaris.';
 
     $operatorName = Setting::get('site_name', 'Afro-Vertex Tours & Safaris');
     $operatorLogo = Setting::logoUrlOrDefault();
@@ -57,25 +73,88 @@
         'front-end/html/assets/images/safari-hero.jpg',
     );
 
-    $hasSelectedFilters = $search !== '' || $letter !== '';
+    $sortLabels = [
+        'alpha'    => 'Title (A to Z)',
+        'featured' => 'Featured order',
+        'recent'   => 'Recently updated',
+    ];
 
-    // Drop one filter while keeping the others, and always reset to page 1 —
-    // staying on page 4 of a set that just shrank shows an empty grid.
-    $withoutParam = function (string $key) {
-        return route('pages.index', array_diff_key(request()->except(['page']), [$key => true]));
+    // A radio group always has something checked, so an untouched sort is
+    // sent as the first entry rather than as an absent parameter.
+    $activeSort = $sort !== '' ? $sort : array_key_first($sortLabels);
+
+    // Only offer an option that would return something, unless it is already
+    // ticked — an unticked option always has a non-zero count, and a ticked one
+    // has to stay visible or there would be no way to untick it.
+    $offerOption = fn (array $counts, array $selected): array => array_filter(
+        $counts,
+        fn (int $count, string $key): bool => $count > 0 || in_array($key, $selected, true),
+        ARRAY_FILTER_USE_BOTH,
+    );
+
+    $readOptions    = $offerOption($readCounts, $readFilters);
+    $updatedOptions = $offerOption($updatedCounts, $updatedFilters);
+
+    $hasSelectedFilters = $search !== ''
+        || $readFilters !== []
+        || $updatedFilters !== []
+        || $sort !== '';
+
+    // Build a listing URL with one filter (or one value of a filter) removed,
+    // always resetting to page 1 — staying on page 4 of a set that just shrank
+    // shows an empty grid. Same helper shape the /tours listing uses.
+    $filterUrl = function (?string $key = null, ?string $value = null) {
+        $query = request()->query();
+        unset($query['page']);
+
+        if ($key !== null) {
+            if ($value !== null && isset($query[$key]) && is_array($query[$key])) {
+                $query[$key] = array_values(array_filter(
+                    $query[$key],
+                    fn ($item) => (string) $item !== $value
+                ));
+
+                if ($query[$key] === []) {
+                    unset($query[$key]);
+                }
+            } else {
+                unset($query[$key]);
+            }
+        }
+
+        return route('pages.index', $query);
     };
+
+    // The removable chips in the "Selected filters" row, built from exactly the
+    // filters that are live, so a chip can never appear for something the query
+    // is not actually filtering on.
+    $activeChips = [];
+    if ($search !== '') {
+        $activeChips[] = ['label' => '"' . $search . '"', 'url' => $filterUrl('search')];
+    }
+    foreach ($readFilters as $value) {
+        $activeChips[] = ['label' => $readLabels[$value], 'url' => $filterUrl('read', $value)];
+    }
+    foreach ($updatedFilters as $value) {
+        $activeChips[] = ['label' => $updatedLabels[$value], 'url' => $filterUrl('updated', $value)];
+    }
+    if ($sort !== '') {
+        $activeChips[] = ['label' => 'Sorted by ' . $sortLabels[$activeSort], 'url' => $filterUrl('sort')];
+    }
 @endphp
 
 @section('body-class', 'is-pages-listing is-tours-listing')
 
-@section('title', $listingTitle . ' | Afro-Vertex Tours & Safaris')
-
-@section('extra-head')
-    <meta name="description" content="{{ Str::limit($listingIntro, 160) }}">
-@endsection
+{{-- No @section('title') / description here on purpose. The frontend layout
+     takes its <title> and meta description from the $meta array built by the
+     view composer in AppServiceProvider, and it does not yield a "title"
+     section at all — emitting one would silently do nothing, and emitting a
+     second <meta name="description"> would duplicate the one the layout prints
+     using $meta['description']. The composer reads pages_listing_title from the
+     same ListingTitles service as the H1 below, so the two stay in step. --}}
 
 @section('page-content')
-    <div class="sfb-listing-page">
+    <div class="sfb-listing-page is-pages-listing">
         <nav class="sfb-breadcrumb" aria-label="Breadcrumb">
             <div class="sfb-container">
                 <a href="{{ route('home') }}">Home</a>
@@ -85,7 +164,9 @@
         </nav>
 
         <div class="sfb-container sfb-main-wrap">
-            <button type="button" class="sfb-filter-toggle" data-sfb-open-filters aria-expanded="false" aria-controls="sfbFilterDrawer">
+            {{-- Same class the /tours listing uses, so this button inherits
+                 styling that already exists rather than needing its own. --}}
+            <button type="button" class="sfb-mobile-filter-toggle" data-sfb-open-filters aria-expanded="false" aria-controls="sfbFilterDrawer">
                 <i class="isax isax-filter" aria-hidden="true"></i>
                 Filter Pages
             </button>
@@ -93,73 +174,104 @@
             <div class="sfb-drawer-backdrop" data-sfb-close-filters hidden></div>
 
             <div class="sfb-layout">
-                <aside class="sfb-sidebar" id="sfbFilterDrawer" aria-label="Page filters" data-sfb-filter-drawer>
+                <aside class="sfb-sidebar sfb-sidebar--pages" id="sfbFilterDrawer" aria-label="Page filters" data-sfb-filter-drawer>
                     <div class="sfb-sidebar__mobile-head">
                         <strong>Filter Pages</strong>
                         <button type="button" data-sfb-close-filters aria-label="Close filters">&times;</button>
                     </div>
 
-                    <form method="GET" action="{{ route('pages.index') }}" class="sfb-filter-form" data-sfb-filter-form>
-                        <section class="sfb-safari-panel" aria-labelledby="pages-search-title">
-                            <h2 id="pages-search-title">Search Pages</h2>
+                    {{-- A plain GET form: unchecked boxes simply do not submit,
+                         so removing a filter needs no JavaScript. The
+                         data-sfb-auto fields re-submit on change for the instant
+                         feel, and the buttons below still work without it. --}}
+                    <form method="GET" action="{{ route('pages.index') }}" class="sfb-pages-filters" data-sfb-filter-form>
+                        <div class="sfb-pages-filters__panel">
 
-                            <div class="sfb-safari-control">
-                                <i class="isax isax-search-1 sfb-safari-control__icon" aria-hidden="true"></i>
-                                <div class="sfb-safari-field sfb-safari-field--button{{ $search !== '' ? ' has-value' : '' }}">
+                            <section class="sfb-pages-filters__section sfb-pages-filters__section--search" aria-labelledby="pages-search-title">
+                                <h2 class="sfb-pages-filters__title" id="pages-search-title">Search Pages</h2>
+
+                                <div class="sfb-pages-filters__search">
+                                    <i class="isax isax-search-1" aria-hidden="true"></i>
                                     <input type="search"
                                            name="search"
-                                           class="sfb-safari-field__input"
+                                           class="sfb-pages-filters__search-input"
                                            placeholder="Search pages, e.g. refund policy"
                                            value="{{ $search }}"
                                            autocomplete="off"
                                            aria-label="Search pages">
                                 </div>
-                            </div>
 
-                            @if($letter !== '')
-                                {{-- Keep the active letter when the search box is
-                                     submitted, otherwise typing a new keyword would
-                                     silently drop the A-Z filter. --}}
-                                <input type="hidden" name="letter" value="{{ $letter }}">
+                                <button type="submit" class="sfb-pages-filters__submit">Search</button>
+
+                                <p class="sfb-pages-filters__hint" aria-live="polite">
+                                    <strong>{{ number_format($pages->total()) }}</strong>
+                                    {{ Str::plural('page', $pages->total()) }} {{ $hasSelectedFilters ? 'match your filters' : 'available' }}
+                                </p>
+                            </section>
+
+                            @if($readOptions)
+                                <section class="sfb-pages-filters__section" aria-labelledby="filter-read">
+                                    <h3 class="sfb-pages-filters__heading" id="filter-read">Reading time</h3>
+                                    <ul class="sfb-pages-filters__options">
+                                        @foreach($readOptions as $value => $count)
+                                            <li>
+                                                <label>
+                                                    <input type="checkbox" name="read[]" value="{{ $value }}"
+                                                           @checked(in_array($value, $readFilters, true)) data-sfb-auto>
+                                                    <span class="sfb-pages-filters__mark" aria-hidden="true"></span>
+                                                    <span class="sfb-pages-filters__label">{{ $readLabels[$value] }}</span>
+                                                    <em>{{ $count }}</em>
+                                                </label>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </section>
                             @endif
 
-                            <button type="submit" class="sfb-show-tours">
-                                Show <b>{{ number_format($pages->total()) }}</b> {{ Str::plural('Page', $pages->total()) }}
-                            </button>
-                        </section>
+                            @if($updatedOptions)
+                                <section class="sfb-pages-filters__section" aria-labelledby="filter-updated">
+                                    <h3 class="sfb-pages-filters__heading" id="filter-updated">Last updated</h3>
+                                    <ul class="sfb-pages-filters__options">
+                                        @foreach($updatedOptions as $value => $count)
+                                            <li>
+                                                <label>
+                                                    <input type="checkbox" name="updated[]" value="{{ $value }}"
+                                                           @checked(in_array($value, $updatedFilters, true)) data-sfb-auto>
+                                                    <span class="sfb-pages-filters__mark" aria-hidden="true"></span>
+                                                    <span class="sfb-pages-filters__label">{{ $updatedLabels[$value] }}</span>
+                                                    <em>{{ $count }}</em>
+                                                </label>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </section>
+                            @endif
 
-                        <section class="sfb-filter-section" aria-labelledby="filter-letter">
-                            <h3 id="filter-letter">Browse A-Z</h3>
-                            <div class="sfb-check-list sfb-az-list" role="group" aria-label="Browse pages alphabetically">
-                                @foreach($alphabet as $candidate)
-                                    @php $count = $letterCounts[$candidate] ?? 0; @endphp
-                                    @if($count > 0)
-                                        <a class="sfb-az-link{{ $letter === $candidate ? ' is-active' : '' }}"
-                                           href="{{ $letter === $candidate ? $withoutParam('letter') : route('pages.index', array_merge(request()->except(['page']), ['letter' => $candidate])) }}"
-                                           @if($letter === $candidate) aria-current="true" @endif>
-                                            <span>{{ $candidate }}</span>
-                                            <em>{{ $count }}</em>
-                                        </a>
-                                    @else
-                                        {{-- No page starts with this letter: rendered
-                                             disabled rather than hidden, so the
-                                             alphabet keeps its full A-Z shape. --}}
-                                        <span class="sfb-az-link is-empty" aria-disabled="true">
-                                            <span>{{ $candidate }}</span>
-                                        </span>
-                                    @endif
-                                @endforeach
+                            <section class="sfb-pages-filters__section" aria-labelledby="filter-sort">
+                                <h3 class="sfb-pages-filters__heading" id="filter-sort">Sort results by</h3>
+                                <ul class="sfb-pages-filters__options sfb-pages-filters__options--radio">
+                                    @foreach($sortLabels as $value => $label)
+                                        <li>
+                                            <label>
+                                                <input type="radio" name="sort" value="{{ $value }}"
+                                                       @checked($activeSort === $value) data-sfb-auto>
+                                                <span class="sfb-pages-filters__mark" aria-hidden="true"></span>
+                                                <span class="sfb-pages-filters__label">{{ $label }}</span>
+                                            </label>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </section>
+
+                            <div class="sfb-pages-filters__actions">
+                                <button type="submit">Apply Filters</button>
+                                <a href="{{ route('pages.index') }}">Clear all filters</a>
                             </div>
-                        </section>
-
-                        <div class="sfb-filter-actions">
-                            <button type="submit">Apply Filters</button>
-                            <a href="{{ route('pages.index') }}">Clear All Filters</a>
                         </div>
                     </form>
                 </aside>
 
-                <main class="sfb-results" id="sfb-results-start" aria-label="Site pages">
+                <main class="sfb-results" id="sfb-results-start" aria-label="{{ $listingTitle }}">
                     <header class="sfb-results-header">
                         <h1>{{ $listingTitle }}</h1>
                         <p>{{ $listingIntro }}</p>
@@ -170,12 +282,10 @@
                         @if(!$hasSelectedFilters)
                             <span class="sfb-selected-chip sfb-selected-chip--muted">All pages</span>
                         @else
-                            @if($letter !== '')
-                                <a class="sfb-selected-chip" href="{{ $withoutParam('letter') }}">{{ $letter }} <b>&times;</b></a>
-                            @endif
-                            @if($search !== '')
-                                <a class="sfb-selected-chip" href="{{ $withoutParam('search') }}">&ldquo;{{ $search }}&rdquo; <b>&times;</b></a>
-                            @endif
+                            @foreach($activeChips as $chip)
+                                <a class="sfb-selected-chip" href="{{ $chip['url'] }}">{{ $chip['label'] }} <b>&times;</b></a>
+                            @endforeach
+                            <a class="sfb-selected-chip sfb-selected-chip--clear" href="{{ route('pages.index') }}">Clear all</a>
                         @endif
                     </div>
 
@@ -190,12 +300,15 @@
                                 $heroImage = $pageItem->hasHeroImage()
                                     ? ($pageItem->heroUrl('medium') ?: $pageItem->heroUrl() ?: $fallbackImage)
                                     : $fallbackImage;
+                                // Same estimate the sidebar's "Reading time"
+                                // facet filters on, so a card can never end up in
+                                // a bucket its own badge contradicts.
+                                $readMinutes = $pageItem->readingMinutes();
                                 $plainText = trim(preg_replace('/\s+/', ' ', strip_tags((string) $pageItem->content)));
                                 $wordCount = str_word_count($plainText);
-                                $readMinutes = max(1, (int) ceil($wordCount / 200));
                                 $updatedLabel = $pageItem->updated_at?->format('j M Y');
                             @endphp
-                            <article class="sfb-tour-card">
+                            <article class="sfb-tour-card sfb-page-card">
                                 <a class="sfb-tour-card__full-link" href="{{ route('page.show', $pageItem->slug) }}" aria-label="Read {{ $pageItem->title }}"></a>
                                 <div class="sfb-tour-card__image-wrap">
                                     <img src="{{ $heroImage }}" alt="{{ $pageItem->title }}" loading="{{ $loop->index < 4 ? 'eager' : 'lazy' }}">
@@ -250,9 +363,19 @@
                             </article>
                         @empty
                             <div class="sfb-empty-results">
-                                <h2>{{ $search !== '' ? 'No pages found matching "' . $search . '".' : ($letter !== '' ? 'No pages starting with "' . $letter . '".' : 'No pages have been published yet.') }}</h2>
-                                <p>{{ $hasSelectedFilters ? 'Try a different keyword or letter, or browse the full list of pages.' : 'Please check back soon.' }}</p>
-                                <a href="{{ route('pages.index') }}">Clear All Filters</a>
+                                <h2>
+                                    @if($search !== '')
+                                        No pages found matching &ldquo;{{ $search }}&rdquo;.
+                                    @elseif($readFilters !== [] || $updatedFilters !== [])
+                                        No pages match the filters you picked.
+                                    @else
+                                        No pages have been published yet.
+                                    @endif
+                                </h2>
+                                <p>{{ $hasSelectedFilters ? 'Try a different keyword, loosen a filter, or browse the full list of pages.' : 'Please check back soon.' }}</p>
+                                @if($hasSelectedFilters)
+                                    <a href="{{ route('pages.index') }}">Clear All Filters</a>
+                                @endif
                             </div>
                         @endforelse
                     </div>

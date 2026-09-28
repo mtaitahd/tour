@@ -50,6 +50,140 @@ class Page extends Model implements HasMedia
         return array_key_exists($this->slug, self::SITE_INFO_PAGES);
     }
 
+    /* ---------------------------------------------------------------------
+       Reading-time estimate
+       ---------------------------------------------------------------------
+       Used for BOTH the "Reading time" metadata on the listing card and the
+       "Reading time" facet group in the filter sidebar, so a card can never
+       land in a bucket its own badge contradicts.
+
+       The estimate is deliberately based on the stored character count rather
+       than a PHP word count. The sidebar has to reproduce it inside a SQL
+       WHERE clause to stay paginated at the database level, and character
+       count is the one measure of `content` that SQL and PHP agree on
+       byte-for-byte — CHAR_LENGTH() and mb_strlen() both count characters,
+       including the markup. A word count (str_word_count(strip_tags(...)))
+       has no portable SQL equivalent: stripping tags needs REGEXP_REPLACE,
+       which is not available on every MySQL build this app might run on, and
+       silently falling back to a different measure is how a filter ends up
+       disagreeing with the card it filters.
+
+       The exact word count is still shown next to the reading time on the
+       card, so the raw figure remains available and nothing was lost.
+       ------------------------------------------------------------------- */
+
+    /**
+     * Characters of stored content treated as one minute of reading. 1000
+     * characters sits around a 165 wpm reading speed once the markup a CMS
+     * stores alongside the prose is included — conservative, and stable
+     * regardless of which editor produced the content.
+     */
+    public const READING_CHARS_PER_MINUTE = 1000;
+
+    /**
+     * Highest reading time, in minutes, still counted as a "short" read.
+     * Medium covers the next band, long everything above it.
+     */
+    public const READING_SHORT_MAX_MINUTES = 3;
+
+    /** Highest reading time, in minutes, still counted as a "medium" read. */
+    public const READING_MEDIUM_MAX_MINUTES = 8;
+
+    /**
+     * Estimated reading time of a chunk of stored content, in whole minutes,
+     * never below 1. Named estimateReadingMinutes rather than readingMinutes
+     * because this is the static form taking a string; the instance
+     * readingMinutes() below is the one templates call, and a class cannot
+     * declare both under the same name.
+     *
+     * Must stay mathematically identical to the SQL thresholds in
+     * readingBucketSql() below.
+     */
+    public static function estimateReadingMinutes(?string $content): int
+    {
+        $minutes = (int) ceil(mb_strlen((string) $content) / self::READING_CHARS_PER_MINUTE);
+
+        return max(1, $minutes);
+    }
+
+    /**
+     * Reading time of this page, in minutes.
+     */
+    public function readingMinutes(): int
+    {
+        return static::estimateReadingMinutes($this->content);
+    }
+
+    /**
+     * The reading-time bucket this page falls into. Drives the card badge and
+     * keeps the sidebar's option labels honest about what they match.
+     */
+    public function readingBucket(): string
+    {
+        return static::readingBucketFor($this->readingMinutes());
+    }
+
+    public static function readingBucketFor(int $minutes): string
+    {
+        if ($minutes <= self::READING_SHORT_MAX_MINUTES) {
+            return 'short';
+        }
+
+        if ($minutes <= self::READING_MEDIUM_MAX_MINUTES) {
+            return 'medium';
+        }
+
+        return 'long';
+    }
+
+    /**
+     * Human labels for the buckets, in the order they are shown.
+     *
+     * @return array<string, string>
+     */
+    public static function readingBucketLabels(): array
+    {
+        return [
+            'short'  => 'Quick read (up to ' . self::READING_SHORT_MAX_MINUTES . ' min)',
+            'medium' => 'In-depth (' . (self::READING_SHORT_MAX_MINUTES + 1) . '–' . self::READING_MEDIUM_MAX_MINUTES . ' min)',
+            'long'   => 'Deep dive (' . (self::READING_MEDIUM_MAX_MINUTES + 1) . '+ min)',
+        ];
+    }
+
+    /**
+     * Portable SQL expression for the character count the buckets are built on.
+     *
+     * COALESCE matters: `content` is nullable, and every comparison against
+     * NULL is unknown, so a page with no body would silently fall out of all
+     * three buckets instead of landing in "quick read" like the PHP estimate
+     * puts it (0 characters → 1 minute).
+     */
+    public static function readingLengthSql(): string
+    {
+        return 'CHAR_LENGTH(COALESCE(content, ' . "''" . '))';
+    }
+
+    /**
+     * A database-visible character-count range for a bucket. Deliberately
+     * derived from the same constants as estimateReadingMinutes() so the two can never
+     * drift: ceil(len / 1000) <= 3 exactly when len <= 3000.
+     *
+     * @return array{0: int, 1: ?int} inclusive min, inclusive max (null = open)
+     */
+    public static function readingBucketSql(string $bucket): array
+    {
+        $unit = self::READING_CHARS_PER_MINUTE;
+        $shortMax = self::READING_SHORT_MAX_MINUTES * $unit;
+        $mediumMax = self::READING_MEDIUM_MAX_MINUTES * $unit;
+
+        return match ($bucket) {
+            'short'  => [0, $shortMax],
+            'medium' => [$shortMax + 1, $mediumMax],
+            'long'   => [$mediumMax + 1, null],
+            default  => [0, null],
+        };
+    }
+
     protected $fillable = [
         'title',
         'slug',

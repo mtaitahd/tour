@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\View;
 use App\Models\Destination;
 use App\Models\TourCategory;
 use App\Pricing\LevelCatalog;
+use App\Services\ListingTitles;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use App\MediaLibrary\CustomUrlGenerator;
 
@@ -35,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
                 'title' => 'Afro-Vertex Tours & Safaris',
                 'description' => 'Discover the best safaris, climbs, and beach holidays in East Africa.',
                 'keywords' => 'safari, kilimanjaro, zanzibar, tanzania tours, africa travel',
-                'og_image' => asset('assets/img/og-default.jpg'),
+                'og_image' => asset('asset/img/og-default.jpg'),
                 'canonical'   => request()->url(),
             ];
 
@@ -46,7 +47,7 @@ class AppServiceProvider extends ServiceProvider
                 $meta['keywords'] = 'travel blog, safari tips, kilimanjaro guide, tanzania travel, africa adventures';
                 $meta['canonical']   = route('blog.index'); // always point to clean /blog
             } elseif (request()->routeIs('tours.index')) {
-                $meta['title'] = 'Tours & Safaris | Afro-Vertex Tours & Safaris';
+                $meta['title'] = ListingTitles::title('tours_listing_title', 'Our Best All Tours & Safaris Packages') . ' | Afro-Vertex Tours & Safaris';
                 $meta['description'] = 'Explore our wide range of Africa safaris, Kilimanjaro climbs, Zanzibar beaches, and group departures.';
                 $meta['keywords'] = 'africa safaris, kilimanjaro trekking, zanzibar tours, tanzania travel packages';
                 $meta['canonical']   = route('tours.index');
@@ -56,7 +57,11 @@ class AppServiceProvider extends ServiceProvider
                 $meta['keywords'] = 'serengeti national park, ngorongoro crater, zanzibar islands, kilimanjaro, east africa destinations';
                 $meta['canonical']   = route('destinations.index');
             } elseif (request()->routeIs('pages.index')) {
-                $meta['title'] = 'Help & Information | Afro-Vertex Tours & Safaris';
+                // Title follows the same setting the on-page H1 uses (Admin →
+                // Website Content → Listing Titles) so the browser tab cannot
+                // disagree with the heading. The description/keywords below stay
+                // hand-written: they are SEO copy, not the editable listing title.
+                $meta['title'] = ListingTitles::title('pages_listing_title', 'Travel Information') . ' | Afro-Vertex Tours & Safaris';
                 $meta['description'] = 'Booking terms, refund and privacy policies, contact details and everything else you need to know before travelling with Afro-Vertex Tours & Safaris.';
                 $meta['keywords'] = 'booking terms, refund policy, privacy policy, travel information, tanzania safari faq';
                 $meta['canonical']   = route('pages.index'); // always point to clean /pages

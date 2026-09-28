@@ -33913,75 +33913,641 @@ body.td-lock {
 
 
 /* ------------------------------------------------------------------
-   Pages listing (/pages).
+   Pages listing (/pages) — "Travel Information".
 
-   The page now uses the /tours layout wholesale: .sfb-layout with the
-   430px .sfb-sidebar on the left and .sfb-results on the right, the same
-   .sfb-tour-grid > .sfb-tour-card cards, and the same pagination partial.
-   frontend/pages/index.blade.php renders that markup directly, so there is
-   no page-specific card styling here at all — the two listings cannot drift
-   apart, and the earlier 3-column .sfb-tour-grid override is gone because it
-   only existed to compensate for /pages having no sidebar.
+   The page keeps the /tours layout: .sfb-layout with a left sidebar and
+   .sfb-results on the right, the same .sfb-tour-grid > .sfb-tour-card
+   cards, and the same pagination partial. frontend/pages/index.blade.php
+   renders that markup directly, so the cards need no page-specific CSS
+   and the two listings cannot drift apart.
 
-   All that remains is the A-Z jump list, which has no /tours equivalent. It
-   reuses the .sfb-check-list grid so it lines up with the checkbox lists
-   above it. The earlier standalone keyword-search-bar rules (.sfb-page-search)
-   and the .visually-hidden utility were removed along with that bar: the
-   search box now lives inside the sidebar using the standard
-   .sfb-safari-field styling, and nothing referenced either of them any more.
+   What IS specific to this page is the sidebar, which is a filter panel
+   rather than a directory:
+
+     - .sfb-sidebar--pages  widths it to ~25% of the content area, leaving
+                            ~75% for the cards. Percentage rather than the
+                            tours' fixed 430px so the proportion holds at
+                            every desktop size.
+     - .sfb-pages-filters  ONE white card containing every group, with
+                            hairline dividers between them. Deliberately not
+                            a stack of separate rounded cards: four boxes
+                            with four shadows reads as a dashboard, and the
+                            brief was dividers, not cards.
+     - .sfb-pages-filters__mark  the checkbox/radio. The real <input> is
+                            visually hidden but still in the tab order and
+                            still the thing a label click targets, so the
+                            whole row is the hit target and the control is
+                            operable by keyboard.
+
+   The "Browse A-Z" alphabet and its .sfb-az-* rules are gone, and nothing
+   replaced them: A-Z navigation has no equivalent anywhere in this block
+   or in the template that renders it.
    ------------------------------------------------------------------ */
 
-.sfb-az-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-  gap: 6px;
+.sfb-sidebar--pages {
+  flex: 0 0 25%;
+  width: 25%;
+  max-width: 430px;
+  min-width: 288px;
 }
 
-.sfb-az-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-  padding: 7px 6px;
+.sfb-pages-filters {
+  display: block;
+}
+
+.sfb-pages-filters__panel {
   background: #fff;
-  border: 1px solid #e3e8ee;
-  border-radius: 3px;
-  color: #2f363e;
+  border: 1px solid #dfe5eb;
+  border-radius: 4px;
+  padding: 0 24px;
+}
+
+.sfb-pages-filters__section {
+  padding: 22px 0;
+  border-top: 1px solid #eef1f4;
+}
+
+.sfb-pages-filters__section--search {
+  padding-top: 26px;
+  border-top: 0;
+}
+
+.sfb-pages-filters__title {
+  margin: 0 0 16px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px;
+  line-height: 1.12;
+  font-weight: 700;
+  color: #2f3338;
+}
+
+.sfb-pages-filters__heading {
+  margin: 0 0 12px;
   font-family: 'Montserrat', 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 800;
-  line-height: 1;
-  text-decoration: none;
-  transition: background .2s ease, border-color .2s ease, color .2s ease;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #2f3338;
 }
 
-.sfb-az-link em {
-  color: #727d88;
-  font-size: 11px;
+/* ── Search ─────────────────────────────────────────────────────── */
+
+.sfb-pages-filters__search {
+  position: relative;
+}
+
+.sfb-pages-filters__search i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: #0876a6;
+  pointer-events: none;
+}
+
+.sfb-pages-filters__search-input {
+  width: 100%;
+  min-height: 52px;
+  padding: 13px 14px 13px 42px;
+  font-family: 'Montserrat', 'Inter', sans-serif;
+  font-size: 16px;
+  color: #303741;
+  background: #fff;
+  border: 1px solid #d9dee4;
+  border-radius: 3px;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.sfb-pages-filters__search-input::placeholder {
+  color: #8b95a1;
+}
+
+.sfb-pages-filters__search-input:focus {
+  border-color: #0876a6;
+  box-shadow: 0 0 0 3px rgba(8, 118, 166, .12);
+}
+
+.sfb-pages-filters__submit {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #0876a6;
+  border: 1px solid #0876a6;
+  border-radius: 3px;
+  color: #fff;
+  font-family: 'Montserrat', 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease;
+}
+
+.sfb-pages-filters__submit:hover,
+.sfb-pages-filters__submit:focus-visible {
+  background: #075b82;
+  border-color: #075b82;
+}
+
+.sfb-pages-filters__hint {
+  margin: 10px 0 0;
+  text-align: center;
+  color: #6b7681;
+  font-family: 'Montserrat', 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+.sfb-pages-filters__hint strong {
+  color: #303741;
+}
+
+/* ── Filter groups ──────────────────────────────────────────────── */
+
+.sfb-pages-filters__options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.sfb-pages-filters__options label {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0;
+  padding: 9px 8px;
+  border-radius: 3px;
+  color: #303741;
+  font-family: 'Montserrat', 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.35;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+
+.sfb-pages-filters__options label:hover {
+  background: #f5f8fa;
+}
+
+/* Visually hidden, still focusable, still the control the label toggles. */
+.sfb-pages-filters__options input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sfb-pages-filters__mark {
+  position: relative;
+  flex: 0 0 auto;
+  width: 19px;
+  height: 19px;
+  background: #fff;
+  border: 1px solid #b9c1cb;
+  border-radius: 2px;
+  transition: background .15s ease, border-color .15s ease;
+}
+
+.sfb-pages-filters__mark::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform .15s ease;
+}
+
+.sfb-pages-filters__options input:checked + .sfb-pages-filters__mark {
+  background: #0876a6;
+  border-color: #0876a6;
+}
+
+.sfb-pages-filters__options input:checked + .sfb-pages-filters__mark::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.sfb-pages-filters__options input:focus-visible + .sfb-pages-filters__mark {
+  border-color: #0876a6;
+  box-shadow: 0 0 0 3px rgba(8, 118, 166, .18);
+}
+
+.sfb-pages-filters__label {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sfb-pages-filters__options em {
+  flex: 0 0 auto;
+  color: #7b8792;
+  font-size: 13px;
   font-style: normal;
   font-weight: 700;
 }
 
-.sfb-az-link:hover {
-  border-color: #0876a6;
-  color: #0876a6;
+/* Radios: round mark, dot instead of a tick. Overrides the checkbox
+   background/transform rather than reusing them, because the tick and the
+   dot are different shapes with different transforms. */
+.sfb-pages-filters__options--radio .sfb-pages-filters__mark {
+  border-radius: 50%;
 }
 
-.sfb-az-link.is-active {
+.sfb-pages-filters__options--radio .sfb-pages-filters__mark::after {
+  content: none;
+}
+
+.sfb-pages-filters__options--radio input:checked + .sfb-pages-filters__mark {
+  background: #fff;
+  background-image: radial-gradient(circle at center, #0876a6 0, #0876a6 4px, transparent 4.5px);
+  border-color: #0876a6;
+}
+
+/* ── Actions ────────────────────────────────────────────────────── */
+
+.sfb-pages-filters__actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  padding: 20px 0 24px;
+  border-top: 1px solid #eef1f4;
+}
+
+.sfb-pages-filters__actions button,
+.sfb-pages-filters__actions a {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  font-family: 'Montserrat', 'Inter', sans-serif;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sfb-pages-filters__actions button {
   background: #0876a6;
-  border-color: #0876a6;
+  border: 1px solid #0876a6;
+  color: #fff;
+  transition: background .2s ease, border-color .2s ease;
+}
+
+.sfb-pages-filters__actions button:hover,
+.sfb-pages-filters__actions button:focus-visible {
+  background: #075b82;
+  border-color: #075b82;
+}
+
+.sfb-pages-filters__actions a {
+  background: #fff;
+  border: 1px solid #cf4a3d;
+  color: #cf4a3d;
+  transition: background .2s ease, color .2s ease;
+}
+
+.sfb-pages-filters__actions a:hover,
+.sfb-pages-filters__actions a:focus-visible {
+  background: #cf4a3d;
   color: #fff;
 }
 
-.sfb-az-link.is-active em {
+.sfb-pages-filters__section:last-of-type {
+  padding-bottom: 22px;
+}
+
+/* Narrower desktop: hold the proportion instead of a fixed 360px/320px,
+   so the cards keep roughly three quarters of the row. */
+@media (max-width: 1399.98px) {
+  .sfb-sidebar--pages {
+    flex: 0 0 27%;
+    width: 27%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 1199.98px) and (min-width: 992px) {
+  .sfb-sidebar--pages {
+    flex: 0 0 30%;
+    width: 30%;
+    min-width: 0;
+  }
+}
+
+/* Below 992px the sidebar is the slide-in drawer, not a column. This has to
+   restate the drawer width because .sfb-sidebar--pages is declared later in
+   this file than the drawer's own rules and would otherwise win on order. */
+@media (max-width: 991.98px) {
+  .sfb-sidebar--pages {
+    flex: none;
+    width: min(400px, calc(100vw - 24px));
+    max-width: none;
+    min-width: 0;
+  }
+
+  .sfb-pages-filters__panel {
+    padding: 0 18px;
+  }
+
+  /* 44px minimum touch target on phones. */
+  .sfb-pages-filters__options label {
+    padding: 12px 8px;
+  }
+}
+
+
+/* ------------------------------------------------------------------
+   Listing filter theme — green.
+
+   Brief: every icon in the /tours and /pages filter sidebars, the
+   "Show N Tours" button, the Tour Length / Price Range controls, the
+   duration histogram, and the View Tour CTA all had to move onto the
+   brand green (#084d2a) instead of the old blue (#0876a6), with visible
+   borders on the filter controls.
+
+   Implemented as a trailing override layer rather than ~30 in-place
+   edits inside the .sfb-* blocks above. Those rules are interleaved with
+   layout and typography for other pages that share the same components
+   (breadcrumbs, FAQ, .wt-* dropdowns), so editing them in place would
+   have meant re-deriving the cascade by hand in a 34k-line file. A
+   single appended layer wins on source order, states its intent once,
+   and can be deleted in one step to revert.
+
+   Deliberately NOT themed: .sfb-breadcrumb, .sfb-faq-* (different page)
+   and the .td-* tour-detail blocks. Only the listings' own chrome.
+   ------------------------------------------------------------------ */
+
+.sfb-layout,
+.sfb-tour-card {
+  --sfb-green: #084d2a;
+  --sfb-green-bright: #0a6635;
+  --sfb-green-mid: #2e9c63;
+  --sfb-green-line: #cfe0d6;
+  --sfb-green-line-strong: #9cc4ad;
+  --sfb-green-tint: #f2f8f4;
+  --sfb-green-ring: rgba(8, 77, 42, 0.18);
+}
+
+/* ── Panels & section headings ───────────────────────────────────── */
+
+.sfb-safari-panel,
+.sfb-filter-section,
+.sfb-pages-filters__panel {
+  border-color: var(--sfb-green-line, #cfe0d6);
+}
+
+.sfb-filter-section h3,
+.sfb-pages-filters__heading {
+  color: var(--sfb-green, #084d2a);
+}
+
+.sfb-filter-section + .sfb-filter-section,
+.sfb-pages-filters__section {
+  border-top-color: var(--sfb-green-line, #cfe0d6);
+}
+
+/* ── Icons ───────────────────────────────────────────────────────── */
+
+/* Where To / Start Date / Travellers glyphs were the only red in the
+   panel; the filter reads as one green system now. */
+.sfb-safari-control__icon {
+  color: var(--sfb-green, #084d2a);
+}
+
+.sfb-whereto__search,
+.sfb-whereto__input::placeholder,
+.sfb-safari-field__remove {
+  color: var(--sfb-green-mid, #2e9c63);
+}
+
+.sfb-whereto__remove {
+  background: var(--sfb-green-tint, #f2f8f4);
+  color: var(--sfb-green, #084d2a);
+}
+
+.sfb-whereto__remove:hover {
+  background: var(--sfb-green, #084d2a);
   color: #fff;
 }
 
-/* No page starts with this letter. Kept in place and dimmed rather than
-   removed, so the alphabet keeps its full A-Z shape instead of reflowing. */
-.sfb-az-link.is-empty {
-  background: #f7f9fb;
-  border-color: #eef1f5;
-  color: #b9c1cb;
-  cursor: default;
+.sfb-pages-filters__search i,
+.sfb-mobile-filter-toggle i {
+  color: currentColor;
+}
+
+.sfb-add-link,
+.sfb-rating-line a,
+.sfb-results-info a,
+.sfb-empty-results a {
+  color: var(--sfb-green, #084d2a);
+}
+
+.sfb-add-link:hover,
+.sfb-rating-line a:hover,
+.sfb-results-info a:hover,
+.sfb-empty-results a:hover {
+  color: var(--sfb-green-bright, #0a6635);
+}
+
+/* ── Fields, sliders and number boxes ────────────────────────────── */
+
+.sfb-safari-field,
+.sfb-number-pair input,
+.sfb-pages-filters__search-input {
+  border-color: var(--sfb-green-line-strong, #9cc4ad);
+}
+
+.sfb-safari-field--button:hover,
+.sfb-safari-field--button:focus-visible,
+.sfb-number-pair input:focus,
+.sfb-pages-filters__search-input:focus {
+  border-color: var(--sfb-green, #084d2a);
+  box-shadow: 0 0 0 3px var(--sfb-green-ring, rgba(8, 77, 42, 0.18));
+  outline: none;
+}
+
+.sfb-whereto__field.is-active {
+  border-color: var(--sfb-green, #084d2a);
+}
+
+.sfb-range-stack input[type="range"],
+.sfb-check-list input {
+  accent-color: var(--sfb-green, #084d2a);
+}
+
+.sfb-range-stack label {
+  color: var(--sfb-green, #084d2a);
+}
+
+/* ── Duration histogram ──────────────────────────────────────────── */
+
+.sfb-histogram {
+  border-bottom-color: var(--sfb-green-line-strong, #9cc4ad);
+}
+
+.sfb-histogram span {
+  background: linear-gradient(180deg, var(--sfb-green-mid, #2e9c63) 0%, var(--sfb-green, #084d2a) 100%);
+}
+
+/* ── Filter option rows ──────────────────────────────────────────── */
+
+/* Native checkboxes can only be tinted via accent-color once checked, so
+   the "border around the filter button" is carried by the row itself.
+   The base rule stands on its own if :has() is unsupported. */
+.sfb-check-list label {
+  padding: 9px 11px;
+  background: #fff;
+  border: 1px solid var(--sfb-green-line, #cfe0d6);
+  border-radius: 3px;
+  transition: background .15s ease, border-color .15s ease;
+}
+
+.sfb-check-list label:hover {
+  border-color: var(--sfb-green-line-strong, #9cc4ad);
+  background: var(--sfb-green-tint, #f2f8f4);
+}
+
+.sfb-check-list label:has(input:checked) {
+  background: var(--sfb-green-tint, #f2f8f4);
+  border-color: var(--sfb-green, #084d2a);
+}
+
+/* Same treatment for the /pages options, which use the custom mark. */
+.sfb-pages-filters__options label {
+  border: 1px solid transparent;
+  border-radius: 3px;
+}
+
+.sfb-pages-filters__options label:hover {
+  background: var(--sfb-green-tint, #f2f8f4);
+  border-color: var(--sfb-green-line, #cfe0d6);
+}
+
+.sfb-pages-filters__options label:has(input:checked) {
+  background: var(--sfb-green-tint, #f2f8f4);
+  border-color: var(--sfb-green, #084d2a);
+}
+
+.sfb-pages-filters__mark {
+  border-color: var(--sfb-green-line-strong, #9cc4ad);
+}
+
+.sfb-pages-filters__options input:checked + .sfb-pages-filters__mark,
+.sfb-pages-filters__options--radio input:checked + .sfb-pages-filters__mark {
+  background: var(--sfb-green, #084d2a);
+  border-color: var(--sfb-green, #084d2a);
+}
+
+.sfb-pages-filters__options--radio input:checked + .sfb-pages-filters__mark {
+  background-image: radial-gradient(circle at center, var(--sfb-green, #084d2a) 0, var(--sfb-green, #084d2a) 4px, transparent 4.5px);
+}
+
+.sfb-pages-filters__options input:focus-visible + .sfb-pages-filters__mark {
+  border-color: var(--sfb-green, #084d2a);
+  box-shadow: 0 0 0 3px var(--sfb-green-ring, rgba(8, 77, 42, 0.18));
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+
+/* Every one of these previously had border: 0 or a blue/red border, so
+   the green border is declared explicitly rather than inherited. */
+.sfb-show-tours,
+.sfb-filter-actions button,
+.sfb-pages-filters__submit,
+.sfb-pages-filters__actions button,
+.sfb-tour-card__cta,
+.sfb-mobile-filter-toggle {
+  background: var(--sfb-green, #084d2a);
+  border: 1px solid var(--sfb-green, #084d2a);
+  color: #fff;
+}
+
+.sfb-show-tours:hover,
+.sfb-show-tours:focus-visible,
+.sfb-filter-actions button:hover,
+.sfb-filter-actions button:focus-visible,
+.sfb-pages-filters__submit:hover,
+.sfb-pages-filters__submit:focus-visible,
+.sfb-pages-filters__actions button:hover,
+.sfb-pages-filters__actions button:focus-visible,
+.sfb-tour-card__cta:hover,
+.sfb-tour-card__cta:focus-visible,
+.sfb-mobile-filter-toggle:hover {
+  background: var(--sfb-green-bright, #0a6635);
+  border-color: var(--sfb-green-bright, #0a6635);
+  color: #fff;
+}
+
+/* Outline variants — the "clear" half of each action pair. */
+.sfb-filter-actions a,
+.sfb-pages-filters__actions a {
+  background: #fff;
+  border: 1px solid var(--sfb-green, #084d2a);
+  color: var(--sfb-green, #084d2a);
+}
+
+.sfb-filter-actions a:hover,
+.sfb-filter-actions a:focus-visible,
+.sfb-pages-filters__actions a:hover,
+.sfb-pages-filters__actions a:focus-visible {
+  background: var(--sfb-green, #084d2a);
+  color: #fff;
+}
+
+/* ── Chips, badges, pagination, loading ──────────────────────────── */
+
+.sfb-selected-chip--blue {
+  border-color: var(--sfb-green, #084d2a);
+  color: var(--sfb-green, #084d2a);
+}
+
+.sfb-selected-chip--clear {
+  border-color: var(--sfb-green-line-strong, #9cc4ad);
+  color: var(--sfb-green, #084d2a);
+}
+
+.sfb-selected-chip:hover {
+  border-color: var(--sfb-green, #084d2a);
+  color: var(--sfb-green, #084d2a);
+}
+
+.sfb-tour-card__badge {
+  background: var(--sfb-green, #084d2a);
+}
+
+.sfb-page-btn:hover,
+.sfb-page-btn:focus-visible,
+.sfb-page-btn.is-active {
+  border-color: var(--sfb-green, #084d2a);
+  color: var(--sfb-green, #084d2a);
+}
+
+.sfb-page-btn:focus-visible {
+  outline: 3px solid var(--sfb-green, #084d2a);
+}
+
+.sfb-results.is-loading::before {
+  border-top-color: var(--sfb-green, #084d2a);
+}
+
+/* The Where To dropdown is rendered at body level, so it does not inherit
+   the tokens declared on .sfb-layout — literals here on purpose. */
+.wt-item strong {
+  color: #084d2a;
+}
+
+.wt-spinner {
+  border-top-color: #084d2a;
 }

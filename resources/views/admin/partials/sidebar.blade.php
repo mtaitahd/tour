@@ -253,17 +253,18 @@
                 <span>Sitemap</span>
             </a>
         </li>
-        <li class="nav-item {{ in_array($currentPage, ['homepage-content', 'traveller-stories', 'subscribe', 'footer', 'starting-points']) ? 'active' : '' }}">
-            <a class="nav-link {{ in_array($currentPage, ['homepage-content', 'traveller-stories', 'subscribe', 'footer', 'starting-points']) ? '' : 'collapsed' }}"
+        @php $websiteContentPages = ['homepage-content', 'traveller-stories', 'subscribe', 'footer', 'starting-points', 'listing-titles']; @endphp
+        <li class="nav-item {{ in_array($currentPage, $websiteContentPages) ? 'active' : '' }}">
+            <a class="nav-link {{ in_array($currentPage, $websiteContentPages) ? '' : 'collapsed' }}"
                href="#" data-bs-target="#website-content-nav" data-bs-toggle="collapse">
                 <i class="fas fa-fw fa-layout"></i>
                 <span>Website Content</span>
                 <i class="fas fa-chevron-down ms-auto"></i>
             </a>
-            <div id="website-content-nav" class="collapse {{ in_array($currentPage, ['homepage-content', 'traveller-stories', 'subscribe', 'footer', 'starting-points']) ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
+            <div id="website-content-nav" class="collapse {{ in_array($currentPage, $websiteContentPages) ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
                 <a class="nav-link" href="{{ route('admin.homepage-content') }}">
                     <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
-                    <span>Homepage Buttons & Captions</span>
+                    <span>Homepage Buttons &amp; Captions</span>
                 </a>
                 <a class="nav-link" href="{{ route('admin.traveller-stories') }}">
                     <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
@@ -280,6 +281,13 @@
                 <a class="nav-link" href="{{ route('admin.starting-points') }}">
                     <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
                     <span>Starting Points</span>
+                </a>
+                {{-- The H1s on /pages and /tours. Lives with the other website
+                     copy screens rather than under Pages → All Pages, because
+                     the listing heading is not itself a page. --}}
+                <a class="nav-link" href="{{ route('admin.listing-titles.index') }}">
+                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
+                    <span>Listing Titles</span>
                 </a>
             </div>
         </li>

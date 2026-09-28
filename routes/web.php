@@ -224,6 +224,11 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
 
         Route::get('/starting-points', [\App\Http\Controllers\Admin\HomepageContentController::class, 'startingPoints'])->name('starting-points');
         Route::post('/starting-points', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateStartingPoints']);
+
+        // ── Listing page titles (the H1 on /pages and /tours) ──
+        Route::get('/listing-titles', [\App\Http\Controllers\Admin\ListingTitleController::class, 'index'])->name('listing-titles.index');
+        Route::post('/listing-titles', [\App\Http\Controllers\Admin\ListingTitleController::class, 'update'])->name('listing-titles.update');
+        Route::delete('/listing-titles/{key}', [\App\Http\Controllers\Admin\ListingTitleController::class, 'destroy'])->name('listing-titles.destroy');
     });
 });
 // ====================== PUBLIC ROUTES ======================

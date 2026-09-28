@@ -2,6 +2,7 @@
 
 @php
     use App\Models\Setting;
+    use App\Services\ListingTitles;
     use Illuminate\Support\Str;
 
     $selectedCountryCodes = collect((array) request('countries'))->filter()->values();
@@ -24,10 +25,10 @@
 
     $mainTitle = $pageSubject !== 'African'
         ? $pageSubject . ' Safari Tours & Holidays'
-        : 'Our Best All Tours & Safaris Packages';
+        : ListingTitles::title('tours_listing_title', 'Our Best All Tours & Safaris Packages');
     $introSource = $headerDestination?->description
         ?? $activeCategory?->description
-        ?? Setting::get('tours_listing_intro');
+        ?? ListingTitles::intro('tours_listing_intro');
     $introText = $introSource
         ? Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags($introSource))), 540)
         : 'Compare handcrafted safari tours, wildlife holidays, mountain adventures and beach escapes across East Africa. Use the filters to narrow the route, travel style, comfort level and price that fit your trip.';
