@@ -26599,13 +26599,13 @@ table.table.dataTable > thead > tr th {
 }
 
 .sfb-breadcrumb a {
-  color: #084d2a;
+  color: #0B6B3A;
   font-weight: 700;
   text-decoration: none;
 }
 
 .sfb-breadcrumb a:hover {
-  color: #0a6635;
+  color: #08552F;
   text-decoration: underline;
 }
 
@@ -26631,7 +26631,29 @@ table.table.dataTable > thead > tr th {
     max-height: calc(100vh - 112px);
     overflow-y: auto;
     padding-right: 4px;
+
+    /* Firefox: thumb, then track. The webkit pair below sets the same
+       two colours for Chrome/Safari/Edge. */
+    scrollbar-color: #0B6B3A #E7EFEA;
+    scrollbar-width: thin;
   }
+}
+
+/* Scrollbar colour only. Width, radius and the scroll behaviour itself are
+   left to the global ::-webkit-scrollbar rules so the sidebar keeps
+   scrolling exactly as before -- this just repaints the track and thumb
+   green. Scoped to the filter sidebar; every other scrollbar on the site
+   is untouched. */
+.sfb-sidebar::-webkit-scrollbar-track {
+  background: #E7EFEA;
+}
+
+.sfb-sidebar::-webkit-scrollbar-thumb {
+  background: #0B6B3A;
+}
+
+.sfb-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #08552F;
 }
 
 .sfb-filter-form {
@@ -26648,7 +26670,7 @@ table.table.dataTable > thead > tr th {
 
 .sfb-safari-panel {
   padding: 26px;
-  border: 1px solid #e4c49b;
+  border: 1px solid #B7D5C4;
   box-shadow: 0 1px 0 rgba(130, 84, 38, 0.05);
 }
 
@@ -26672,7 +26694,7 @@ table.table.dataTable > thead > tr th {
 .sfb-safari-control__icon {
   margin-top: 17px;
   font-size: 28px;
-  color: #084d2a;
+  color: #0B6B3A;
 }
 
 .sfb-safari-field {
@@ -26684,7 +26706,7 @@ table.table.dataTable > thead > tr th {
   width: 100%;
   padding: 13px 48px 13px 17px;
   background: #fff;
-  border: 1px solid #d9dee4;
+  border: 1px solid #B7D5C4;
   border-radius: 3px;
   color: #303741;
   text-align: left;
@@ -26696,8 +26718,8 @@ table.table.dataTable > thead > tr th {
 
 .sfb-safari-field--button:hover,
 .sfb-safari-field--button:focus-visible {
-  border-color: #084d2a;
-  box-shadow: 0 0 0 3px rgba(8, 77, 42, 0.12);
+  border-color: #0B6B3A;
+  box-shadow: 0 0 0 2px rgba(11, 107, 58, 0.12);
   outline: none;
 }
 
@@ -26733,6 +26755,8 @@ table.table.dataTable > thead > tr th {
 }
 
 .sfb-safari-field__remove,
+/* The Date and Travellers fields are themselves the buttons, so their
+   dropdown arrow is a filter control accent and joins the green. */
 .sfb-safari-field .isax-arrow-right-3 {
   position: absolute;
   right: 16px;
@@ -26741,19 +26765,29 @@ table.table.dataTable > thead > tr th {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #8b949e;
+  color: #0B6B3A;
   font-size: 24px;
   line-height: 1;
   text-decoration: none;
 }
 
+/* The remove dot shares the field's right-hand corner, so it is a solid
+   green disc with a white glyph rather than an outlined one. Its &times;
+   is a text node, so it follows the color set here. */
+.sfb-safari-field__remove {
+  background: #0B6B3A;
+  border-radius: 50%;
+  color: #fff;
+}
+
 .sfb-safari-field__remove:hover {
-  color: #084d2a;
+  background: #08552F;
+  color: #fff;
 }
 
 .sfb-add-link {
   grid-column: 2;
-  color: #084d2a;
+  color: #0B6B3A;
   font-family: 'Montserrat', 'Inter', sans-serif;
   font-size: 16px;
   font-weight: 700;
@@ -26761,13 +26795,13 @@ table.table.dataTable > thead > tr th {
 }
 
 .sfb-add-link:hover {
-  color: #0a6635;
+  color: #08552F;
   text-decoration: underline;
 }
 
 .sfb-filter-section {
   padding: 22px 24px;
-  border: 1px solid #e2e6ea;
+  border: 1px solid #B7D5C4;
   box-shadow: 0 1px 0 rgba(24, 38, 52, 0.03);
 }
 
@@ -26779,19 +26813,24 @@ table.table.dataTable > thead > tr th {
   color: #2f3338;
 }
 
+/* The axis is the only chrome here, so it takes the green border like the
+   rest of the filter controls rather than staying a neutral hairline. */
 .sfb-histogram {
   height: 86px;
   display: flex;
   align-items: flex-end;
   gap: 4px;
   padding: 10px 0 8px;
-  border-bottom: 1px solid #e4e8ec;
+  border-bottom: 1px solid #B7D5C4;
 }
 
+/* Bar heights come from PHP; only the colour is themed. The top stop is
+   #549775, a lighter green derived from the primary #0B6B3A, so the
+   gradient still reads as depth without introducing a second hue. */
 .sfb-histogram span {
   flex: 1;
   min-width: 4px;
-  background: linear-gradient(180deg, #2e9c63 0%, #084d2a 100%);
+  background: linear-gradient(180deg, #549775 0%, #0B6B3A 100%);
   border-radius: 3px 3px 0 0;
   opacity: .85;
 }
@@ -26814,7 +26853,7 @@ table.table.dataTable > thead > tr th {
 
 .sfb-range-stack input[type="range"] {
   width: 100%;
-  accent-color: #084d2a;
+  accent-color: #0B6B3A;
 }
 
 .sfb-number-pair {
@@ -26827,7 +26866,7 @@ table.table.dataTable > thead > tr th {
 .sfb-number-pair input {
   width: 100%;
   min-height: 44px;
-  border: 1px solid #d9dee4;
+  border: 1px solid #B7D5C4;
   border-radius: 3px;
   padding: 0 12px;
   color: #303741;
@@ -26836,8 +26875,8 @@ table.table.dataTable > thead > tr th {
 }
 
 .sfb-number-pair input:focus {
-  border-color: #084d2a;
-  box-shadow: 0 0 0 3px rgba(8, 77, 42, 0.12);
+  border-color: #0B6B3A;
+  box-shadow: 0 0 0 2px rgba(11, 107, 58, 0.12);
   outline: none;
 }
 
@@ -26852,23 +26891,47 @@ table.table.dataTable > thead > tr th {
   padding-right: 4px;
 }
 
+/* The native checkbox only takes accent-color once it is checked, so the
+   green border on the row is what makes an option read as a control.
+   min-height restores the 44px touch target: the base label has no
+   padding of its own, so a single-line option would otherwise be ~40px.
+
+   :has() is used for the checked tint only. It is not load-bearing --
+   the row is already readable without it, and a browser that lacks it
+   still shows the green accent on the checkbox itself. */
 .sfb-check-list label {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-height: 44px;
   margin: 0;
+  padding: 10px 11px;
+  background: #fff;
+  border: 1px solid #B7D5C4;
+  border-radius: 3px;
   color: #303741;
   font-family: 'Montserrat', 'Inter', sans-serif;
   font-size: 16px;
   line-height: 1.35;
   cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+
+.sfb-check-list label:hover {
+  background: #F3F8F5;
+  border-color: #0B6B3A;
+}
+
+.sfb-check-list label:has(input:checked) {
+  background: #F3F8F5;
+  border-color: #0B6B3A;
 }
 
 .sfb-check-list input {
   width: 18px;
   height: 18px;
   flex: 0 0 auto;
-  accent-color: #084d2a;
+  accent-color: #0B6B3A;
 }
 
 .sfb-check-list span {
@@ -26901,16 +26964,37 @@ table.table.dataTable > thead > tr th {
   text-decoration: none;
 }
 
+/* Apply Filters is the primary action: solid green, deepening on hover. */
 .sfb-filter-actions button {
-  border: 1px solid #084d2a;
-  background: #084d2a;
+  border: 1px solid #0B6B3A;
+  background: #0B6B3A;
+  color: #fff;
+  transition: background .2s ease, border-color .2s ease;
+}
+
+.sfb-filter-actions button:hover,
+.sfb-filter-actions button:focus-visible {
+  border-color: #08552F;
+  background: #08552F;
   color: #fff;
 }
 
+/* Clear All Filters stays secondary on purpose. Filled green here would
+   make it the same weight as Apply Filters and leave the reader with two
+   identical primaries, so it is an outlined button that fills only on
+   hover. */
 .sfb-filter-actions a {
-  border: 1px solid #084d2a;
+  border: 1px solid #0B6B3A;
   background: #fff;
-  color: #084d2a;
+  color: #0B6B3A;
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.sfb-filter-actions a:hover,
+.sfb-filter-actions a:focus-visible {
+  border-color: #08552F;
+  background: #F3F8F5;
+  color: #08552F;
 }
 
 .sfb-results {
@@ -26951,7 +27035,7 @@ table.table.dataTable > thead > tr th {
 
 .sfb-rating-line a,
 .sfb-results-info a {
-  color: #084d2a;
+  color: #0B6B3A;
   font-weight: 700;
   text-decoration: none;
 }
@@ -27011,13 +27095,13 @@ table.table.dataTable > thead > tr th {
 }
 
 .sfb-selected-chip--blue {
-  border-color: #084d2a;
-  color: #0a6635;
+  border-color: #0B6B3A;
+  color: #08552F;
 }
 
 .sfb-selected-chip--clear {
-  border-color: #084d2a;
-  color: #084d2a;
+  border-color: #0B6B3A;
+  color: #0B6B3A;
 }
 
 .sfb-selected-chip--muted {
@@ -27105,7 +27189,7 @@ table.table.dataTable > thead > tr th {
   align-items: center;
   min-height: 32px;
   padding: 0 12px;
-  background: #084d2a;
+  background: #0B6B3A;
   color: #fff;
   border-radius: 2px;
   font-family: 'Montserrat', 'Inter', sans-serif;
@@ -27246,17 +27330,21 @@ table.table.dataTable > thead > tr th {
   justify-content: center;
   width: 100%;
   margin-top: 18px;
-  background: #084d2a;
+  background: #0B6B3A;
   color: #fff;
+  border: 1px solid #0B6B3A;
   border-radius: 3px;
   font-family: 'Montserrat', 'Inter', sans-serif;
   font-size: 16px;
   font-weight: 900;
   text-decoration: none;
+  transition: background .2s ease, border-color .2s ease;
 }
 
-.sfb-tour-card__cta:hover {
-  background: #0a6635;
+.sfb-tour-card__cta:hover,
+.sfb-tour-card__cta:focus-visible {
+  background: #08552F;
+  border-color: #08552F;
   color: #fff;
 }
 
@@ -27281,7 +27369,7 @@ table.table.dataTable > thead > tr th {
 }
 
 .sfb-empty-results a {
-  color: #084d2a;
+  color: #0B6B3A;
   font-weight: 800;
 }
 
@@ -27333,7 +27421,7 @@ table.table.dataTable > thead > tr th {
   border: 1px solid #dfe5eb;
   border-radius: 3px;
   box-shadow: 0 1px 4px rgba(23, 38, 52, 0.07);
-  color: #084d2a;
+  color: #0B6B3A;
   font-family: 'Montserrat', 'Inter', sans-serif;
   font-size: 17px;
   font-weight: 800;
@@ -27347,20 +27435,20 @@ table.table.dataTable > thead > tr th {
 }
 
 .sfb-page-btn:hover {
-  border-color: #084d2a;
-  color: #0a6635;
+  border-color: #0B6B3A;
+  color: #08552F;
   box-shadow: 0 3px 10px rgba(23, 38, 52, 0.12);
 }
 
 .sfb-page-btn:focus-visible {
-  outline: 3px solid #084d2a;
+  outline: 3px solid #0B6B3A;
   outline-offset: 2px;
 }
 
 .sfb-page-btn.is-active,
 .sfb-page-btn.is-active:hover {
-  background: #084d2a;
-  border-color: #084d2a;
+  background: #0B6B3A;
+  border-color: #0B6B3A;
   color: #fff;
   cursor: default;
   box-shadow: none;
@@ -27400,8 +27488,8 @@ table.table.dataTable > thead > tr th {
   width: 46px;
   height: 46px;
   margin-left: -23px;
-  border: 4px solid rgba(8, 77, 42, 0.22);
-  border-top-color: #084d2a;
+  border: 4px solid rgba(11, 107, 58, 0.22);
+  border-top-color: #0B6B3A;
   border-radius: 50%;
   animation: sfb-spin .8s linear infinite;
 }
@@ -27501,7 +27589,7 @@ body.sfb-page-transition {
   margin-top: 28px;
   padding: 24px;
   background: #fff;
-  border: 1px solid #e2e6ea;
+  border: 1px solid #B7D5C4;
   border-radius: 5px;
 }
 
@@ -27569,20 +27657,36 @@ body.sfb-filter-lock {
     display: block;
   }
 
-  .sfb-mobile-filter-toggle {
-    min-height: 46px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 20px;
-    padding: 0 16px;
-    background: #084d2a;
-    color: #fff;
-    border: 0;
-    border-radius: 3px;
-    font-family: 'Montserrat', 'Inter', sans-serif;
-    font-weight: 900;
-  }
+    .sfb-mobile-filter-toggle {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      padding: 0 16px;
+      background: #0B6B3A;
+      color: #fff;
+      border: 1px solid #0B6B3A;
+      border-radius: 3px;
+      font-family: 'Montserrat', 'Inter', sans-serif;
+      font-weight: 900;
+      cursor: pointer;
+      transition: background .2s ease, border-color .2s ease;
+    }
+
+    .sfb-mobile-filter-toggle:hover,
+    .sfb-mobile-filter-toggle:focus-visible {
+      background: #08552F;
+      border-color: #08552F;
+      color: #fff;
+    }
+
+    /* The toggle's glyph is an icon font, which keeps its own colour
+       instead of following the button's, so it has to be pointed at
+       currentColor to come out white on the green. */
+    .sfb-mobile-filter-toggle i {
+      color: currentColor;
+    }
 
   .sfb-sidebar {
     position: fixed;
@@ -27614,15 +27718,27 @@ body.sfb-filter-lock {
     font-size: 25px;
   }
 
+  /* The drawer's close control. Outlined green rather than filled: it
+     dismisses the panel instead of submitting anything, so it belongs
+     with Clear All Filters rather than with Apply Filters. */
   .sfb-sidebar__mobile-head button {
     width: 40px;
     height: 40px;
     background: #fff;
-    border: 1px solid #d9dee4;
+    border: 1px solid #0B6B3A;
     border-radius: 50%;
-    color: #30343a;
+    color: #0B6B3A;
     font-size: 26px;
     line-height: 1;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, color .2s ease;
+  }
+
+  .sfb-sidebar__mobile-head button:hover,
+  .sfb-sidebar__mobile-head button:focus-visible {
+    background: #F3F8F5;
+    border-color: #08552F;
+    color: #08552F;
   }
 
   .sfb-drawer-backdrop:not([hidden]) {
@@ -27781,7 +27897,7 @@ body.sfb-filter-lock {
 }
 
 .popover-close:focus-visible {
-  outline: 3px solid #0a6635;
+  outline: 3px solid #08552F;
   outline-offset: 2px;
 }
 
@@ -27830,7 +27946,7 @@ body.sfb-filter-lock {
 }
 
 .sdc-nav-btn:focus-visible {
-  outline: 3px solid #0a6635;
+  outline: 3px solid #08552F;
   outline-offset: 2px;
 }
 
@@ -27876,7 +27992,7 @@ body.sfb-filter-lock {
   font-family: 'Montserrat', 'Inter', sans-serif;
   font-size: 20px;
   background: #eef8fa;
-  color: #0a6635;
+  color: #08552F;
   border: 1px solid #d5d5d5;
   margin: -1px 0 0 -1px;
   cursor: pointer;
@@ -27889,13 +28005,13 @@ body.sfb-filter-lock {
 }
 
 .calendar-day:focus-visible {
-  outline: 3px solid #0a6635;
+  outline: 3px solid #08552F;
   outline-offset: -3px;
   z-index: 2;
 }
 
 .calendar-day.is-today {
-  box-shadow: inset 0 0 0 2px #0a6635;
+  box-shadow: inset 0 0 0 2px #08552F;
   font-weight: 700;
 }
 
@@ -28020,7 +28136,7 @@ body.sfb-filter-lock {
 }
 
 .tp-counter__btn:focus-visible {
-  outline: 3px solid #0a6635;
+  outline: 3px solid #08552F;
   outline-offset: 1px;
   z-index: 1;
 }
@@ -28075,7 +28191,7 @@ body.sfb-filter-lock {
 }
 
 .tp-done:focus-visible {
-  outline: 3px solid #0a6635;
+  outline: 3px solid #08552F;
   outline-offset: 2px;
 }
 
@@ -28101,7 +28217,7 @@ body.sfb-filter-lock {
 }
 
 .afro-travellers-reset:focus-visible {
-  outline: 2px solid #0a6635;
+  outline: 2px solid #08552F;
   outline-offset: 1px;
 }
 
@@ -28681,8 +28797,8 @@ body.sfb-filter-lock {
 
 .sfb-whereto__field:focus-within,
 .sfb-whereto__field.is-active {
-  border-color: #084d2a;
-  box-shadow: 0 0 0 3px rgba(8, 77, 42, 0.14);
+  border-color: #0B6B3A;
+  box-shadow: 0 0 0 2px rgba(11, 107, 58, 0.12);
 }
 
 .sfb-safari-field__input.sfb-whereto__input {
@@ -28713,11 +28829,16 @@ body.sfb-filter-lock {
   min-width: 26px;
 }
 
+/* The destination search glyph. The SVG is stroke="currentColor", so
+   setting the color here is enough to recolour it. */
 .sfb-whereto__search {
-  color: #98a1ab;
+  color: #0B6B3A;
   pointer-events: none;
 }
 
+/* Solid green so it reads as a control rather than a grey chip, and it
+   only appears once a destination is chosen. The glyph is an inline SVG
+   with stroke="currentColor", so it follows the white set here. */
 .sfb-whereto__remove {
   display: inline-flex;
   align-items: center;
@@ -28727,15 +28848,16 @@ body.sfb-filter-lock {
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: #eef1f4;
-  color: #5c6770;
+  background: #0B6B3A;
+  color: #fff;
   cursor: pointer;
   transition: background .15s ease, color .15s ease;
 }
 
-.sfb-whereto__remove:hover {
-  background: #f2f8f4;
-  color: #084d2a;
+.sfb-whereto__remove:hover,
+.sfb-whereto__remove:focus-visible {
+  background: #08552F;
+  color: #fff;
 }
 
 /* ?? Show Tours submit button ?? */
@@ -28749,7 +28871,7 @@ body.sfb-filter-lock {
   min-height: 52px;
   margin-top: 22px;
   padding: 0 18px;
-  background: #084d2a;
+  background: #0B6B3A;
   color: #fff;
   border: 0;
   border-radius: 4px;
@@ -28765,7 +28887,7 @@ body.sfb-filter-lock {
 }
 
 .sfb-show-tours:hover {
-  background: #0a6635;
+  background: #08552F;
 }
 
 .sfb-show-tours:active {
@@ -28852,7 +28974,7 @@ body.sfb-filter-lock {
   display: block;
   font-size: 16px;
   font-weight: 700;
-  color: #084d2a;
+  color: #0B6B3A;
   line-height: 1.35;
 }
 
@@ -28865,7 +28987,7 @@ body.sfb-filter-lock {
 
 .wt-item:hover,
 .wt-item.is-highlighted {
-  background: #f2f9fc;
+  background: #F3F8F5;
 }
 
 .wt-item mark {
@@ -28890,7 +29012,7 @@ body.sfb-filter-lock {
   width: 18px;
   height: 18px;
   border: 2.5px solid #dfe5eb;
-  border-top-color: #084d2a;
+  border-top-color: #0B6B3A;
   border-radius: 50%;
   animation: wt-spin .7s linear infinite;
 }
@@ -33984,7 +34106,7 @@ body.td-lock {
   min-height: 78px;
   padding: 13px 17px;
   background: #fff;
-  border: 1px solid #9cc4ad;
+  border: 1px solid #B7D5C4;
   border-radius: 3px;
   color: #303741;
   font-family: 'Montserrat', 'Inter', sans-serif;
@@ -33998,8 +34120,8 @@ body.td-lock {
 }
 
 .sfb-pages-search__input:focus {
-  border-color: #084d2a;
-  box-shadow: 0 0 0 3px rgba(8, 77, 42, .18);
+  border-color: #0B6B3A;
+  box-shadow: 0 0 0 2px rgba(11, 107, 58, 0.12);
 }
 
 /* Narrower desktop: hold the proportion instead of a fixed 360px/320px,
@@ -34031,112 +34153,3 @@ body.td-lock {
     min-width: 0;
   }
 }
-
-
-/* ------------------------------------------------------------------
-   Listing filter — green accents and visible control borders.
-
-   The listing chrome itself is already brand green at source (the
-   /tours block above and the pages block just above this one), so this
-   block only carries what the source rules deliberately do NOT do:
-   tinting the neutral borders green, and drawing a border around the
-   filter controls so each one reads as a button.
-
-   Appending rather than interleaving keeps it separable: deleting this
-   block reverts to the plain green listing without touching layout.
-
-   Scope: /tours and /pages only. The FAQ block is shared with the tour
-   detail page, and the .td-* tour-detail block was left alone on
-   purpose, so neither is affected by anything here.
-   ------------------------------------------------------------------ */
-
-/* ── Panels, headings, histogram ─────────────────────────────────── */
-
-.sfb-safari-panel,
-.sfb-filter-section {
-  border-color: #cfe0d6;
-}
-
-.sfb-filter-section h3 {
-  color: #084d2a;
-}
-
-.sfb-histogram {
-  border-bottom-color: #9cc4ad;
-}
-
-/* ── Field borders and focus rings ──────────────────────────────── */
-
-.sfb-safari-field,
-.sfb-number-pair input {
-  border-color: #9cc4ad;
-}
-
-.sfb-safari-field--button:hover,
-.sfb-safari-field--button:focus-visible,
-.sfb-number-pair input:focus {
-  border-color: #084d2a;
-  box-shadow: 0 0 0 3px rgba(8, 77, 42, 0.18);
-  outline: none;
-}
-
-.sfb-range-stack label {
-  color: #084d2a;
-}
-
-.sfb-whereto__search {
-  color: #2e9c63;
-}
-
-/* ── Filter option rows ──────────────────────────────────────────── */
-
-/* A native checkbox can only be tinted through accent-color once it is
-   checked, so the "border around the filter button" is carried by the
-   row. The base rule stands on its own where :has() is unsupported.
-
-   min-height is the 44px touch target the panel used to get from its own
-   label padding; .sfb-check-list has no padding of its own, so without
-   it a single-line option is only ~40px tall. */
-.sfb-check-list label {
-  min-height: 44px;
-  padding: 10px 11px;
-  background: #fff;
-  border: 1px solid #cfe0d6;
-  border-radius: 3px;
-  transition: background .15s ease, border-color .15s ease;
-}
-
-.sfb-check-list label:hover {
-  background: #f2f8f4;
-  border-color: #9cc4ad;
-}
-
-.sfb-check-list label:has(input:checked) {
-  background: #f2f8f4;
-  border-color: #084d2a;
-}
-
-/* ── Buttons that had no border of their own ────────────────────── */
-
-.sfb-show-tours,
-.sfb-tour-card__cta,
-.sfb-mobile-filter-toggle {
-  border: 1px solid #084d2a;
-}
-
-.sfb-show-tours:hover,
-.sfb-show-tours:focus-visible,
-.sfb-tour-card__cta:hover,
-.sfb-tour-card__cta:focus-visible,
-.sfb-mobile-filter-toggle:hover {
-  background: #0a6635;
-  border-color: #0a6635;
-  color: #fff;
-}
-
-/* The toggle's glyph is an icon font, so it has to be told to inherit
-   the white button text rather than keep its own colour. */
-.sfb-mobile-filter-toggle i {
-  color: currentColor;
-}
-
