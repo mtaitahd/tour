@@ -194,4 +194,32 @@ class DestinationPageRenderingTest extends TestCase
              ->assertOk()
              ->assertSee('database out of date');
     }
+
+    /**
+     * Regression: validation only guards a slug the admin typed. A blank slug was
+     * generated after validation, so a name that collided with an existing
+     * destination hit the unique index and threw a QueryException (a silent 500 in
+     * the modal). The generated slug must now be unique.
+     */
+    public function test_creating_a_destination_with_an_existing_name_gets_a_unique_slug(): void
+    {
+        $admin = $this->admin();
+
+        Destination::create([
+            'name'         => 'Serengeti',
+            'slug'         => 'serengeti',
+            'country_code' => 'TZ',
+        ]);
+
+        $this->actingAs($admin)
+             ->post(route('admin.destinations.store'), [
+                 'name'         => 'Serengeti',
+                 'slug'         => '',
+                 'country_code' => 'TZ',
+             ])
+             ->assertRedirect(route('admin.destinations.index'));
+
+        $this->assertSame(2, Destination::count());
+        $this->assertDatabaseHas('destinations', ['slug' => 'serengeti-1']);
+    }
 }

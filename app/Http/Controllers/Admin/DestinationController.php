@@ -69,7 +69,11 @@ class DestinationController extends Controller
         }
 
         if (empty($validated['slug'])) {
-            $validated['slug'] = Str::slug($validated['name']);
+            // Validation above only guards a slug the admin typed; a blank slug is
+            // generated here, *after* validation, so a name that collides with an
+            // existing destination used to reach the unique index and 500. Generate
+            // a guaranteed-unique slug instead (serengeti, serengeti-1, ...).
+            $validated['slug'] = $this->uniqueSlug(Str::slug($validated['name']));
         }
 
         try {
@@ -77,11 +81,7 @@ class DestinationController extends Controller
         } catch (QueryException $e) {
             Log::error('Failed to create destination', ['error' => $e->getMessage()]);
 
-            return back()->withInput()->with(
-                'error',
-                'The destination could not be saved because of a database error. '
-                . 'If this keeps happening, run "php artisan migrate --force" on the server.'
-            );
+            return back()->withInput()->with('error', $this->describeSaveFailure($e));
         }
 
         return redirect()->route('admin.destinations.index')
@@ -156,11 +156,7 @@ class DestinationController extends Controller
                 'error'          => $e->getMessage(),
             ]);
 
-            return back()->withInput()->with(
-                'error',
-                'The destination could not be saved because of a database error. '
-                . 'If this keeps happening, run "php artisan migrate --force" on the server.'
-            );
+            return back()->withInput()->with('error', $this->describeSaveFailure($e));
         }
 
         // Media Library hero selection — additive alongside the existing direct-upload
@@ -250,5 +246,45 @@ class DestinationController extends Controller
             . implode(', ', $missing)
             . ' column(s). Run "php artisan migrate --force" on the server, then try again.'
         );
+    }
+
+    /**
+     * A slug built from the name that is guaranteed not to collide with an
+     * existing destination (serengeti, serengeti-1, serengeti-2, ...).
+     */
+    private function uniqueSlug(string $base): string
+    {
+        $base = $base !== '' ? $base : 'destination';
+        $slug = $base;
+        $suffix = 1;
+
+        while (Destination::where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $suffix++;
+        }
+
+        return $slug;
+    }
+
+    /**
+     * Turn a save QueryException into something the admin can act on. A raw "500"
+     * in the modal iframe told them nothing, so recognise the common constraint
+     * violations and otherwise surface the driver message (the full trace is also
+     * written to storage/logs/laravel.log).
+     */
+    private function describeSaveFailure(QueryException $e): string
+    {
+        $message = $e->getMessage();
+
+        if ($e->getCode() === '23000' && str_contains($message, 'Duplicate entry')) {
+            if (preg_match("/Duplicate entry '([^']+)' for key '([^']+)'/", $message, $m)) {
+                return "The destination could not be saved: \"{$m[1]}\" already exists, so it "
+                     . 'must be unique. Change the name, or set a different slug.';
+            }
+
+            return 'The destination could not be saved: a value that must be unique already exists.';
+        }
+
+        return 'The destination could not be saved because of a database error: '
+             . Str::limit($message, 300);
     }
 }
