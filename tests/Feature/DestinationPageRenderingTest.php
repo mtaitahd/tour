@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Destination;
+use App\Models\TourPackage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
@@ -221,5 +222,79 @@ class DestinationPageRenderingTest extends TestCase
 
         $this->assertSame(2, Destination::count());
         $this->assertDatabaseHas('destinations', ['slug' => 'serengeti-1']);
+    }
+
+    public function test_admin_index_offers_a_delete_button_for_each_destination(): void
+    {
+        $admin = $this->admin();
+
+        $destination = Destination::create([
+            'name'         => 'Ruaha',
+            'slug'         => 'ruaha',
+            'country_code' => 'TZ',
+        ]);
+
+        $html = $this->actingAs($admin)
+                     ->get(route('admin.destinations.index'))
+                     ->assertOk()
+                     ->getContent();
+
+        $this->assertStringContainsString(route('admin.destinations.destroy', $destination), $html);
+        // Blade compiles @method('DELETE') down to a hidden _method input, which is
+        // what actually makes the POST delete rather than update.
+        $this->assertStringContainsString('name="_method" value="DELETE"', $html);
+        $this->assertStringContainsString('Delete Ruaha? This cannot be undone.', $html);
+    }
+
+    public function test_admin_can_delete_a_destination(): void
+    {
+        $admin = $this->admin();
+
+        $destination = Destination::create([
+            'name'         => 'Ruaha',
+            'slug'         => 'ruaha',
+            'country_code' => 'TZ',
+        ]);
+
+        $this->actingAs($admin)
+             ->delete(route('admin.destinations.destroy', $destination))
+             ->assertRedirect(route('admin.destinations.index'));
+
+        $this->assertDatabaseMissing('destinations', ['id' => $destination->id]);
+    }
+
+    /**
+     * Regression: the live database has no foreign key on tour_destinations, so
+     * deleting a destination used to leave pivot rows pointing at a missing id.
+     */
+    public function test_deleting_a_destination_detaches_its_tour_links(): void
+    {
+        $admin = $this->admin();
+
+        $destination = Destination::create([
+            'name'         => 'Ruaha',
+            'slug'         => 'ruaha',
+            'country_code' => 'TZ',
+        ]);
+
+        $tour = TourPackage::create([
+            'title' => 'Kilimanjaro Climb',
+            'slug'  => 'kilimanjaro-climb',
+        ]);
+
+        $destination->tours()->attach($tour->id, ['order' => 1, 'is_highlight' => false]);
+        $this->assertDatabaseHas('tour_destinations', [
+            'tour_package_id' => $tour->id,
+            'destination_id'  => $destination->id,
+        ]);
+
+        $this->actingAs($admin)
+             ->delete(route('admin.destinations.destroy', $destination))
+             ->assertRedirect(route('admin.destinations.index'));
+
+        $this->assertDatabaseMissing('tour_destinations', [
+            'tour_package_id' => $tour->id,
+            'destination_id'  => $destination->id,
+        ]);
     }
 }

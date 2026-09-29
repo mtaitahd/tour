@@ -42,6 +42,14 @@
                 <td>
                   <a href="{{ route('destination.show', $destination->slug) }}" class="btn btn btn-sm btn-outline-success" target="_blank"><i class="fas fa-eye"></i></a>
                   <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#destinationFormModal" onclick="openDestinationForm('{{ route('admin.destinations.edit', $destination) }}')"><i class="fas fa-edit"></i></button>
+                  <form action="{{ route('admin.destinations.destroy', $destination) }}" method="POST" class="d-inline"
+                        onsubmit="return confirm('Delete {{ addslashes($destination->name) }}? This cannot be undone.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
                 </td>
               </tr>
             @empty

@@ -217,6 +217,12 @@ class DestinationController extends Controller
      */
     public function destroy(Destination $destination)
     {
+        // Detach the tour_destinations pivot explicitly. The migration declares this
+        // ON DELETE CASCADE, but the live database has no foreign key on that table,
+        // so without this a deleted destination would leave pivot rows pointing at a
+        // missing id and the tour's destination list would break.
+        $destination->tours()->detach();
+
         app(MediaLibraryService::class)->forgetAllUsagesFor($destination);
         $destination->delete();
 
