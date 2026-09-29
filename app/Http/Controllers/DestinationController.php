@@ -92,6 +92,12 @@ class DestinationController extends Controller
                                     });
 
         return view('frontend.destinations.show', compact('destination', 'relatedTours', 'relatedLinks'))
-            ->with('fromPrices', \App\Services\TourPriceResolver::fromPriceMap($relatedTours));
+            // getCollection() is required: fromPriceMap() expects a plain collection of
+            // TourPackage models. Passing the paginator itself made collect() build a
+            // collection out of the paginator's *meta* array (current_page, total,
+            // per_page, ...) instead of its models, so the loop then read ->id off an
+            // int and every public destination page 500'd with
+            // 'Attempt to read property "id" on int'.
+            ->with('fromPrices', \App\Services\TourPriceResolver::fromPriceMap($relatedTours->getCollection()));
     }
 }

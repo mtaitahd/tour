@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\PackagePrice;
 use App\Models\TourPackage;
 use App\Pricing\LevelCatalog;
+use Illuminate\Pagination\AbstractPaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -99,7 +100,18 @@ class TourPriceResolver
      */
     public static function fromPriceMap(iterable $tours): array
     {
-        $tours = collect($tours);
+        // A paginator is Arrayable, so collect($paginator) would silently build a
+        // collection out of its *meta* array (current_page, total, per_page, ...)
+        // instead of its models — every later ->id read then hits an int/string.
+        // Unwrap paginators up front, and keep only real TourPackage rows, so a
+        // caller passing the wrong thing fails quietly here instead of 500-ing on
+        // a public page.
+        if ($tours instanceof AbstractPaginator) {
+            $tours = $tours->getCollection();
+        }
+
+        $tours = collect($tours)->filter(fn ($tour) => $tour instanceof TourPackage)->values();
+
         $ids = $tours->pluck('id')->filter()->all();
         $result = [];
 

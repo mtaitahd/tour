@@ -7,6 +7,10 @@ deployment:
     - /bin/cp -R bootstrap $DEPLOYPATH
     - /bin/cp -R config $DEPLOYPATH
     - /bin/cp -R database $DEPLOYPATH
+    # front-end/ holds the public site's stylesheet (front-end/html/assets/css/style.css)
+    # that every frontend layout loads. Without this copy the live server keeps serving
+    # whatever copy of it was last uploaded, so CSS-only commits never appear.
+    - /bin/cp -R front-end $DEPLOYPATH
     - /bin/cp -R public $DEPLOYPATH
     - /bin/cp -R resources $DEPLOYPATH
     - /bin/cp -R routes $DEPLOYPATH
