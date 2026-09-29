@@ -43,6 +43,8 @@ class TourPackageController extends Controller
             'is_group_departure'                            => 'boolean',
             'starting_point'                                => 'nullable|string|max:255',
             'ending_point'                                  => 'nullable|string|max:255',
+            'available_months'                              => 'nullable|array',
+            'available_months.*'                            => 'integer|between:1,12',
             'meta_title'                                    => 'nullable|string|max:255',
             'meta_description'                              => 'nullable|string',
             'meta_keywords'                                 => 'nullable|string|max:255',
@@ -200,6 +202,7 @@ class TourPackageController extends Controller
             'physical_rating'    => $request->input('physical_rating', 'moderate'),
             'tour_level'         => $request->input('tour_level', 'mid_range'),
             'is_group_departure' => $request->has('is_group_departure') ? 1 : 0,
+            'available_months'   => $this->normalizeMonths($request->input('available_months')),
             'starting_point'     => $request->starting_point,
             'ending_point'       => $request->ending_point,
             'overview'           => $request->overview,
@@ -329,6 +332,8 @@ public function edit(TourPackage $tourPackage)
             'is_group_departure'                            => 'boolean',
             'starting_point'                                => 'nullable|string|max:255',
             'ending_point'                                  => 'nullable|string|max:255',
+            'available_months'                              => 'nullable|array',
+            'available_months.*'                            => 'integer|between:1,12',
             'meta_title'                                    => 'nullable|string|max:255',
             'meta_description'                              => 'nullable|string',
             'meta_keywords'                                 => 'nullable|string|max:255',
@@ -495,6 +500,7 @@ public function edit(TourPackage $tourPackage)
             'physical_rating'    => $request->input('physical_rating', 'moderate'),
             'tour_level'         => $request->input('tour_level', 'mid_range'),
             'is_group_departure' => $request->has('is_group_departure') ? 1 : 0,
+            'available_months'   => $this->normalizeMonths($request->input('available_months')),
             'starting_point'     => $request->starting_point,
             'ending_point'       => $request->ending_point,
             'overview'           => $request->overview,
@@ -646,6 +652,35 @@ public function edit(TourPackage $tourPackage)
         return redirect()->route('admin.tour-packages.index')
                          ->with('success', 'Tour package updated successfully!');
         });
+    }
+
+    /**
+     * Coerce the submitted month checkboxes into a clean, ordered, de-duplicated
+     * list of month numbers, or null when none are ticked.
+     *
+     * Checkbox arrays arrive in DOM order and are absent entirely when nothing is
+     * ticked, so storing them raw would make "all months" and "no months" hard to
+     * tell apart and would leave duplicates/spaces in the JSON. null means "no
+     * month restriction", which is a real, distinct state — see runsAllYear().
+     *
+     * @param  mixed  $months
+     * @return int[]|null
+     */
+    private function normalizeMonths($months): ?array
+    {
+        if (!is_array($months)) {
+            return null;
+        }
+
+        $normalized = collect($months)
+            ->map(fn ($month) => (int) $month)
+            ->filter(fn ($month) => $month >= 1 && $month <= 12)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+
+        return $normalized ?: null;
     }
 
     private function normalizeAccommodationTiers(array $dayData): array

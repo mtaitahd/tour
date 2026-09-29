@@ -286,6 +286,9 @@
                 </div>
               </div>
 
+              <!-- Available Months — 12 checkboxes + a Select all toggle -->
+              @include('admin.tour-packages.partials.available-months', ['tourPackage' => $tourPackage, 'idPrefix' => 'tour-edit'])
+
               <!-- Overview – Quill -->
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Overview</label>

@@ -41,6 +41,7 @@ class TourPackage extends Model implements HasMedia
 
         // Departure
         'departure_dates',
+        'available_months',  // JSON: [1, 6, 7] — month numbers (1-12) the tour runs in
         'starting_point',
         'ending_point',
 
@@ -76,6 +77,7 @@ class TourPackage extends Model implements HasMedia
 
     protected $casts = [
         'departure_dates'  => 'array',
+        'available_months' => 'array',
         'highlights'       => 'array',
         'inclusions'       => 'array',
         'exclusions'       => 'array',
@@ -88,6 +90,50 @@ class TourPackage extends Model implements HasMedia
         'is_featured'      => 'boolean',
         'no_robots'        => 'boolean',
     ];
+
+    /**
+     * The twelve months, keyed by the month number stored in available_months.
+     * Defined once here so the admin checkboxes and any front-end "runs in..."
+     * label can never drift apart.
+     */
+    public const MONTHS = [
+        1  => 'January',
+        2  => 'February',
+        3  => 'March',
+        4  => 'April',
+        5  => 'May',
+        6  => 'June',
+        7  => 'July',
+        8  => 'August',
+        9  => 'September',
+        10 => 'October',
+        11 => 'November',
+        12 => 'December',
+    ];
+
+    /**
+     * available_months as readable names, in calendar order. Any unrecognised
+     * value is dropped rather than rendered as a blank entry, so a hand-edited
+     * or legacy row can't break a template.
+     *
+     * @return string[]
+     */
+    public function getAvailableMonthNamesAttribute(): array
+    {
+        return collect($this->available_months ?? [])
+            ->map(fn ($month) => self::MONTHS[(int) $month] ?? null)
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Whether this tour has no month restriction at all (i.e. it runs year-round).
+     */
+    public function runsAllYear(): bool
+    {
+        return empty($this->available_months);
+    }
 
     // ─── Relationships ────────────────────────────────────────────────────────
 
