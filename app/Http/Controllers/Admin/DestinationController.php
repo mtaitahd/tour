@@ -275,6 +275,15 @@ class DestinationController extends Controller
     {
         $message = $e->getMessage();
 
+        // A restored/hand-edited table can lose AUTO_INCREMENT on destinations.id.
+        // Laravel omits id from the INSERT, so MySQL rejects it with 1364 and the
+        // destination can never be created. Name the exact fix.
+        if (str_contains($message, "'id' doesn't have a default value")) {
+            return 'The destinations table is missing AUTO_INCREMENT on its id column, so new '
+                 . 'rows cannot be inserted. Run: ALTER TABLE destinations '
+                 . "MODIFY `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;";
+        }
+
         if ($e->getCode() === '23000' && str_contains($message, 'Duplicate entry')) {
             if (preg_match("/Duplicate entry '([^']+)' for key '([^']+)'/", $message, $m)) {
                 return "The destination could not be saved: \"{$m[1]}\" already exists, so it "
