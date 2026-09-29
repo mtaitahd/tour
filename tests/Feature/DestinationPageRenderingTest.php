@@ -113,4 +113,47 @@ class DestinationPageRenderingTest extends TestCase
         // The blank repeater row must be dropped, not stored.
         $this->assertCount(1, Destination::first()->faqs);
     }
+
+    /**
+     * Regression: a rejected create used to be completely invisible. The create form
+     * had no error block (the edit form did), so the browser simply re-rendered a
+     * blank form and the click looked like it did nothing.
+     */
+    public function test_failed_create_shows_errors_instead_of_failing_silently(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+             ->from(route('admin.destinations.create'))
+             ->post(route('admin.destinations.store'), [
+                 'name'         => '',              // required
+                 'country_code' => 'XX',            // not in:TZ,KE,UG,RW
+             ])
+             ->assertRedirect(route('admin.destinations.create'))
+             ->assertSessionHasErrors(['name', 'country_code']);
+
+        $this->assertSame(0, Destination::count());
+
+        // Following the redirect must actually render the messages.
+        $html = $this->actingAs($admin)->get(route('admin.destinations.create'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('Destination could not be saved', $html);
+        $this->assertStringContainsString('alert-danger', $html);
+    }
+
+    /**
+     * Regression: submitting inside the modal iframe redirects back to the admin
+     * index, so the browser shows nothing while the POST is in flight. The form
+     * must therefore mark the button as saving.
+     */
+    public function test_create_form_has_a_saving_state(): void
+    {
+        $admin = $this->admin();
+
+        $html = $this->actingAs($admin)->get(route('admin.destinations.create'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('destination-create-form', $html);
+        $this->assertStringContainsString('destination-create-submit', $html);
+        $this->assertStringContainsString('Saving', $html);
+    }
 }

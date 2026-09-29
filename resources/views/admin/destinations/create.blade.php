@@ -7,7 +7,24 @@
   <section class="section">
     <div class="card">
       <div class="card-body">
-        <form method="POST" action="{{ route('admin.destinations.store') }}">
+        <h5 class="card-title">New Destination</h5>
+
+        {{-- Mirrors admin/destinations/edit.blade.php. Without this the create form
+             failed silently: a validation error or a 500 just re-rendered the blank
+             form, so it looked like the click did nothing. --}}
+        @if ($errors->any())
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Destination could not be saved.</strong>
+            <ul class="mb-0">
+              @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+              @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        @endif
+
+        <form method="POST" action="{{ route('admin.destinations.store') }}" id="destination-create-form">
           @csrf
 
           <div class="row my-3">
@@ -113,11 +130,30 @@
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary">Create Destination</button>
+          <button type="submit" class="btn btn-primary" id="destination-create-submit">Create Destination</button>
         </form>
       </div>
     </div>
   </section>
+
+  <script>
+    // Same saving-state pattern the tour-packages forms use: a submit inside this
+    // modal iframe redirects back to the admin index, so the browser gives no
+    // feedback at all while the POST is in flight. Disable the button and show a
+    // spinner so it is obvious the save is actually happening.
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.getElementById('destination-create-form');
+      if (!form) return;
+
+      form.addEventListener('submit', function () {
+        const btn = document.getElementById('destination-create-submit');
+        if (!btn || btn.dataset.saving === '1') return;
+        btn.dataset.saving = '1';
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving…';
+      });
+    });
+  </script>
 
   <script>
     $(document).ready(function () {
