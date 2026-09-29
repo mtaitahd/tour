@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Destination;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -155,5 +156,42 @@ class DestinationPageRenderingTest extends TestCase
         $this->assertStringContainsString('destination-create-form', $html);
         $this->assertStringContainsString('destination-create-submit', $html);
         $this->assertStringContainsString('Saving', $html);
+    }
+
+    /**
+     * Regression: when the live database predates the faqs/reviews_embed migration,
+     * the insert threw a QueryException that Laravel rendered as a bare 500 inside
+     * the modal iframe — the spinner stopped and the admin was told nothing. It must
+     * now redirect back with an actionable message.
+     */
+    public function test_store_reports_missing_database_columns_instead_of_failing_silently(): void
+    {
+        $admin = $this->admin();
+
+        // Pretend the destinations table is stale: none of the newer columns exist.
+        Schema::shouldReceive('hasColumn')->andReturn(false);
+
+        $this->actingAs($admin)
+             ->from(route('admin.destinations.create'))
+             ->post(route('admin.destinations.store'), [
+                 'name'         => 'Ngorongoro',
+                 'country_code' => 'TZ',
+             ])
+             ->assertRedirect(route('admin.destinations.create'))
+             ->assertSessionHas('error');
+
+        $this->assertStringContainsString('migrate', session('error'));
+        $this->assertSame(0, Destination::count());
+    }
+
+    public function test_create_form_renders_a_flash_error(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+             ->withSession(['error' => 'Destination could not be saved: database out of date'])
+             ->get(route('admin.destinations.create'))
+             ->assertOk()
+             ->assertSee('database out of date');
     }
 }

@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Destination;
 use App\Models\GalleryImage;
 use App\Services\MediaLibraryService;
@@ -49,6 +52,14 @@ class DestinationController extends Controller
             'is_featured'      => 'boolean',
         ]);
 
+        // The live database has repeatedly lagged behind the migrations that add
+        // these columns. Without this guard the insert throws a QueryException and
+        // Laravel returns a bare 500 into the modal iframe: the spinner stops, the
+        // modal stays open, and the admin is told nothing. Fail with a real message.
+        if ($missing = $this->missingColumns(['faqs', 'reviews_embed'])) {
+            return $this->missingColumnsResponse($missing);
+        }
+
         // Drop FAQ rows where both fields were left blank (e.g. an added-then-unused
         // repeater row), same convention as tour_packages.
         if (!empty($validated['faqs'])) {
@@ -61,7 +72,17 @@ class DestinationController extends Controller
             $validated['slug'] = Str::slug($validated['name']);
         }
 
-        Destination::create($validated);
+        try {
+            Destination::create($validated);
+        } catch (QueryException $e) {
+            Log::error('Failed to create destination', ['error' => $e->getMessage()]);
+
+            return back()->withInput()->with(
+                'error',
+                'The destination could not be saved because of a database error. '
+                . 'If this keeps happening, run "php artisan migrate --force" on the server.'
+            );
+        }
 
         return redirect()->route('admin.destinations.index')
                          ->with('success', 'Destination created');
@@ -121,7 +142,26 @@ class DestinationController extends Controller
 
         $validated['is_featured'] = $request->has('is_featured');
 
-        $destination->update($validated);
+        // Same stale-schema protection as store(): the update writes these columns too,
+        // and a QueryException here would also surface as a silent 500 in the modal.
+        if ($missing = $this->missingColumns(['faqs', 'reviews_embed', 'hero_image_id'])) {
+            return $this->missingColumnsResponse($missing);
+        }
+
+        try {
+            $destination->update($validated);
+        } catch (QueryException $e) {
+            Log::error('Failed to update destination', [
+                'destination_id' => $destination->id,
+                'error'          => $e->getMessage(),
+            ]);
+
+            return back()->withInput()->with(
+                'error',
+                'The destination could not be saved because of a database error. '
+                . 'If this keeps happening, run "php artisan migrate --force" on the server.'
+            );
+        }
 
         // Media Library hero selection — additive alongside the existing direct-upload
         // path below. If both hero_image_id and a new hero_image file are submitted in
@@ -186,5 +226,29 @@ class DestinationController extends Controller
 
         return redirect()->route('admin.destinations.index')
                          ->with('success', 'Destination deleted successfully!');
+    }
+
+    /**
+     * Which of the given destinations columns don't exist in the database yet.
+     *
+     * @param  string[]  $columns
+     * @return string[]
+     */
+    private function missingColumns(array $columns): array
+    {
+        return array_values(array_filter(
+            $columns,
+            fn (string $column) => !Schema::hasColumn('destinations', $column)
+        ));
+    }
+
+    private function missingColumnsResponse(array $missing)
+    {
+        return back()->withInput()->with(
+            'error',
+            'Destination could not be saved: the database is missing the '
+            . implode(', ', $missing)
+            . ' column(s). Run "php artisan migrate --force" on the server, then try again.'
+        );
     }
 }
