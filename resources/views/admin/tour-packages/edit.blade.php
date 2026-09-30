@@ -147,55 +147,45 @@
                 </div>
               </div>
 
-              <div class="row mb-4 mt-5">
-                <label class="col-sm-2 col-form-label">Destinations</label>
-                <div class="col-sm-10">
-                  <select name="destinations[]" class="form-select" multiple>
-                    @foreach(\App\Models\Destination::orderBy('name')->get() as $dest)
-                      <option value="{{ $dest->id }}"
-                        {{ in_array($dest->id, old('destinations', $tourPackage->destinations->pluck('id')->toArray())) ? 'selected' : '' }}>
-                        {{ $dest->name }} ({{ $dest->country_code }})
-                      </option>
-                    @endforeach
-                  </select>
-                  <small>Select multiple destinations this tour visits</small>
-                </div>
-              </div>
+              @include('admin.tour-packages.partials.destination-picker', [
+                  'selected' => $tourPackage->destinations->pluck('id')->toArray(),
+                  'rowClass' => 'mb-4 mt-5',
+              ])
 
-              <!-- Tour Categories — powers the public footer/category listing pages
-                   (e.g. /tanzania-tours, /kilimanjaro-climbing-package). A tour can
-                   belong to more than one. -->
-              <div class="row mb-4">
-                <label class="col-sm-2 col-form-label">Categories</label>
-                <div class="col-sm-10">
-                  <select name="categories[]" class="form-select" multiple>
-                    @foreach(\App\Models\TourCategory::orderBy('order')->orderBy('name')->get() as $category)
-                      <option value="{{ $category->id }}"
-                        {{ in_array($category->id, old('categories', $tourPackage->categories->pluck('id')->toArray())) ? 'selected' : '' }}>
-                        {{ $category->name }}
-                      </option>
-                    @endforeach
-                  </select>
-                  <small>Select every category this tour should appear under (e.g. Tanzania Tours, Kilimanjaro Climbing Package). Manage categories under Tours &amp; Packages &rarr; Categories.</small>
-                </div>
-              </div>
+              <!-- Categories and Activities power the public category listing pages
+                   (e.g. /tanzania-tours) and the tour detail page; a tour can belong
+                   to more than one of each. Both are the same partial the create
+                   form uses, so the two forms cannot drift apart. -->
+              @include('admin.tour-packages.partials.checkbox-picker', [
+                  'pickerLabel'   => 'Categories',
+                  'fieldName'     => 'categories',
+                  'pickerOptions' => \App\Models\TourCategory::orderBy('order')->orderBy('name')->get()
+                                        ->map(fn ($category) => ['value' => $category->id, 'label' => $category->name])
+                                        ->all(),
+                  'pickerHelp'    => 'Select every category this tour should appear under (e.g. Tanzania Tours, Kilimanjaro Climbing Package). Manage them under Tours &amp; Packages &rarr; Categories.',
+                  'selected'      => $tourPackage->categories->pluck('id')->toArray(),
+                  'idPrefix'      => 'tour-edit',
+              ])
 
-              <!-- Activities -->
-              <div class="row mb-3">
-                <label class="col-sm-2 col-form-label">Activities</label>
-                <div class="col-sm-10">
-                  @php $selectedActivities = method_exists($tourPackage, 'activities') ? $tourPackage->activities->pluck('id')->toArray() : []; @endphp
-                  <select name="activities[]" class="form-select select2" multiple>
-                    @foreach(\App\Models\Activity::orderBy('order')->get() as $activity)
-                      <option value="{{ $activity->id }}"
-                        {{ in_array($activity->id, old('activities', $selectedActivities)) ? 'selected' : '' }}>
-                        {{ $activity->name }}
-                      </option>
-                    @endforeach
-                  </select>
-                  <small class="text-muted">Select all activities included in this tour</small>
-                </div>
-              </div>
+              @include('admin.tour-packages.partials.checkbox-picker', [
+                  'pickerLabel'   => 'Activities',
+                  'fieldName'     => 'activities',
+                  // Every activity is listed here, not just the active ones: the
+                  // create form only offers active activities, so an inactive one
+                  // can still be attached. Listing it is what stops the save from
+                  // quietly detaching it.
+                  'pickerOptions' => \App\Models\Activity::orderBy('order')->orderBy('name')->get()
+                                        ->map(fn ($activity) => [
+                                            'value' => $activity->id,
+                                            'label' => $activity->name . ($activity->is_active ? '' : ' (inactive)'),
+                                        ])
+                                        ->all(),
+                  'pickerHelp'    => 'Select all activities included in this tour.',
+                  'selected'      => method_exists($tourPackage, 'activities')
+                                        ? $tourPackage->activities->pluck('id')->toArray()
+                                        : [],
+                  'idPrefix'      => 'tour-edit',
+              ])
 
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Duration (Days)</label>

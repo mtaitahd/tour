@@ -7,6 +7,8 @@ use App\Models\Destination;
 use App\Models\TourCategory;
 use App\Models\TourPackage;
 use App\Models\User;
+use DOMDocument;
+use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -81,6 +83,106 @@ class TourPackageTaxonomyTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('add some from the admin menu first', $html);
+    }
+
+    /* ── Both forms offer the same pickers ─────────────────────────────── */
+
+    /**
+     * Asserts the three taxonomy fields are checkbox groups and that the given
+     * ids come back pre-ticked. Returns the parsed document for further checks.
+     */
+    private function assertCheckboxPickers(string $html, array $ticked = []): DOMXPath
+    {
+        $document = new DOMDocument();
+        @$document->loadHTML('<?xml encoding="UTF-8">' . $html);
+
+        $xpath = new DOMXPath($document);
+
+        foreach (['destinations', 'categories', 'activities'] as $field) {
+            $boxes = $xpath->query("//input[@name='{$field}[]']");
+
+            $this->assertGreaterThan(0, $boxes->length, "no {$field}[] checkboxes were rendered");
+
+            foreach ($boxes as $box) {
+                $this->assertSame('checkbox', $box->getAttribute('type'), "{$field}[] is not a checkbox");
+            }
+
+            // A <select multiple> is the shape this used to have, and it is the
+            // shape that cannot express "nothing ticked".
+            $this->assertSame(0, $xpath->query("//select[@name='{$field}[]']")->length);
+        }
+
+        foreach ($ticked as [$field, $id]) {
+            $box = $xpath->query("//input[@name='{$field}[]' and @value='{$id}']")->item(0);
+
+            $this->assertNotNull($box, "{$field}[] has no option {$id}");
+            $this->assertTrue($box->hasAttribute('checked'), "{$field}[] option {$id} is not pre-ticked");
+        }
+
+        return $xpath;
+    }
+
+    public function test_create_and_edit_forms_offer_the_same_pickers(): void
+    {
+        $category = $this->category('Tanzania Tours');
+        $activity = $this->activity('Big Five');
+        $spot     = Destination::create(['name' => 'Ngorongoro', 'slug' => 'ngorongoro-' . Str::random(4), 'country_code' => 'TZ']);
+
+        $createHtml = $this->actingAs($this->admin)
+            ->get(route('admin.tour-packages.create'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertCheckboxPickers($createHtml);
+
+        $tour = TourPackage::create([
+            'title'  => 'Ruaha',
+            'slug'   => 'ruaha-' . Str::random(5),
+            'status' => 'published',
+        ]);
+        $tour->categories()->attach($category->id);
+        $tour->activities()->attach($activity->id);
+        $tour->destinations()->attach($spot->id);
+
+        $editHtml = $this->actingAs($this->admin)
+            ->get(route('admin.tour-packages.edit', $tour))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertCheckboxPickers($editHtml, [
+            ['destinations', $spot->id],
+            ['categories', $category->id],
+            ['activities', $activity->id],
+        ]);
+    }
+
+    public function test_an_attached_inactive_activity_is_still_offered_on_edit(): void
+    {
+        $activity = $this->activity('Snorkelling');
+        $activity->update(['is_active' => false]);
+
+        $tour = TourPackage::create([
+            'title'  => 'Ruaha',
+            'slug'   => 'ruaha-' . Str::random(5),
+            'status' => 'published',
+        ]);
+        $tour->categories()->attach($this->category('Tanzania Tours')->id);
+        $tour->activities()->attach($activity->id);
+        $tour->destinations()->attach(
+            Destination::create(['name' => 'Ruaha NP', 'slug' => 'ruaha-np-' . Str::random(4), 'country_code' => 'TZ'])->id
+        );
+
+        $html = $this->actingAs($this->admin)
+            ->get(route('admin.tour-packages.edit', $tour))
+            ->assertOk()
+            ->getContent();
+
+        $xpath = $this->assertCheckboxPickers($html);
+
+        $box = $xpath->query("//input[@name='activities[]' and @value='{$activity->id}']")->item(0);
+
+        $this->assertTrue($box->hasAttribute('checked'));
+        $this->assertStringContainsString('(inactive)', $html);
     }
 
     /* ── Storing ───────────────────────────────────────────────────────── */

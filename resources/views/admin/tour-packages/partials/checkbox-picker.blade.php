@@ -12,6 +12,7 @@
         $pickerHelp      string|null  helper text under the grid.
         $selected        array        pre-ticked values (old() wins when present).
         $idPrefix        string|null  id namespace, default 'tour'.
+        $rowClass        string|null  spacing on the wrapping row, default 'mb-3'.
         $pickerAllLabel  string|null  label for the select-all toggle, default 'Select all'.
         $showSelectAll   bool         default true.
 --}}
@@ -28,7 +29,7 @@
     $pickerOptions  = $pickerOptions ?? [];
 @endphp
 
-<div class="row mb-3 tour-picker-field" data-picker-field data-picker-id="{{ $pickerId }}">
+<div class="row {{ $rowClass ?? 'mb-3' }} tour-picker-field" data-picker-field data-picker-id="{{ $pickerId }}">
     <label class="col-sm-2 col-form-label">{{ $pickerLabel }}</label>
     <div class="col-sm-10">
         @if ($showSelectAll && count($pickerOptions) > 1)
