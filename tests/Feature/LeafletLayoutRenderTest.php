@@ -12,7 +12,8 @@ use Tests\TestCase;
  * - Leaflet CSS + JS are loaded from the LOCAL vendor copy (not unpkg CDN)
  * - Every itinerary day uses the dedicated .itinerary-location-map-wrapper /
  *   .itinerary-location-map[data-location-map] structure
- * - The locally-hosted Leaflet marker images exist on disk
+ * - The stylesheet the page loads resolves the local marker images, and those
+ *   images exist on disk
  */
 class LeafletLayoutRenderTest extends TestCase
 {
@@ -20,11 +21,20 @@ class LeafletLayoutRenderTest extends TestCase
 
     private function assertLocalLeafletLoaded(string $html): void
     {
-        $this->assertStringContainsString('assets/vendor/leaflet/leaflet.css', $html);
-        $this->assertStringContainsString('assets/vendor/leaflet/leaflet.js', $html);
+        $this->assertStringContainsString('asset/vendor/leaflet/leaflet.css', $html);
+        $this->assertStringContainsString('asset/vendor/leaflet/leaflet.js', $html);
         $this->assertStringContainsString('itinerary-location-map-wrapper', $html);
         $this->assertStringContainsString('data-location-map', $html);
         $this->assertStringNotContainsString('unpkg.com/leaflet', $html);
+
+        // The page never spells out the marker URLs: leaflet.css asks for them
+        // relatively (url(images/marker-icon.png)), so a stylesheet copied over
+        // without its images/ folder renders a map with no pins and nothing in
+        // the HTML hints at it. Check the stylesheet's own reference instead.
+        $this->assertStringContainsString(
+            'url(images/marker-icon.png)',
+            file_get_contents(base_path('asset/vendor/leaflet/leaflet.css'))
+        );
     }
 
     public function test_create_page_loads_local_leaflet_and_uses_scoped_map_markup(): void
@@ -34,7 +44,6 @@ class LeafletLayoutRenderTest extends TestCase
         $html = $this->actingAs($admin)->get(route('admin.tour-packages.create'))->assertOk()->getContent();
 
         $this->assertLocalLeafletLoaded($html);
-        $this->assertStringContainsString('assets/vendor/leaflet/images/marker-icon.png', $html);
     }
 
     public function test_edit_page_loads_local_leaflet_and_uses_scoped_map_markup(): void
@@ -53,15 +62,14 @@ class LeafletLayoutRenderTest extends TestCase
         $html = $this->actingAs($admin)->get(route('admin.tour-packages.edit', $tour->id))->assertOk()->getContent();
 
         $this->assertLocalLeafletLoaded($html);
-        $this->assertStringContainsString('assets/vendor/leaflet/images/marker-icon.png', $html);
     }
 
     public function test_local_leaflet_assets_exist_on_disk(): void
     {
-        $this->assertFileExists(base_path('assets/vendor/leaflet/leaflet.css'));
-        $this->assertFileExists(base_path('assets/vendor/leaflet/leaflet.js'));
-        $this->assertFileExists(base_path('assets/vendor/leaflet/images/marker-icon.png'));
-        $this->assertFileExists(base_path('assets/vendor/leaflet/images/marker-icon-2x.png'));
-        $this->assertFileExists(base_path('assets/vendor/leaflet/images/marker-shadow.png'));
+        $this->assertFileExists(base_path('asset/vendor/leaflet/leaflet.css'));
+        $this->assertFileExists(base_path('asset/vendor/leaflet/leaflet.js'));
+        $this->assertFileExists(base_path('asset/vendor/leaflet/images/marker-icon.png'));
+        $this->assertFileExists(base_path('asset/vendor/leaflet/images/marker-icon-2x.png'));
+        $this->assertFileExists(base_path('asset/vendor/leaflet/images/marker-shadow.png'));
     }
 }
