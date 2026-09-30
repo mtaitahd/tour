@@ -162,24 +162,12 @@
     'idPrefix'      => 'tour-create',
 ])
 
-<!-- Video URL -->
-<div class="row mb-3">
-    <label class="col-sm-2 col-form-label">Video URL</label>
-    <div class="col-sm-10">
-        <input type="text" name="video_url" class="form-control" value="{{ old('video_url') }}" >
-    </div>
-</div>
-
-<!-- Embed Map -->
-<div class="row mb-3">
-    <label class="col-sm-2 col-form-label">Embed Map</label>
-    <div class="col-sm-10">
-        <textarea name="embed_map" class="form-control" rows="3" >{{ old('embed_map') }}</textarea>
-        <small class="form-text text-muted">
-            Paste your embed code (e.g., Google Maps iframe).
-        </small>
-    </div>
-</div>
+{{-- Video URL and Embed Map are not collected here. Both columns stay on
+     tour_packages and the public tour page still reads them
+     (TourController::buildEmbedUrl / tours.show), but they are no longer part of
+     creating a tour — a new tour starts with neither, and they are filled in
+     later on the edit form, which still offers Video URL and shows Embed Map for
+     tours that already have one. --}}
 
 <div class="row mb-3">
   <label class="col-sm-2 col-form-label">Safari Car Images</label>

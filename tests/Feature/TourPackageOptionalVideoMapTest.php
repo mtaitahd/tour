@@ -11,13 +11,16 @@ use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
- * Video URL and Embed Map are optional on the tour package form.
+ * Video URL and Embed Map are not collected when creating a tour.
  *
- * Both columns are nullable in the schema and both have always validated as
- * 'nullable|string' in the controller — but the create form still carried a red
- * required asterisk on each label, telling admins a field was mandatory when
- * nothing enforced it. The edit form never showed those asterisks, so the two
- * forms also disagreed with each other.
+ * Both were removed from the add-tour form. The columns themselves stay on
+ * tour_packages and the public tour page still reads them, so nothing about
+ * existing tours changed: they can be filled in on the edit form, which still
+ * offers Video URL and shows Embed Map for tours that already have one.
+ *
+ * These tests hold that line: the create form offers neither field, the edit
+ * form still manages both without marking them required, and a tour can be
+ * created and updated with either or both values present.
  */
 class TourPackageOptionalVideoMapTest extends TestCase
 {
@@ -42,6 +45,46 @@ class TourPackageOptionalVideoMapTest extends TestCase
     }
 
     /* ── The form UI ──────────────────────────────────────────────────── */
+
+    public function test_create_form_no_longer_collects_video_url_or_embed_map(): void
+    {
+        $html = $this->actingAs($this->admin)
+            ->get(route('admin.tour-packages.create'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('name="video_url"', $html);
+        $this->assertStringNotContainsString('name="embed_map"', $html);
+        $this->assertStringNotContainsString('Video URL', $html);
+        $this->assertStringNotContainsString('Embed Map', $html);
+    }
+
+    /**
+     * The edit form still manages both, and — as it always did — does not claim
+     * either is required: the columns are nullable and validate as
+     * 'nullable|string'.
+     */
+    public function test_edit_form_still_manages_both_without_marking_them_required(): void
+    {
+        // Embed Map is a legacy field on the edit form: its block only renders
+        // when the package already has one. Give it one so the field is present
+        // to be checked.
+        $package = TourPackage::create([
+            'title'     => 'Ruaha',
+            'slug'      => 'ruaha-' . Str::random(5),
+            'embed_map' => '<iframe src="https://maps.google.com/embed"></iframe>',
+        ]);
+
+        $html = $this->actingAs($this->admin)
+            ->get(route('admin.tour-packages.edit', $package))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('name="video_url"', $html);
+        $this->assertStringContainsString('name="embed_map"', $html);
+
+        $this->assertNotMarkedRequired($html, ['video_url', 'embed_map']);
+    }
 
     /**
      * Walk the rendered form and confirm the given fields carry neither a
@@ -77,38 +120,9 @@ class TourPackageOptionalVideoMapTest extends TestCase
         }
     }
 
-    public function test_create_form_does_not_mark_video_url_or_embed_map_as_required(): void
-    {
-        $html = $this->actingAs($this->admin)
-            ->get(route('admin.tour-packages.create'))
-            ->assertOk()
-            ->getContent();
+    /* ── Creating without them ────────────────────────────────────────── */
 
-        $this->assertNotMarkedRequired($html, ['video_url', 'embed_map']);
-    }
-
-    public function test_edit_form_agrees_with_the_create_form(): void
-    {
-        // Embed Map is a legacy field on the edit form: its block only renders
-        // when the package already has one. Give it one so the field is present
-        // to be checked.
-        $package = TourPackage::create([
-            'title'     => 'Ruaha',
-            'slug'      => 'ruaha-' . Str::random(5),
-            'embed_map' => '<iframe src="https://maps.google.com/embed"></iframe>',
-        ]);
-
-        $html = $this->actingAs($this->admin)
-            ->get(route('admin.tour-packages.edit', $package))
-            ->assertOk()
-            ->getContent();
-
-        $this->assertNotMarkedRequired($html, ['video_url', 'embed_map']);
-    }
-
-    /* ── Submitting without them ──────────────────────────────────────── */
-
-    public function test_a_tour_can_be_created_without_a_video_url_or_embed_map(): void
+    public function test_a_tour_created_from_the_form_starts_with_neither_value(): void
     {
         $this->actingAs($this->admin)
             ->post(route('admin.tour-packages.store'), $this->payload())
@@ -121,6 +135,11 @@ class TourPackageOptionalVideoMapTest extends TestCase
         $this->assertNull($package->embed_map);
     }
 
+    /**
+     * Nothing enforces the removal at the controller: a direct POST that still
+     * carries the values is stored, so any existing import or script that sends
+     * them is not broken by the form losing the fields.
+     */
     public function test_a_tour_can_still_be_created_with_both_values(): void
     {
         $this->actingAs($this->admin)
