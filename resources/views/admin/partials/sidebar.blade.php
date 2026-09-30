@@ -5,7 +5,14 @@
 @endphp
 <ul class="navbar-nav sidebar sidebar-light accordion" id="accordionSidebar">
     {{-- Brand --}}
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ $user->panelHome() }}">
+    {{-- Links to the dashboard route directly rather than through $user->panelHome():
+         panelHome() aborts with a 403 for accounts that have not been assigned a
+         role yet, so calling it from a layout turned every page that renders this
+         sidebar into a 403 for those users — including /profile, the one page they
+         are still meant to be able to open. 'dashboard' is the first module in
+         config/panel.php and is granted to every valid-role user, so this resolves
+         to the same URL panelHome() returns for anyone who may see this sidebar. --}}
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ route('dashboard') }}">
         <div class="sidebar-brand-icon">
             @php $brandLogo = \App\Models\Setting::logoUrl(); @endphp
             @if($brandLogo)
