@@ -219,6 +219,20 @@
     text-decoration: underline;
   }
 
+  /* reCAPTCHA v2 is a fixed 304px-wide widget and does not scale, so it is
+     centred and allowed to scroll horizontally on phones narrower than that
+     rather than being squashed or clipped. */
+  .login-form .login-recaptcha {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: auto;
+    margin: 18px 0 16px;
+  }
+  .login-form .login-recaptcha .invalid-feedback {
+    text-align: center;
+  }
+
   .login-form .btn-brand {
     width: 100%;
     padding: 12px;
@@ -293,7 +307,11 @@
         </div>
       @endif
 
-      @if($errors->any())
+      {{-- The credentials alert is only about credentials. Without the hasAny()
+           filter a failed captcha showed "The email or password you entered is
+           incorrect", which sends people off retyping a password that was never
+           the problem. --}}
+      @if($errors->hasAny(['email', 'password']))
         <div class="login-alert">
           <i class="fas fa-exclamation-triangle"></i>
           <span>The email or password you entered is incorrect.</span>
@@ -341,6 +359,13 @@
           @endif
         </div>
 
+        <div class="login-recaptcha">
+          <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+          @error('g-recaptcha-response')
+            <div class="invalid-feedback d-block">{{ $message }}</div>
+          @enderror
+        </div>
+
         <button type="submit" class="btn-brand">
           <i class="fas fa-sign-in-alt"></i> Login
         </button>
@@ -352,3 +377,7 @@
   </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+@endpush
