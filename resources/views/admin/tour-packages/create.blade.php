@@ -739,6 +739,10 @@ $(this).closest('.section-item').remove();
 .ql-font-courier-new { font-family: "Courier New", monospace !important; }
 </style>
 
+{{-- Media Library button for the Quill editors below (Overview, itinerary days,
+     extra sections) — see the partial for why it exists. --}}
+@include('admin.tour-packages.partials.quill-media')
+
 <script>
 $(document).ready(function () {
 function initQuill(editorDiv) {
@@ -747,21 +751,40 @@ if (!editorDiv.length || editorDiv.hasClass('ql-container')) return;
 const quill = new Quill(editorDiv[0], {
 theme: 'snow',
 modules: {
-toolbar: [
+toolbar: {
+container: [
 [{ 'font': ['arial', 'helvetica', 'times-new-roman', 'georgia', 'verdana', 'courier-new'] }],
 [{ 'header': [1, 2, 3, 4, 5, 6, false] }], // all 6 heading levels
 ['bold', 'italic', 'underline', 'strike'],
 ['blockquote', 'code-block'],
 [{ 'list': 'ordered'}, { 'list': 'bullet' }],
 ['link'],
-['clean']
+['clean'],
+QuillMedia.galleryButton()
 ]
+}
 }
 });
 
 const hiddenInput = editorDiv.siblings('.quill-hidden-input').first();
+
+QuillMedia.attach(quill, hiddenInput);
+
 if (hiddenInput.val()) {
-quill.root.innerHTML = hiddenInput.val();
+// dangerouslyPasteHTML (not quill.root.innerHTML = ...) so the HTML is parsed
+// into Quill's document model. Assigning innerHTML leaves the model empty, which
+// means any image already in the content is dropped the first time the editor is
+// changed and re-saved.
+const html = hiddenInput.val();
+try {
+quill.clipboard.dangerouslyPasteHTML(html, 'silent');
+} catch (e) { /* handled by the fallback below */ }
+if (quill.getLength() < 2) {
+// Stored HTML Quill has no format for (e.g. hand-written markup) would parse to
+// an empty model, so the first keystroke would wipe the field. Render it as-is
+// instead — an imperfect editor is better than losing someone's content.
+quill.root.innerHTML = html;
+}
 }
 quill.on('text-change', function () {
 hiddenInput.val(quill.root.innerHTML);

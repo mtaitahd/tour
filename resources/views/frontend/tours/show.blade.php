@@ -176,6 +176,29 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
 
             {{-- 5. OVERVIEW --}}
             <section class="td-section" id="td-overview" data-td-section="overview">
+                {{-- Images can now be inserted into the Overview from the admin's
+                     Media Library (tour-packages create/edit, Quill toolbar), and
+                     the overview is printed as raw HTML, so the <img> renders.
+                     These rules are the safety net for that: never wider than the
+                     column, never distorted, and a sensible rhythm around them. --}}
+                <style>
+                    .td-overview img {
+                        max-width: 100%;
+                        height: auto;
+                        display: block;
+                        margin: 1.25em auto;
+                        border-radius: 8px;
+                    }
+                    .td-overview img[data-align="left"]   { margin-left: 0; margin-right: auto; }
+                    .td-overview img[data-align="right"]  { margin-right: 0; margin-left: auto; }
+                    .td-overview figure { margin: 1.5em 0; }
+                    .td-overview figcaption {
+                        font-size: .875em;
+                        color: #64748b;
+                        text-align: center;
+                        margin-top: .5em;
+                    }
+                </style>
                 <div class="td-overview">
                     {!! $tour->overview !!}
                 </div>
