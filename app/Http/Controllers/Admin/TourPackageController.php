@@ -31,6 +31,14 @@ class TourPackageController extends Controller
         $request->validate([
             'title'                                         => 'required|string|max:255',
             'slug'                                          => 'nullable|string|unique:tour_packages,slug',
+            // Many-to-many pickers. Validated so a hand-crafted or stale POST can't
+            // attach ids that don't exist, which would fail the pivot FK.
+            'destinations'                                  => 'nullable|array',
+            'destinations.*'                                => 'integer|exists:destinations,id',
+            'categories'                                    => 'nullable|array',
+            'categories.*'                                  => 'integer|exists:tour_categories,id',
+            'activities'                                    => 'nullable|array',
+            'activities.*'                                  => 'integer|exists:activities,id',
             'duration_days'                                 => 'nullable|integer|min:1',
             'video_url'                                     => 'nullable|string|max:500',
             'embed_map'                                     => 'nullable|string',
@@ -288,17 +296,17 @@ class TourPackageController extends Controller
             $tourPackage->save();
         }
 
-        // ── Destinations ──────────────────────────────────────────────────────
-        if ($request->has('destinations')) {
-            $tourPackage->destinations()->sync($request->destinations);
-        }
+        // ── Destinations / Categories / Activities ─────────────────────────────
+        // These sync unconditionally rather than behind ->has(). Checkbox and
+        // multi-select fields are simply absent from the POST when the admin unticks
+        // everything, so a has() guard means "clear all" silently keeps the old
+        // selection instead of removing it. Both forms always render these fields,
+        // so an absent key genuinely means "none".
+        $tourPackage->destinations()->sync((array) $request->input('destinations', []));
+        $tourPackage->categories()->sync((array) $request->input('categories', []));
+        $tourPackage->activities()->sync((array) $request->input('activities', []));
 
-// ── Categories ────────────────────────────────────────────────────────
-        if ($request->has('categories')) {
-            $tourPackage->categories()->sync($request->categories);
-        }
-
-// ── Phase 2 Pricing ──────────────────────────────────────────────────
+        // ── Phase 2 Pricing ──────────────────────────────────────────────────
         $this->persistPricing($request, $tourPackage);
 
         \App\Services\SitemapGenerator::generate();
@@ -320,6 +328,13 @@ public function edit(TourPackage $tourPackage)
         $request->validate([
             'title'                                         => 'required|string|max:255',
             'slug'                                          => 'required|string|max:255|unique:tour_packages,slug,' . $tourPackage->id,
+            // Same many-to-many guards as store() — see the note there.
+            'destinations'                                  => 'nullable|array',
+            'destinations.*'                                => 'integer|exists:destinations,id',
+            'categories'                                    => 'nullable|array',
+            'categories.*'                                  => 'integer|exists:tour_categories,id',
+            'activities'                                    => 'nullable|array',
+            'activities.*'                                  => 'integer|exists:activities,id',
             'duration_days'                                 => 'nullable|integer|min:1',
             'video_url'                                     => 'nullable|string|max:500',
             'embed_map'                                     => 'nullable|string',
@@ -600,29 +615,14 @@ public function edit(TourPackage $tourPackage)
             $tourPackage->save();
         }
 
-        // ── Destinations ──────────────────────────────────────────────────────
-        if ($request->has('destinations')) {
-            $tourPackage->destinations()->sync($request->destinations);
-        }
-
-        // ── Categories ────────────────────────────────────────────────────────
-        // NOTE: same limitation as the destinations sync above — if every category
-        // is deselected, the <select multiple> field is entirely absent from the
-        // submitted form data, so $request->has('categories') is false and the old
-        // categories are never cleared. This matches existing, pre-existing behavior
-        // for destinations rather than introducing a special case only here; if this
-        // ever needs fixing, both should be fixed together (e.g. a hidden
-        // categories_submitted=1 marker field).
-        if ($request->has('categories')) {
-            $tourPackage->categories()->sync($request->categories);
-        }
-
-        // ── Activities ────────────────────────────────────────────────────────
-        // Same fix as store() — this field existed on the form but was never wired
-        // up to actually persist the selection.
-        if ($request->has('activities')) {
-            $tourPackage->activities()->sync($request->activities);
-        }
+        // ── Destinations / Categories / Activities ─────────────────────────────
+        // Now unconditional, matching store(). The old has() guards were a known
+        // bug: a <select multiple> / checkbox group is entirely absent from the POST
+        // when everything is deselected, so "clear all" left the old rows attached
+        // and the admin could never unassign a category, activity or destination.
+        $tourPackage->destinations()->sync((array) $request->input('destinations', []));
+        $tourPackage->categories()->sync((array) $request->input('categories', []));
+        $tourPackage->activities()->sync((array) $request->input('activities', []));
 
         // ── Group Departures ──────────────────────────────────────────────────
         if ($request->has('departures')) {

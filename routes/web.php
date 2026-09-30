@@ -118,6 +118,13 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
             ->name('tour-price-calculator.preview')
             ->middleware('throttle:30,1');
         Route::resource('tour-categories', \App\Http\Controllers\Admin\TourCategoryController::class);
+
+        // The Activity model, pivot and full CRUD controller (with views) have all
+        // existed since 2026_02_11, but no route was ever registered, so the whole
+        // screen was unreachable and activities could not be managed or assigned
+        // from the admin. Guarded by the same 'tours' permission as the other
+        // tour taxonomy screens.
+        Route::resource('activities', \App\Http\Controllers\Admin\ActivityController::class);
     });
 
     // ── Mega Nav (module: mega-nav) ─────────────────────────────────────

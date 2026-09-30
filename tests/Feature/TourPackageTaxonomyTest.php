@@ -1,0 +1,223 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Activity;
+use App\Models\Destination;
+use App\Models\TourCategory;
+use App\Models\TourPackage;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+/**
+ * Tour package <-> taxonomy wiring.
+ *
+ * Three related problems this covers:
+ *
+ *  1. The create form had no Categories or Activities pickers at all, so a new tour
+ *     could only be categorised after a second, separate edit.
+ *  2. store() never synced activities, so the field could not have worked on create.
+ *  3. Both store() and update() synced behind ->has(), which is always false when
+ *     the admin unticks every box (an empty multi-select is absent from the POST).
+ *     "Clear all" therefore silently kept the old rows.
+ */
+class TourPackageTaxonomyTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private User $admin;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->admin = User::factory()->superAdmin()->create();
+    }
+
+    private function payload(array $overrides = []): array
+    {
+        return array_merge([
+            'title'          => 'Migration Safari',
+            'slug'           => 'migration-' . Str::random(5),
+            'status'         => 'published',
+            'pricing_source' => 'none',
+        ], $overrides);
+    }
+
+    private function category(string $name): TourCategory
+    {
+        return TourCategory::create(['name' => $name, 'slug' => Str::slug($name) . '-' . Str::random(4)]);
+    }
+
+    private function activity(string $name): Activity
+    {
+        return Activity::create(['name' => $name, 'slug' => Str::slug($name) . '-' . Str::random(4)]);
+    }
+
+    /* ── The create form ───────────────────────────────────────────────── */
+
+    public function test_create_form_offers_category_and_activity_pickers(): void
+    {
+        $category = $this->category('Tanzania Tours');
+        $activity = $this->activity('Big Five');
+
+        $html = $this->actingAs($this->admin)
+            ->get(route('admin.tour-packages.create'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('name="categories[]"', $html);
+        $this->assertStringContainsString('name="activities[]"', $html);
+        $this->assertStringContainsString($category->name, $html);
+        $this->assertStringContainsString($activity->name, $html);
+    }
+
+    public function test_create_form_explains_when_there_is_nothing_to_pick(): void
+    {
+        $html = $this->actingAs($this->admin)
+            ->get(route('admin.tour-packages.create'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('add some from the admin menu first', $html);
+    }
+
+    /* ── Storing ───────────────────────────────────────────────────────── */
+
+    public function test_store_persists_categories_and_activities(): void
+    {
+        $category = $this->category('Tanzania Tours');
+        $other    = $this->category('Zanzibar');
+        $activity = $this->activity('Big Five');
+        $hike     = $this->activity('Hiking');
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.tour-packages.store'), $this->payload([
+                'categories' => [$category->id, $other->id],
+                'activities' => [$activity->id, $hike->id],
+            ]))
+            ->assertRedirect();
+
+        $tour = TourPackage::orderByDesc('id')->first();
+
+        $this->assertEqualsCanonicalizing(
+            [$category->id, $other->id],
+            $tour->categories->pluck('id')->all()
+        );
+        $this->assertEqualsCanonicalizing(
+            [$activity->id, $hike->id],
+            $tour->activities->pluck('id')->all()
+        );
+    }
+
+    public function test_store_saves_destinations_supplied_with_categories(): void
+    {
+        $category = $this->category('Tanzania Tours');
+        $spot     = Destination::create(['name' => 'Ngorongoro', 'slug' => 'ngorongoro-' . Str::random(4), 'country_code' => 'TZ']);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.tour-packages.store'), $this->payload([
+                'destinations' => [$spot->id],
+                'categories'   => [$category->id],
+            ]))
+            ->assertRedirect();
+
+        $this->assertEqualsCanonicalizing([$spot->id], TourPackage::orderByDesc('id')->first()->destinations->pluck('id')->all());
+    }
+
+    /* ── The "clear all" bug ───────────────────────────────────────────── */
+
+    public function test_update_clears_categories_when_every_box_is_unticked(): void
+    {
+        $tour = TourPackage::create([
+            'title'  => 'Ruaha',
+            'slug'   => 'ruaha-' . Str::random(5),
+            'status' => 'published',
+        ]);
+        $tour->categories()->attach($this->category('Tanzania Tours')->id);
+
+        $this->assertCount(1, $tour->fresh()->categories);
+
+        // No 'categories' key at all — exactly what an unticked multi-select sends.
+        $this->actingAs($this->admin)
+            ->put(route('admin.tour-packages.update', $tour), $this->payload(['slug' => $tour->slug]))
+            ->assertRedirect();
+
+        $this->assertCount(0, $tour->fresh()->categories);
+    }
+
+    public function test_update_clears_activities_and_destinations_when_unticked(): void
+    {
+        $tour = TourPackage::create([
+            'title'  => 'Ruaha',
+            'slug'   => 'ruaha-' . Str::random(5),
+            'status' => 'published',
+        ]);
+        $tour->activities()->attach($this->activity('Big Five')->id);
+        $tour->destinations()->attach(
+            Destination::create(['name' => 'Ruaha NP', 'slug' => 'ruaha-np-' . Str::random(4), 'country_code' => 'TZ'])->id
+        );
+
+        $this->actingAs($this->admin)
+            ->put(route('admin.tour-packages.update', $tour), $this->payload(['slug' => $tour->slug]))
+            ->assertRedirect();
+
+        $tour = $tour->fresh();
+        $this->assertCount(0, $tour->activities);
+        $this->assertCount(0, $tour->destinations);
+    }
+
+    /* ── Validation ────────────────────────────────────────────────────── */
+
+    public function test_a_nonexistent_category_id_is_rejected(): void
+    {
+        $this->actingAs($this->admin)
+            ->from(route('admin.tour-packages.create'))
+            ->post(route('admin.tour-packages.store'), $this->payload([
+                'categories' => [999999],
+            ]))
+            ->assertSessionHasErrors('categories.0');
+
+        $this->assertSame(0, TourPackage::count());
+    }
+
+    public function test_a_nonexistent_activity_id_is_rejected(): void
+    {
+        $this->actingAs($this->admin)
+            ->from(route('admin.tour-packages.create'))
+            ->post(route('admin.tour-packages.store'), $this->payload([
+                'activities' => [999999],
+            ]))
+            ->assertSessionHasErrors('activities.0');
+    }
+
+    /* ── Activities admin screen ───────────────────────────────────────── */
+
+    public function test_the_activities_admin_screen_is_reachable(): void
+    {
+        $this->activity('Big Five');
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.activities.index'))
+            ->assertOk();
+    }
+
+    public function test_activities_can_be_created_and_deleted_from_the_admin(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('admin.activities.store'), [
+                'name'        => 'Snorkelling',
+                'description' => 'Reef snorkelling trip.',
+            ])
+            ->assertRedirect();
+
+        $activity = Activity::where('name', 'Snorkelling')->firstOrFail();
+
+        $this->actingAs($this->admin)
+            ->delete(route('admin.activities.destroy', $activity))
+            ->assertRedirect();
+
+        $this->assertNull(Activity::find($activity->id));
+    }
+}

@@ -182,6 +182,28 @@
 </div>
 </div>
 
+<!-- Tour Categories -->
+@include('admin.tour-packages.partials.checkbox-picker', [
+    'pickerLabel'   => 'Categories',
+    'fieldName'     => 'categories',
+    'pickerOptions' => \App\Models\TourCategory::orderBy('order')->orderBy('name')->get()
+                          ->map(fn ($category) => ['value' => $category->id, 'label' => $category->name])
+                          ->all(),
+    'pickerHelp'    => 'Select every category this tour should appear under. Manage them under Tours & Packages &rarr; Categories.',
+    'idPrefix'      => 'tour-create',
+])
+
+<!-- Activities -->
+@include('admin.tour-packages.partials.checkbox-picker', [
+    'pickerLabel'   => 'Activities',
+    'fieldName'     => 'activities',
+    'pickerOptions' => \App\Models\Activity::active()->orderBy('order')->orderBy('name')->get()
+                          ->map(fn ($activity) => ['value' => $activity->id, 'label' => $activity->name])
+                          ->all(),
+    'pickerHelp'    => 'Select the activities included in this tour.',
+    'idPrefix'      => 'tour-create',
+])
+
 <!-- Video URL -->
 <div class="row mb-3">
     <label class="col-sm-2 col-form-label">Video URL <span class="text-danger">*</span></label>
