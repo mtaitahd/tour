@@ -1099,6 +1099,15 @@ $(window).on('resize', function () {
     if(!saveStatus)return;
     saveStatus.textContent=text;
     saveStatus.className='small '+(kind==='success'?'text-success':kind==='error'?'text-danger':'text-muted');
+    // The status line lives in the wizard header, above every panel, so an error
+    // raised while someone is on step 2, 3 or 4 was written off-screen: the Next
+    // button simply stopped responding and nothing on the page said why. Scroll
+    // the header back into view so the reason is where the failing click was.
+    if(kind==='error'){
+      var header=saveStatus.closest('.tour-wizard-header')||saveStatus;
+      var top=header.getBoundingClientRect().top+window.pageYOffset-90;
+      window.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+    }
   }
   function setStep(step,scroll){
     step=Math.max(1,Math.min(4,Number(step)||1));
@@ -1135,6 +1144,22 @@ $(window).on('resize', function () {
     }
     if(slugInput&&revision===revisionAtSave&&data.slug){slugInput.value=data.slug;}
   }
+  async function draftFailureMessage(response){
+    var body=null;
+    try{body=await response.json();}catch(ignore){}
+    if(response.status===419)return 'Your session expired. Refresh this page, sign in again, then continue the draft.';
+    if(response.status===401)return 'You are signed out. Sign in again, then continue the draft.';
+    if(response.status===403)return 'Your account does not have permission to save tours.';
+    if(response.status===404)return 'The draft save route was not found. Push and deploy the latest code, then refresh this page.';
+    if(response.status===413)return 'The form is too large to save in one request. Reduce large pasted content and try again.';
+    if(response.status===422&&body){
+      var errors=body.errors?Object.values(body.errors).reduce(function(all,messages){return all.concat(messages);},[]):[];
+      if(errors.length)return 'Please correct this draft field: '+errors[0];
+      if(body.message)return body.message;
+    }
+    if(response.status>=500)return 'The server could not save this draft (HTTP '+response.status+'). Check the server error log.';
+    return 'Draft save failed (HTTP '+response.status+'). Please refresh and try again.';
+  }
   async function saveDraft(force){
     if(saving){saveQueued=true;return activeSave;}
     if(!dirty&&!force)return true;
@@ -1153,8 +1178,9 @@ $(window).on('resize', function () {
         updateSaveStatus('Saving draft…');
         try{
           var response=await fetch(autosaveUrl,{method:'POST',body:data,credentials:'same-origin',headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}});
-          if(!response.ok)throw new Error('Draft save returned '+response.status);
+          if(!response.ok)throw new Error(await draftFailureMessage(response));
           var result=await response.json();
+          if(!result||!result.draft_id)throw new Error('The server response was incomplete. Refresh the page and try again.');
           applyDraftResponse(result,revisionAtSave);
           if(revision!==revisionAtSave){dirty=true;saveQueued=true;}
           else{
@@ -1165,7 +1191,7 @@ $(window).on('resize', function () {
           dirty=true;
           saveQueued=false;
           successful=false;
-          updateSaveStatus('Could not save draft. Check your connection and try again.','error');
+          updateSaveStatus(error&&error.message==='Failed to fetch'?'Cannot reach the server. Check your connection, then try again.':(error&&error.message?error.message:'Could not save draft. Check the connection and try again.'),'error');
         }
         force=false;
       }while(saveQueued&&successful);
