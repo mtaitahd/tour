@@ -1,1 +1,0 @@
-Welcome to AVT CMS<?php /**PATH C:\xampp\htdocs\tour\resources\views\auth\dash.blade.php ENDPATH**/ ?>

@@ -18,3 +18,8 @@ yarn-error.log
 /.vscode
 # Local project backups (DB dumps may contain personal data) — never commit
 /project-storage
+# Deployment archives kept in the project root (public.zip alone is 255 MB, over
+# GitHub's 100 MB per-file limit) — build them fresh on the server instead.
+/bootstrap.zip
+/phpunit.zip
+/public.zip

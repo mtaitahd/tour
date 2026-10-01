@@ -48,7 +48,7 @@ $iconSvg = function (string $key) {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="#c13d31" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $d . '</svg>';
 };
 
-$levelLabels = ['budget' => 'Budget', 'mid_range' => 'Mid-range', 'midrange' => 'Mid-range', 'luxury' => 'Luxury'];
+$levelLabels = ['budget' => 'Budget', 'budget_camping' => 'Camping', 'budget_lodge' => 'Budget', 'mid_range' => 'Mid-range', 'midrange' => 'Mid-range', 'luxury' => 'Luxury'];
 $tourLevelLabel = $levelLabels[strtolower((string) $tour->tour_level)] ?? ucfirst((string) $tour->tour_level);
 
 $videoUrl = (string) $tour->video_url;
@@ -138,6 +138,8 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
         <div class="td-hero__content">
             <div class="td-container">
                 <h1 class="td-hero__title">{{ $tour->cardTitle() }}</h1>
+                @if($tour->tour_format)<span class="td-tour-format-badge">{{ ucfirst($tour->tour_format) }} Tour</span>@endif
+                @if($tour->mountain)<span class="td-tour-format-badge">{{ $tour->mountain->name }}@if($tour->mountain_route_ids)<span class="ms-2">{{ \App\Models\MountainRoute::whereIn('id', $tour->mountain_route_ids)->pluck('name')->implode(', ') }}</span>@endif</span>@endif
                 <p class="td-hero__offered">Offered By: {{ $operator['name'] }}</p>
                 <div class="td-hero__rating">
                     {!! $renderStars($displayRating) !!}
@@ -192,6 +194,16 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                     .td-overview img[data-align="left"]   { margin-left: 0; margin-right: auto; }
                     .td-overview img[data-align="right"]  { margin-right: 0; margin-left: auto; }
                     .td-overview figure { margin: 1.5em 0; }
+                    .td-day__num { background:#198754 !important; color:#fff !important; }
+                    .td-btn--quote { background:#198754 !important; border-color:#198754 !important; color:#fff !important; }
+                    .td-feature__icon svg { stroke:#198754 !important; }
+                    .td-heading__line { background-color:#198754 !important; }
+                    .td-highlights li::marker { color:#198754; }
+                    .td-tour-format-badge { display:inline-flex; margin:.4rem 0 .8rem; padding:.35rem .75rem; border-radius:999px; background:#198754; color:#fff; font-size:.85rem; font-weight:700; }
+                    .td-lightbox__head { border-top:4px solid #198754; }
+                    .td-lightbox__title { background:#198754; color:#fff; padding:.25rem .6rem; border-radius:4px; }
+                    .sfb-faq-item { border-color:#198754 !important; }
+                    .sfb-faq-item__num, .sfb-faq-item__toggle { color:#198754 !important; }
                     .td-overview figcaption {
                         font-size: .875em;
                         color: #64748b;
@@ -246,6 +258,14 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                             </ul>
                         </div>
                     </div>
+                </section>
+            @endif
+
+            {{-- 7. HIGHLIGHTS --}}
+            @if(count($tour->highlights ?? []))
+                <section class="td-section td-white-card td-highlights">
+                    <h2 class="td-heading">Tour Highlights<span class="td-heading__line" aria-hidden="true"></span></h2>
+                    <ul>@foreach($tour->highlights as $highlight)<li>{{ $highlight }}</li>@endforeach</ul>
                 </section>
             @endif
 
@@ -325,6 +345,8 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                                                 @else
                                                     <strong>{{ $tier['name'] }}</strong>
                                                 @endif
+                                                @if(!empty($tier['description']))<small class="d-block">{{ $tier['description'] }}</small>@endif
+                                                @if(!empty($tier['amenities']))<small class="d-block">{{ implode(' · ', $tier['amenities']) }}</small>@endif
                                             </span>
                                         @endforeach
                                     @else

@@ -59,8 +59,9 @@
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Tier</label>
                 <div class="col-sm-10">
-                  <input type="text" name="tier" class="form-control" value="{{ old('tier', $accommodation->tier) }}"
-                         placeholder="e.g. Luxury Lodge, Tented Camp, Boutique Hotel, Beach Resort">
+                  <input type="text" name="tier" list="accommodation-tier-options" class="form-control" value="{{ old('tier', $accommodation->tier) }}"
+                         placeholder="e.g. High Luxury, Comfort, Essential">
+                  <datalist id="accommodation-tier-options"><option value="High Luxury"><option value="High Exclusive"><option value="High Elite"><option value="High Classic"><option value="Comfort"><option value="Premium"><option value="Essential"><option value="Value"><option value="Plus"></datalist>
                 </div>
               </div>
 

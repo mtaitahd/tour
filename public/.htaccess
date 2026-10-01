@@ -22,3 +22,52 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# ========================================================================
+# Merged from the live server's .htaccess (www.afrovertextours.com)
+# so the Laravel build keeps the same cache / WebP / static-file behaviour.
+# You can now delete the old .htaccess on the live server.
+# ========================================================================
+
+# ── Browser caching (expires headers) ──────────────────────────────────
+<IfModule mod_expires.c>
+	ExpiresActive On
+	ExpiresByType image/jpg "access plus 1 year"
+	ExpiresByType image/jpeg "access plus 1 year"
+	ExpiresByType image/gif "access plus 1 year"
+	ExpiresByType image/png "access plus 1 year"
+	ExpiresByType text/css "access plus 1 month"
+	ExpiresByType application/pdf "access plus 1 month"
+	ExpiresByType text/javascript "access plus 1 month"
+	ExpiresByType text/html "access plus 2 hours"
+	ExpiresByType image/x-icon "access plus 1 year"
+	ExpiresDefault "access plus 6 hours"
+</IfModule>
+
+# ── WebP: serve existing .webp copy instead of jpg/png/gif/etc ─────────
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteCond %{REQUEST_FILENAME} -f
+	RewriteCond %{REQUEST_URI} (.+)\.(gif|bmp|jpg|jpeg|png|tiff|svg|webp)$ [NC]
+	RewriteCond %{DOCUMENT_ROOT}%1.webp -f
+	RewriteRule ^(.+)\.(gif|bmp|jpg|jpeg|png|tiff|svg|webp)$ $1.webp [T=image/webp,E=WEBP_REDIRECT:1,L]
+</IfModule>
+
+# ── Skip front controller for missing static assets (NFD 404 patch) ────
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteCond %{REQUEST_URI} !(robots\.txt|ads\.txt|[a-z0-9_\-]*sitemap[a-z0-9_\.\-]*\.(xml|xsl|html)(\.gz)?)
+	RewriteCond %{REQUEST_URI} \.(css|htc|less|js|js2|js3|js4|html|htm|rtf|rtx|txt|xsd|xsl|xml|asf|asx|wax|wmv|wmx|avi|avif|avifs|bmp|class|divx|doc|docx|eot|exe|gif|gz|gzip|ico|jpg|jpeg|jpe|webp|json|mdb|mid|midi|mov|qt|mp3|m4a|mp4|m4v|mpeg|mpg|mpe|webm|mpp|otf|_otf|odb|odc|odf|odg|odp|ods|odt|ogg|ogv|pdf|png|pot|pps|ppt|pptx|ra|ram|svg|svgz|swf|tar|tif|tiff|ttf|ttc|_ttf|wav|wma|wri|woff|woff2|xla|xls|xlsx|xlt|xlw|zip)$ [NC]
+	RewriteRule .* - [L]
+</IfModule>
+
+# ── PHP handler: cPanel ea-php82 (LiteSpeed live server only) ────────────
+# Runs only on the live cPanel/LiteSpeed server; skipped on local XAMPP
+# (Apache/mod_php) so local PHP keeps working.
+<IfModule mime_module>
+	<If "%{SERVER_SOFTWARE} =~ /LiteSpeed/i">
+		AddHandler application/x-httpd-ea-php82___lsphp .php .php8 .phtml
+	</If>
+</IfModule>

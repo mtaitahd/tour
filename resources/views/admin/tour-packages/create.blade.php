@@ -133,6 +133,7 @@
 </div>
 <!-- Destinations — multi-select checkbox dropdown -->
 @include('admin.tour-packages.partials.destination-picker')
+@include('admin.tour-packages.partials.mountain-and-related', ['tourPackage' => null])
 <div class="row mb-3">
 <label class="col-sm-2 col-form-label">Duration (Days)</label>
 <div class="col-sm-10">
@@ -170,13 +171,13 @@
      tours that already have one. --}}
 
 <div class="row mb-3">
-  <label class="col-sm-2 col-form-label">Safari Car Images</label>
+  <label class="col-sm-2 col-form-label">Transfer Cars Images</label>
   <div class="col-sm-10">
     <x-media-picker
         name="safari_car_image_ids"
         multiple
         :selected="old('safari_car_image_ids')"
-        label="Select Safari Car Images"
+        label="Select Transfer Cars Images"
     />
     <small class="text-muted d-block mt-1">Choose one or more images from the library. Drag to reorder.</small>
   </div>
@@ -204,8 +205,8 @@
 <label class="col-sm-2 col-form-label">Tour Level</label>
 <div class="col-sm-10">
 <select name="tour_level" class="form-select">
-<option value="budget_camping">Budget Camping</option>
-<option value="budget_lodge">Budget Lodge</option>
+<option value="budget_camping">Camping</option>
+<option value="budget_lodge">Budget</option>
 <option value="mid_range" selected>Mid-Range</option>
 <option value="luxury">Luxury</option>
 </select>
@@ -290,21 +291,25 @@ value="{{ old("itinerary_days.$index.title") }}">
 <small class="text-muted d-block mt-1">Choose one or more images from the library. Drag to reorder.</small>
 </div>
 <div class="col-md-12">
-<label class="form-label">Description</label>
-<div class="quill-editor border rounded" style="height: 220px;"></div>
-<input type="hidden" name="itinerary_days[{{ $index }}][description]" class="quill-hidden-input" value="{{ old("itinerary_days.$index.description") }}">
+<label class="form-label">Description Notepad</label>
+<textarea id="itinerary-description-{{ $index }}" name="itinerary_days[{{ $index }}][description]" class="form-control tinymce-editor itinerary-notepad" rows="8">{{ old("itinerary_days.$index.description") }}</textarea>
 </div>
 <div class="col-md-12">
 <label class="form-label">Accommodation Tiers</label>
-@foreach(['silver' => 'Silver', 'gold' => 'Gold', 'platinum' => 'Platinum / Private'] as $tierKey => $tierLabel)
-<div class="row g-2 align-items-end mb-2">
+@php $accommodationOptions = \App\Models\Accommodation::published()->orderBy('name')->get(); $level = old('tour_level', 'mid_range'); $group = $level === 'luxury' ? 'luxury' : (str_contains($level, 'budget') || $level === 'budget' ? 'budget' : 'mid_range'); $tierLabels = $group === 'luxury' ? ['silver' => 'High Luxury', 'gold' => 'High Exclusive', 'platinum' => 'High Elite'] : ($group === 'budget' ? ['silver' => 'Essential', 'gold' => 'Value', 'platinum' => 'Plus'] : ['silver' => 'High Classic', 'gold' => 'Comfort', 'platinum' => 'Premium']); @endphp
+@foreach($tierLabels as $tierKey => $tierLabel)
+<div class="row g-2 align-items-end mb-2 accommodation-tier-row" data-tier-key="{{ $tierKey }}">
 <div class="col-md-3">
 <label class="form-label small mb-1">{{ $tierLabel }}</label>
-<input type="text"
-name="itinerary_days[{{ $index }}][accommodation_name_{{ $tierKey }}]"
-class="form-control"
-placeholder="{{ $tierLabel }} accommodation"
-value="{{ old("itinerary_days.$index.accommodation_name_$tierKey") }}">
+@php $selectedAccommodationName = old("itinerary_days.$index.accommodation_name_$tierKey", ''); @endphp
+<select name="itinerary_days[{{ $index }}][accommodation_name_{{ $tierKey }}]" class="form-select accommodation-choice" data-accommodation-choice>
+<option value="">Choose {{ $tierLabel }} accommodation</option>
+@if($selectedAccommodationName && !$accommodationOptions->contains('name', $selectedAccommodationName))<option value="{{ $selectedAccommodationName }}" selected>{{ $selectedAccommodationName }} (saved entry)</option>@endif
+@foreach($accommodationOptions as $accommodationOption)
+@php $optionTier = strtolower((string) $accommodationOption->tier); $optionGroup = str_contains($optionTier, 'luxury') || str_contains($optionTier, 'exclusive') || str_contains($optionTier, 'elite') ? 'luxury' : (str_contains($optionTier, 'classic') || str_contains($optionTier, 'comfort') || str_contains($optionTier, 'premium') ? 'mid_range' : (str_contains($optionTier, 'essential') || str_contains($optionTier, 'value') || str_contains($optionTier, 'plus') ? 'budget' : 'all')); @endphp
+<option value="{{ $accommodationOption->name }}" data-level-group="{{ $optionGroup }}" @selected($selectedAccommodationName === $accommodationOption->name)>{{ $accommodationOption->name }}{{ $accommodationOption->tier ? ' · ' . $accommodationOption->tier : '' }}</option>
+@endforeach
+</select>
 </div>
 <div class="col-md-9">
 <label class="form-label small mb-1">{{ $tierLabel }} Image</label>
@@ -422,102 +427,12 @@ value="{{ old("exclusions_items.$index", $item) }}">
 <small class="text-muted d-block mt-1">Choose an existing image from the library.</small>
 </div>
 </div>
-<div class="row mb-3">
-<label class="col-sm-2 col-form-label fw-bold">Gallery Images (multiple)</label>
-<div class="col-sm-10">
-{{--
-    Picker-only. This field previously had a gallery_images[] file input here while
-    the controller had already been converted to read gallery_image_ids only, so
-    gallery images could not be set at all on the create form. Now it matches the
-    edit form.
---}}
-<x-media-picker
-    name="gallery_image_ids"
-    multiple
-    :selected="old('gallery_image_ids', [])"
-    label="Select Gallery Images"
-/>
-<small class="text-muted d-block mt-1">Choose one or more images from the library. Drag to reorder.</small>
-</div>
-</div>
+
 <div class="row mb-3">
 <label class="col-sm-2 col-form-label">Ending Point</label>
 <div class="col-sm-10">
 <input type="text" name="ending_point" class="form-control"
 value="{{ old('ending_point') }}" placeholder="e.g. Arusha, Zanzibar Airport">
-</div>
-</div>
-<!-- Extra Sections -->
-<div class="row mt-5">
-<label class="col-sm-2 col-form-label fw-bold">Extra Sections (below main content)</label>
-<div class="col-sm-10">
-<div id="extra-sections-repeater">
-{{--
-    Fixed pre-existing bug: this previously referenced $tourPackage->extra_sections,
-    same issue as the itinerary section above — $tourPackage doesn't exist on this
-    create form. old('extra_sections') alone is the correct fallback here.
---}}
-@if(old('extra_sections'))
-@foreach(old('extra_sections') as $index => $section)
-<div class="section-item card mb-4 shadow-sm">
-<div class="card-header d-flex justify-content-between align-items-center bg-light">
-<h6 class="mb-0">Section {{ $loop->iteration }}</h6>
-<button type="button" class="btn btn-sm btn-danger remove-section">
-<i class="bi bi-trash"></i> Remove
-</button>
-</div>
-<div class="card-body">
-<div class="row g-3">
-<div class="col-md-6">
-<label class="form-label">Section Image</label>
-{{--
-    Picker-only, per decision. Field name (existing_image_id) unchanged.
---}}
-@php $sectionExistingImageId = old("extra_sections.$index.existing_image_id", $section['image_id'] ?? null); @endphp
-<x-media-picker
-    name="extra_sections[{{ $index }}][existing_image_id]"
-    :selected="$sectionExistingImageId"
-    label="Select Section Image"
-/>
-</div>
-<div class="col-md-6">
-<label class="form-label">Section Title</label>
-<input type="text" name="extra_sections[{{ $index }}][title]" class="form-control"
-value="{{ old("extra_sections.$index.title", $section['title'] ?? '') }}">
-</div>
-<div class="col-12">
-<label class="form-label">Section Content</label>
-<div class="quill-editor quill-mini border rounded" style="height: 180px;"></div>
-<input type="hidden" name="extra_sections[{{ $index }}][content]" 
-class="quill-hidden-input" 
-value="{{ old("extra_sections.$index.content", $section['content'] ?? '') }}">
-</div>
-<div class="col-md-6">
-<label class="form-label">Image Position</label>
-<select name="extra_sections[{{ $index }}][image_side]" class="form-select">
-<option value="left" {{ ($section['image_side'] ?? 'left') == 'left' ? 'selected' : '' }}>Image on Left</option>
-<option value="right" {{ ($section['image_side'] ?? 'left') == 'right' ? 'selected' : '' }}>Image on Right</option>
-</select>
-</div>
-</div>
-</div>
-</div>
-@endforeach
-@endif
-</div>
-<button type="button" id="add-extra-section" class="btn btn-outline-primary mt-3">
-<i class="bi bi-plus-circle"></i> Add New Section
-</button>
-
-{{-- Hidden template picker for new sections added client-side — see the matching
-     block and rationale in tour-packages/edit.blade.php. --}}
-<div id="extra-section-picker-template" class="d-none">
-  <x-media-picker
-      name="extra_sections[__INDEX__][existing_image_id]"
-      :selected="null"
-      label="Select Section Image"
-  />
-</div>
 </div>
 </div>
 <!-- SEO -->
@@ -570,24 +485,6 @@ value="{{ old("extra_sections.$index.content", $section['content'] ?? '') }}">
 </div>
 </div>
 </div>
-<div class="row mb-5 mt-5"> <!-- mt-5 adds high space on top -->
-  <label class="col-sm-2 col-form-label"><strong>Trip Details</strong></label>
-  <div class="col-sm-10">
-    <div class="detail-item row mb-3 align-items-start">
-      <div class="col-md-5">
-        <input type="text" name="detail[title]" class="form-control" 
-               placeholder="Make Your Dream Trip Come True With Afro-vertex Tours and Safaris">
-      </div>
-      <div class="col-md-7">
-        <textarea name="detail[description]" class="form-control" rows="3" 
-                  placeholder="Detail Description (e.g. Adjust sample itineraries to your preferences)">
-        </textarea>
-      </div>
-    </div>
-  </div>
-</div>
-
-
 <!-- FAQ Section -->
 <div class="row mb-5 mt-5"> <!-- mt-5 adds high space on top -->
   <label class="col-sm-2 col-form-label"><strong>FAQs</strong></label>
@@ -831,6 +728,11 @@ initQuill($('#extra-sections-repeater .quill-editor').last());
 });
 });
 </script>
+@push('scripts')
+<script>
+(function(){var levelSelect=document.querySelector('[name="tour_level"]');if(!levelSelect)return;function group(){var v=levelSelect.value;return v==='luxury'?'luxury':(v.indexOf('budget')===0||v==='budget'?'budget':'mid_range');}function filter(){var g=group();document.querySelectorAll('[data-accommodation-choice] option[data-level-group]').forEach(function(o){o.hidden=o.dataset.levelGroup!=='all'&&o.dataset.levelGroup!==g;});var labels={luxury:{silver:'High Luxury',gold:'High Exclusive',platinum:'High Elite'},mid_range:{silver:'High Classic',gold:'Comfort',platinum:'Premium'},budget:{silver:'Essential',gold:'Value',platinum:'Plus'}};document.querySelectorAll('.accommodation-tier-row').forEach(function(row){var key=row.dataset.tierKey,label=row.querySelector('label.form-label.small.mb-1');if(label&&labels[g][key])label.textContent=labels[g][key];});}window.filterAccommodationOptions=filter;levelSelect.addEventListener('change',filter);filter();})();
+</script>
+@endpush
 @endsection
 
 @push('scripts')
@@ -868,13 +770,12 @@ $(document).ready(function () {
             '<input type="hidden" name="itinerary_days[' + n + '][lng]" class="loc-field-lng">' +
             '</div>' +
             '<div class="col-md-12 day-images-picker-slot"><label class="form-label">Day Images</label></div>' +
-            '<div class="col-md-12"><label class="form-label">Description</label>' +
-            '<div class="quill-editor border rounded" style="height: 220px;"></div>' +
-            '<input type="hidden" name="itinerary_days[' + n + '][description]" class="quill-hidden-input"></div>' +
+            '<div class="col-md-12"><label class="form-label">Description Notepad</label>' +
+            '<textarea id="itinerary-description-' + n + '" name="itinerary_days[' + n + '][description]" class="form-control tinymce-editor itinerary-notepad" rows="8"></textarea></div>' +
             '<div class="col-md-12"><label class="form-label">Accommodation Tiers</label>' +
             ['silver', 'gold', 'platinum'].map(function (tier) {
                 var label = tier === 'platinum' ? 'Platinum / Private' : tier.charAt(0).toUpperCase() + tier.slice(1);
-                return '<div class="row g-2 align-items-end mb-2"><div class="col-md-3"><label class="form-label small mb-1">' + label + '</label>' +
+                return '<div class="row g-2 align-items-end mb-2 accommodation-tier-row" data-tier-key="' + tier + '"><div class="col-md-3"><label class="form-label small mb-1">' + label + '</label>' +
                     '<input type="text" name="itinerary_days[' + n + '][accommodation_name_' + tier + ']" class="form-control" placeholder="' + label + ' accommodation"></div>' +
                     '<div class="col-md-9 acc-tier-picker-slot" data-tier="' + tier + '"><label class="form-label small mb-1">' + label + ' Image</label></div></div>';
             }).join('') +
@@ -885,6 +786,20 @@ $(document).ready(function () {
 
         var $newDay = $(html);
         $('#itinerary-repeater').append($newDay);
+        if (window.tinymce) tinymce.init({ selector: '#itinerary-description-' + n });
+        $newDay.find('input[name*="accommodation_name_"]').each(function () {
+          var input=this, select=document.createElement('select');
+          select.name=input.name; select.className='form-select accommodation-choice'; select.setAttribute('data-accommodation-choice','');
+          select.add(new Option('Choose accommodation',''));
+          var catalog=@json(\App\Models\Accommodation::published()->orderBy('name')->get(['name','tier'])->values());
+          catalog.forEach(function(item){
+            var tier=String(item.tier||'').toLowerCase();
+            var group=(tier.indexOf('luxury')>=0||tier.indexOf('exclusive')>=0||tier.indexOf('elite')>=0)?'luxury':((tier.indexOf('classic')>=0||tier.indexOf('comfort')>=0||tier.indexOf('premium')>=0)?'mid_range':((tier.indexOf('essential')>=0||tier.indexOf('value')>=0||tier.indexOf('plus')>=0)?'budget':'all'));
+            var option=new Option(item.name+(item.tier?' · '+item.tier:''),item.name); option.dataset.levelGroup=group; select.add(option);
+          });
+          input.replaceWith(select);
+        });
+        if(window.filterAccommodationOptions)window.filterAccommodationOptions();
 
         var templateHtml = document.getElementById('itinerary-day-picker-template').innerHTML;
         var pickerNodes = $('<div>' + templateHtml.replace(/__INDEX__/g, n) + '</div>').children();

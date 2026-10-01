@@ -39,6 +39,12 @@ class TourPackageController extends Controller
             'categories.*'                                  => 'integer|exists:tour_categories,id',
             'activities'                                    => 'nullable|array',
             'activities.*'                                  => 'integer|exists:activities,id',
+            'mountain_id'                                   => 'nullable|integer|exists:mountains,id',
+            'mountain_route_ids'                            => 'nullable|array',
+            'mountain_route_ids.*'                          => 'integer|exists:mountain_routes,id',
+            'related_tour_ids'                              => 'nullable|array',
+            'related_tour_ids.*'                            => 'integer|exists:tour_packages,id',
+            'tour_format'                                   => 'nullable|in:private,group',
             'duration_days'                                 => 'nullable|integer|min:1',
             'video_url'                                     => 'nullable|string|max:500',
             'embed_map'                                     => 'nullable|string',
@@ -230,6 +236,10 @@ class TourPackageController extends Controller
             'package_duration_type' => $request->input('package_duration_type') ?: null,
             'tour_type'            => $request->input('tour_type') ? strtoupper($request->input('tour_type')) : null,
             'package_category'     => $request->input('package_category') ?: null,
+            'tour_format'          => $request->input('tour_format', 'private'),
+            'mountain_id'          => $request->input('mountain_id'),
+            'mountain_route_ids'   => array_values(array_map('intval', $request->input('mountain_route_ids', []))),
+            'related_tour_ids'     => array_values(array_map('intval', $request->input('related_tour_ids', []))),
             'pricing_source'       => $request->input('pricing_source', 'none'),
         ]);
 
@@ -335,6 +345,12 @@ public function edit(TourPackage $tourPackage)
             'categories.*'                                  => 'integer|exists:tour_categories,id',
             'activities'                                    => 'nullable|array',
             'activities.*'                                  => 'integer|exists:activities,id',
+            'mountain_id'                                   => 'nullable|integer|exists:mountains,id',
+            'mountain_route_ids'                            => 'nullable|array',
+            'mountain_route_ids.*'                          => 'integer|exists:mountain_routes,id',
+            'related_tour_ids'                              => 'nullable|array',
+            'related_tour_ids.*'                            => 'integer|exists:tour_packages,id',
+            'tour_format'                                   => 'nullable|in:private,group',
             'duration_days'                                 => 'nullable|integer|min:1',
             'video_url'                                     => 'nullable|string|max:500',
             'embed_map'                                     => 'nullable|string',
@@ -535,6 +551,7 @@ public function edit(TourPackage $tourPackage)
             'package_duration_type' => $request->input('package_duration_type') ?: null,
             'tour_type'            => $request->input('tour_type') ? strtoupper($request->input('tour_type')) : null,
             'package_category'     => $request->input('package_category') ?: null,
+
             'pricing_source'       => $request->input('pricing_source', 'none'),
         ]);
 
@@ -727,7 +744,10 @@ public function edit(TourPackage $tourPackage)
         $accommodations = [];
         foreach ($tiers as $key => $label) {
             $name = trim($dayData["accommodation_name_$key"] ?? '');
-            $imageId = $dayData["existing_accommodation_image_$key"] ?? null;
+            $selectedAccommodation = $name !== '' ? \App\Models\Accommodation::published()->where('name', $name)->first() : null;
+            $imageId = ! empty($dayData["existing_accommodation_image_$key"])
+                ? $dayData["existing_accommodation_image_$key"]
+                : $selectedAccommodation?->hero_image_id;
 
             // Skip a tier with neither a name nor an image — this used to also
             // require a 'remove_accommodation_image_*' flag to be set, a field that
@@ -744,6 +764,9 @@ public function edit(TourPackage $tourPackage)
                 'type'              => $label,
                 'tier_key'          => $key,
                 'name'              => $name,
+                'accommodation_id'  => $selectedAccommodation?->id,
+                'description'       => $selectedAccommodation?->description,
+                'amenities'         => $selectedAccommodation?->amenities ?? [],
                 'image_id'          => $imageId,
                 'existing_image_id' => $imageId,
             ];

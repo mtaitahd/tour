@@ -57,8 +57,8 @@
                     'BI' => 'Burundi', 'MZ' => 'Mozambique', 'SS' => 'South Sudan', 'ET' => 'Ethiopia',
                   ];
                   $levelLabels = [
-                    'budget_camping' => 'Budget Camping',
-                    'budget_lodge'   => 'Budget Lodge',
+                    'budget_camping' => 'Camping',
+                    'budget_lodge'   => 'Budget',
                     'mid_range'      => 'Mid-Range',
                     'luxury'         => 'Luxury',
                   ];
@@ -95,7 +95,7 @@
                     <td>{{ $countryText ?: '—' }}</td>
                     <td>{{ $package->duration_days ? $package->duration_days . ' days' : '—' }}</td>
                     <td>{{ $levelLabel }}</td>
-                    <td>{{ $tourType }}</td>
+                    <td>{{ ucfirst($package->tour_format ?: 'private') }}</td>
                     <td>{{ $lodgeCamp }}</td>
                     <td>{{ $destinations->pluck('name')->implode(', ') ?: '—' }}</td>
                     <td>{{ number_format($package->base_price) }} {{ $package->currency }}</td>

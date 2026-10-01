@@ -186,6 +186,7 @@
                                         : [],
                   'idPrefix'      => 'tour-edit',
               ])
+              @include('admin.tour-packages.partials.mountain-and-related', ['tourPackage' => $tourPackage])
 
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Duration (Days)</label>
@@ -220,9 +221,9 @@
               </div>
               @endif
 
-              <!-- Safari Car Images -->
+              <!-- Transfer Cars Images -->
               <div class="row mb-3">
-                <label class="col-sm-2 col-form-label">Safari Car Images</label>
+                <label class="col-sm-2 col-form-label">Transfer Cars Images</label>
                 <div class="col-sm-10">
                   {{--
                       Picker-only, per decision: direct upload removed entirely.
@@ -234,7 +235,7 @@
                       name="safari_car_image_ids"
                       multiple
                       :selected="old('safari_car_image_ids', app(\App\Services\MediaLibraryService::class)->orderedImagesFor($tourPackage, 'safari_car_images')->pluck('id')->all())"
-                      label="Select Safari Car Images"
+                      label="Select Transfer Cars Images"
                   />
                   <small class="text-muted d-block mt-1">Choose one or more images from the library. Drag to reorder.</small>
                 </div>
@@ -268,8 +269,8 @@
                 <label class="col-sm-2 col-form-label">Tour Level</label>
                 <div class="col-sm-10">
                   <select name="tour_level" class="form-select">
-                    <option value="budget_camping"{{ old('tour_level', $tourPackage->tour_level) == 'budget_camping'? 'selected' : '' }}>Budget Camping</option>
-                    <option value="budget_lodge"  {{ old('tour_level', $tourPackage->tour_level) == 'budget_lodge'  ? 'selected' : '' }}>Budget Lodge</option>
+                    <option value="budget_camping"{{ old('tour_level', $tourPackage->tour_level) == 'budget_camping'? 'selected' : '' }}>Camping</option>
+                    <option value="budget_lodge"  {{ old('tour_level', $tourPackage->tour_level) == 'budget_lodge'  ? 'selected' : '' }}>Budget</option>
                     <option value="mid_range"     {{ old('tour_level', $tourPackage->tour_level) == 'mid_range'     ? 'selected' : '' }}>Mid-Range</option>
                     <option value="luxury"        {{ old('tour_level', $tourPackage->tour_level) == 'luxury'        ? 'selected' : '' }}>Luxury</option>
                   </select>
@@ -364,10 +365,8 @@
                               </div>
 
                               <div class="col-md-12">
-                                <label class="form-label">Description</label>
-                                <div class="quill-editor border rounded" style="height: 220px;"></div>
-                                <input type="hidden" name="itinerary_days[{{ $index }}][description]" class="quill-hidden-input"
-                                       value="{{ old("itinerary_days.$index.description", $day['description'] ?? '') }}">
+                                <label class="form-label">Description Notepad</label>
+                                <textarea id="itinerary-description-{{ $index }}" name="itinerary_days[{{ $index }}][description]" class="form-control tinymce-editor itinerary-notepad" rows="8">{{ old("itinerary_days.$index.description", $day['description'] ?? '') }}</textarea>
                               </div>
 
                               <div class="col-md-12">
@@ -378,7 +377,8 @@
                                       return strtolower($acc['tier_key'] ?? $acc['type'] ?? '');
                                   });
                                 @endphp
-                                @foreach(['silver' => 'Silver', 'gold' => 'Gold', 'platinum' => 'Platinum / Private'] as $tierKey => $tierLabel)
+                                @php $accommodationOptions = \App\Models\Accommodation::published()->orderBy('name')->get(); $level = old('tour_level', $tourPackage->tour_level); $group = $level === 'luxury' ? 'luxury' : (str_contains($level, 'budget') || $level === 'budget' ? 'budget' : 'mid_range'); $tierLabels = $group === 'luxury' ? ['silver' => 'High Luxury', 'gold' => 'High Exclusive', 'platinum' => 'High Elite'] : ($group === 'budget' ? ['silver' => 'Essential', 'gold' => 'Value', 'platinum' => 'Plus'] : ['silver' => 'High Classic', 'gold' => 'Comfort', 'platinum' => 'Premium']); @endphp
+@foreach($tierLabels as $tierKey => $tierLabel)
                                   @php
                                     $acc = $accommodationsByTier->get($tierKey, []);
                                     $accMedia = !empty($acc['image_id'])
@@ -400,14 +400,18 @@
                                     }
                                     $existingImageId = $accMedia?->id;
                                   @endphp
-                                  <div class="row g-2 align-items-end mb-3 accommodation-tier-row">
+                                  <div class="row g-2 align-items-end mb-3 accommodation-tier-row" data-tier-key="{{ $tierKey }}">
                                     <div class="col-md-3">
                                       <label class="form-label small mb-1">{{ $tierLabel }}</label>
-                                      <input type="text"
-                                             name="itinerary_days[{{ $index }}][accommodation_name_{{ $tierKey }}]"
-                                             class="form-control"
-                                             placeholder="{{ $tierLabel }} accommodation"
-                                             value="{{ old("itinerary_days.$index.accommodation_name_$tierKey", $acc['name'] ?? '') }}">
+                                      @php $selectedAccommodationName = old("itinerary_days.$index.accommodation_name_$tierKey", $acc['name'] ?? ''); @endphp
+                                      <select name="itinerary_days[{{ $index }}][accommodation_name_{{ $tierKey }}]" class="form-select accommodation-choice" data-accommodation-choice>
+                                        <option value="">Choose {{ $tierLabel }} accommodation</option>
+                                        @if($selectedAccommodationName && !$accommodationOptions->contains('name', $selectedAccommodationName))<option value="{{ $selectedAccommodationName }}" selected>{{ $selectedAccommodationName }} (saved entry)</option>@endif
+                                        @foreach($accommodationOptions as $accommodationOption)
+                                          @php $optionTier = strtolower((string) $accommodationOption->tier); $optionGroup = str_contains($optionTier, 'luxury') || str_contains($optionTier, 'exclusive') || str_contains($optionTier, 'elite') ? 'luxury' : (str_contains($optionTier, 'classic') || str_contains($optionTier, 'comfort') || str_contains($optionTier, 'premium') ? 'mid_range' : (str_contains($optionTier, 'essential') || str_contains($optionTier, 'value') || str_contains($optionTier, 'plus') ? 'budget' : 'all')); @endphp
+                                          <option value="{{ $accommodationOption->name }}" data-level-group="{{ $optionGroup }}" @selected($selectedAccommodationName === $accommodationOption->name)>{{ $accommodationOption->name }}{{ $accommodationOption->tier ? ' · ' . $accommodationOption->tier : '' }}</option>
+                                        @endforeach
+                                      </select>
                                     </div>
                                     <div class="col-md-9">
                                       <label class="form-label small mb-1">{{ $tierLabel }} Image</label>
@@ -1200,16 +1204,15 @@
                 <label class="form-label">Day Images</label>
               </div>
               <div class="col-md-12">
-                <label class="form-label">Description</label>
-                <div class="quill-editor border rounded" style="height: 220px;"></div>
-                <input type="hidden" name="itinerary_days[${dayIndex}][description]" class="quill-hidden-input">
+                <label class="form-label">Description Notepad</label>
+                <textarea id="itinerary-description-${dayIndex}" name="itinerary_days[${dayIndex}][description]" class="form-control tinymce-editor itinerary-notepad" rows="8"></textarea>
               </div>
               <div class="col-md-12">
                 <label class="form-label">Accommodation Tiers</label>
                 ${['silver', 'gold', 'platinum'].map((tier) => {
                   const label = tier === 'platinum' ? 'Platinum / Private' : tier.charAt(0).toUpperCase() + tier.slice(1);
                   return `
-                    <div class="row g-2 align-items-end mb-2">
+                    <div class="row g-2 align-items-end mb-2 accommodation-tier-row" data-tier-key="${tier}">
                       <div class="col-md-3">
                         <label class="form-label small mb-1">${label}</label>
                         <input type="text" name="itinerary_days[${dayIndex}][accommodation_name_${tier}]" class="form-control" placeholder="${label} accommodation">
@@ -1230,6 +1233,20 @@
         </div>`;
       const $newDay = $(newDayHtml);
       $('#itinerary-repeater').append($newDay);
+      if (window.tinymce) tinymce.init({ selector: '#itinerary-description-' + dayIndex });
+        $newDay.find('input[name*="accommodation_name_"]').each(function () {
+          var input=this, select=document.createElement('select');
+          select.name=input.name; select.className='form-select accommodation-choice'; select.setAttribute('data-accommodation-choice','');
+          select.add(new Option('Choose accommodation',''));
+          var catalog=@json(\App\Models\Accommodation::published()->orderBy('name')->get(['name','tier'])->values());
+          catalog.forEach(function(item){
+            var tier=String(item.tier||'').toLowerCase();
+            var group=(tier.indexOf('luxury')>=0||tier.indexOf('exclusive')>=0||tier.indexOf('elite')>=0)?'luxury':((tier.indexOf('classic')>=0||tier.indexOf('comfort')>=0||tier.indexOf('premium')>=0)?'mid_range':((tier.indexOf('essential')>=0||tier.indexOf('value')>=0||tier.indexOf('plus')>=0)?'budget':'all'));
+            var option=new Option(item.name+(item.tier?' · '+item.tier:''),item.name); option.dataset.levelGroup=group; select.add(option);
+          });
+          input.replaceWith(select);
+        });
+        if(window.filterAccommodationOptions)window.filterAccommodationOptions();
 
       // Clone the hidden template pickers and drop each into its slot, with the
       // "__INDEX__" placeholder replaced by this day's real index. See the
@@ -1429,6 +1446,11 @@
   });
 </script>
 
+@push('scripts')
+<script>
+(function(){var levelSelect=document.querySelector('[name="tour_level"]');if(!levelSelect)return;function group(){var v=levelSelect.value;return v==='luxury'?'luxury':(v.indexOf('budget')===0||v==='budget'?'budget':'mid_range');}function filter(){var g=group();document.querySelectorAll('[data-accommodation-choice] option[data-level-group]').forEach(function(o){o.hidden=o.dataset.levelGroup!=='all'&&o.dataset.levelGroup!==g;});var labels={luxury:{silver:'High Luxury',gold:'High Exclusive',platinum:'High Elite'},mid_range:{silver:'High Classic',gold:'Comfort',platinum:'Premium'},budget:{silver:'Essential',gold:'Value',platinum:'Plus'}};document.querySelectorAll('.accommodation-tier-row').forEach(function(row){var key=row.dataset.tierKey,label=row.querySelector('label.form-label.small.mb-1');if(label&&labels[g][key])label.textContent=labels[g][key];});}window.filterAccommodationOptions=filter;levelSelect.addEventListener('change',filter);filter();})();
+</script>
+@endpush
 @endsection
 
 @push('scripts')

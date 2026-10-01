@@ -73,6 +73,10 @@ class TourPackage extends Model implements HasMedia
 
         // Media Library
         'hero_image_id',
+        'tour_format',
+        'mountain_id',
+        'mountain_route_ids',
+        'related_tour_ids',
     ];
 
     protected $casts = [
@@ -87,6 +91,8 @@ class TourPackage extends Model implements HasMedia
         'season_pricing'   => 'array',  // NEW
         'trip_details'     => 'array',
         'faqs'             => 'array',  // NEW
+        'mountain_route_ids' => 'array',
+        'related_tour_ids' => 'array',
         'is_featured'      => 'boolean',
         'no_robots'        => 'boolean',
     ];
@@ -136,6 +142,11 @@ class TourPackage extends Model implements HasMedia
     }
 
     // ─── Relationships ────────────────────────────────────────────────────────
+
+    public function mountain(): BelongsTo
+    {
+        return $this->belongsTo(Mountain::class);
+    }
 
     public function destinations()
     {

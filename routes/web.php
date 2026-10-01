@@ -125,6 +125,8 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
         // from the admin. Guarded by the same 'tours' permission as the other
         // tour taxonomy screens.
         Route::resource('activities', \App\Http\Controllers\Admin\ActivityController::class);
+        Route::resource('mountains', \App\Http\Controllers\Admin\MountainController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('mountain-routes', \App\Http\Controllers\Admin\MountainRouteController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['mountain-routes' => 'mountainRoute']);
     });
 
     // ── Mega Nav (module: mega-nav) ─────────────────────────────────────

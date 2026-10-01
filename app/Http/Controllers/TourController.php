@@ -656,6 +656,8 @@ class TourController extends Controller
                     'type'     => strtoupper($tier['type'] ?? $tier['level'] ?? 'SILVER'),
                     'tier_key' => strtolower($tier['tier_key'] ?? $tier['type'] ?? $tier['level'] ?? 'silver'),
                     'name'     => $tier['name'] ?? '',
+                    'description' => $tier['description'] ?? '',
+                    'amenities' => $tier['amenities'] ?? [],
                     'url'      => $tier['url'] ?? '',
                     'thumb'    => $thumbUrl,
                     'photos'   => $fullUrls,
@@ -676,7 +678,7 @@ class TourController extends Controller
         if ($tour->tour_level && isset($levelLabels[strtolower($tour->tour_level)])) {
             $features[] = ['icon' => 'bed', 'title' => $levelLabels[strtolower($tour->tour_level)], 'text' => 'Specialised' . strtolower($levelLabels[strtolower($tour->tour_level)]) . ' options available'];
         }
-        $features[] = ['icon' => 'private', 'title' => 'Private tour', 'text' => 'This tour runs exclusively for your own group'];
+        $features[] = ['icon' => $tour->tour_format === 'group' ? 'group' : 'private', 'title' => $tour->tour_format === 'group' ? 'Group tour' : 'Private tour', 'text' => $tour->tour_format === 'group' ? 'Join other travellers on this shared departure' : 'This tour runs exclusively for your own group'];
         $features[] = ['icon' => 'calendar', 'title' => 'Can start any day', 'text' => 'Flexible departure — pick any date that suits you'];
 
         /* ── Activities & transportation rows (hidden when nothing applies) ─── */
@@ -781,9 +783,12 @@ class TourController extends Controller
             ->values();
 
         $relatedTours = $scored->filter(fn ($item) => $item['score'] > 0)->take(6)->pluck('tour');
+        if (! empty($tour->related_tour_ids)) {
+            $relatedTours = TourPackage::query()->where('status', 'published')->where('id', '!=', $tour->id)->whereIn('id', $tour->related_tour_ids)->get();
+        }
 
         // Fallback so the section never renders nearly-empty on small catalogues.
-        if ($relatedTours->count() < 3) {
+        if (empty($tour->related_tour_ids) && $relatedTours->count() < 3) {
             $fillerIds = $relatedTours->pluck('id')->push($tour->id);
             $fillers   = TourPackage::query()
                 ->where('status', 'published')

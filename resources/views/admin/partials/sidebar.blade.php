@@ -65,14 +65,14 @@
 
     {{-- Tours & Packages --}}
     @if($can('tours'))
-        <li class="nav-item {{ in_array($currentPage, ['tour-packages', 'tour-categories', 'activities']) ? 'active' : '' }}">
-            <a class="nav-link {{ in_array($currentPage, ['tour-packages', 'tour-categories', 'activities']) ? '' : 'collapsed' }}"
+        <li class="nav-item {{ in_array($currentPage, ['tour-packages', 'tour-categories', 'activities', 'mountains', 'mountain-routes']) ? 'active' : '' }}">
+            <a class="nav-link {{ in_array($currentPage, ['tour-packages', 'tour-categories', 'activities', 'mountains', 'mountain-routes']) ? '' : 'collapsed' }}"
                href="#" data-bs-target="#tours-nav" data-bs-toggle="collapse">
                 <i class="fas fa-fw fa-briefcase"></i>
                 <span>Tours & Packages</span>
                 <i class="fas fa-chevron-down ms-auto"></i>
             </a>
-            <div id="tours-nav" class="collapse {{ in_array($currentPage, ['tour-packages', 'tour-categories', 'activities']) ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
+            <div id="tours-nav" class="collapse {{ in_array($currentPage, ['tour-packages', 'tour-categories', 'activities', 'mountains', 'mountain-routes']) ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
                 <a class="nav-link" href="{{ route('admin.tour-packages.index') }}">
                     <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
                     <span>All Tours</span>
@@ -84,6 +84,14 @@
                 <a class="nav-link" href="{{ route('admin.activities.index') }}">
                     <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
                     <span>Activities</span>
+                </a>
+                <a class="nav-link" href="{{ route('admin.mountains.index') }}">
+                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
+                    <span>Mountains</span>
+                </a>
+                <a class="nav-link" href="{{ route('admin.mountain-routes.index') }}">
+                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
+                    <span>Mountain Routes</span>
                 </a>
             </div>
         </li>
