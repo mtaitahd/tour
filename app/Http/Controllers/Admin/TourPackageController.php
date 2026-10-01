@@ -90,6 +90,10 @@ class TourPackageController extends Controller
             'title'         => $title !== '' ? $title : 'Untitled tour draft',
             'slug'          => $slug,
             'status'        => 'draft',
+            // Some production databases still define trip_details as NOT NULL
+            // without a default. The field stays out of the form; persist an
+            // empty JSON array so incomplete drafts can be inserted safely.
+            'trip_details'   => [],
             'draft_payload' => $payload,
         ]);
         $tourPackage->save();
