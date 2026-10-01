@@ -112,6 +112,8 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
         Route::post('location-search', [\App\Http\Controllers\Admin\LocationSearchController::class, '__invoke'])
             ->middleware('throttle:10,1')
             ->name('location-search');
+        Route::post('tour-packages/drafts/autosave', [TourPackageController::class, 'autosaveDraft'])
+            ->name('tour-packages.autosave');
         Route::resource('tour-packages', TourPackageController::class);
         // Phase 2: server-side price calculator preview (POST-only, throttled).
         Route::post('tour-price-calculator/preview', [\App\Http\Controllers\Admin\TourPriceCalculatorController::class, 'preview'])

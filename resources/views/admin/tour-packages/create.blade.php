@@ -114,13 +114,29 @@
 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 @endif
-<form id="tour-create-form" method="POST" action="{{ route('admin.tour-packages.store') }}" enctype="multipart/form-data">
+<form id="tour-create-form" method="POST" action="{{ isset($draft) && $draft ? route('admin.tour-packages.update', $draft->id) : route('admin.tour-packages.store') }}" enctype="multipart/form-data">
 @csrf
+@if(isset($draft) && $draft) @method('PUT') @endif
+<input type="hidden" id="tour-draft-id" name="draft_id" value="{{ $draft->id ?? old('draft_id') }}">
+<div class="tour-wizard-header mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+    <div><div class="small text-uppercase text-muted fw-semibold">Tour builder</div><div class="fw-semibold" id="tour-wizard-step-title">Step 1 of 4 · Package Information</div></div>
+    <div id="tour-draft-save-status" class="small text-muted" role="status" aria-live="polite">Draft saves automatically</div>
+  </div>
+  <div class="progress mb-3" style="height:6px" aria-label="Tour form progress"><div class="progress-bar bg-success" id="tour-wizard-progress" role="progressbar" style="width:25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div></div>
+  <div class="row g-2" aria-label="Tour form steps">
+    <div class="col-6 col-lg-3"><button type="button" class="btn btn-sm btn-success w-100 tour-wizard-step-indicator" data-step-indicator="1" aria-current="step">1 · Package Info</button></div>
+    <div class="col-6 col-lg-3"><button type="button" class="btn btn-sm btn-outline-secondary w-100 tour-wizard-step-indicator" data-step-indicator="2">2 · Pricing &amp; Setup</button></div>
+    <div class="col-6 col-lg-3"><button type="button" class="btn btn-sm btn-outline-secondary w-100 tour-wizard-step-indicator" data-step-indicator="3">3 · Itinerary</button></div>
+    <div class="col-6 col-lg-3"><button type="button" class="btn btn-sm btn-outline-secondary w-100 tour-wizard-step-indicator" data-step-indicator="4">4 · SEO &amp; Publish</button></div>
+  </div>
+</div>
+<div class="tour-wizard-panel" data-wizard-step="1">
 <!-- Basic Info -->
 <div class="row mb-3">
 <label class="col-sm-2 col-form-label">Title <span class="text-danger">*</span></label>
 <div class="col-sm-10">
-<input type="text" name="title" class="form-control" value="{{ old('title') }}" >
+<input type="text" id="tour-title" name="title" class="form-control" value="{{ old('title') }}" >
 </div>
 </div>
 
@@ -186,6 +202,13 @@
 
 
 
+<div class="d-flex justify-content-end mt-4">
+  <button type="button" class="btn btn-primary tour-wizard-next" data-next-step="2">Next: Pricing &amp; Setup <i class="bi bi-arrow-right"></i></button>
+</div>
+</div>
+
+<div class="tour-wizard-panel d-none" data-wizard-step="2">
+<h5 class="card-title">Pricing &amp; Trip Setup</h5>
 @include('admin.tour-packages.partials.pricing.selector', ['tourPackage' => null])
 
 <!-- Level & Rating -->
@@ -214,6 +237,26 @@
 </div>
 <!-- Available Months — 12 checkboxes + a Select all toggle -->
 @include('admin.tour-packages.partials.available-months', ['tourPackage' => null, 'idPrefix' => 'tour-create'])
+<div class="row mb-3">
+  <label class="col-sm-2 col-form-label" for="tour-starting-point">Starting Point</label>
+  <div class="col-sm-10"><input type="text" id="tour-starting-point" name="starting_point" class="form-control" value="{{ old('starting_point') }}" placeholder="e.g. Arusha"></div>
+</div>
+<div class="row mb-3">
+  <label class="col-sm-2 col-form-label" for="tour-ending-point">Ending Point</label>
+  <div class="col-sm-10"><input type="text" id="tour-ending-point" name="ending_point" class="form-control" value="{{ old('ending_point') }}" placeholder="e.g. Arusha, Zanzibar Airport"></div>
+</div>
+<div class="row mb-3">
+  <label class="col-sm-2 col-form-label fw-bold">Hero Image (main cover)</label>
+  <div class="col-sm-10"><x-media-picker name="hero_image_id" :selected="old('hero_image_id')" label="Select from Media Library" /><small class="text-muted d-block mt-1">Choose an existing image from the library.</small></div>
+</div>
+<div class="d-flex justify-content-between mt-4">
+  <button type="button" class="btn btn-outline-secondary tour-wizard-back" data-previous-step="1"><i class="bi bi-arrow-left"></i> Back</button>
+  <button type="button" class="btn btn-primary tour-wizard-next" data-next-step="3">Next: Itinerary <i class="bi bi-arrow-right"></i></button>
+</div>
+</div>
+
+<div class="tour-wizard-panel d-none" data-wizard-step="3">
+<h5 class="card-title">Itinerary &amp; Experience</h5>
 <!-- Overview — the full notepad, same editor as the destination form's Description.
      Not a .tinymce-editor on purpose: the Overview is initialised by this form
      instead (see the script at the foot of this file) so its toolbar can carry the
@@ -414,29 +457,16 @@ value="{{ old("exclusions_items.$index", $item) }}">
 <small>Will be saved as JSON array</small>
 </div>
 </div>
-<!-- Hero & Gallery -->
-<div class="row mb-3">
-<label class="col-sm-2 col-form-label fw-bold">Hero Image (main cover)</label>
-<div class="col-sm-10">
-{{-- Picker-only: the Media Library is the single source of images. --}}
-<x-media-picker
-    name="hero_image_id"
-    :selected="old('hero_image_id')"
-    label="Select from Media Library"
-/>
-<small class="text-muted d-block mt-1">Choose an existing image from the library.</small>
+@include('admin.tour-packages.partials.faq-fields')
+<div class="d-flex justify-content-between mt-4">
+  <button type="button" class="btn btn-outline-secondary tour-wizard-back" data-previous-step="2"><i class="bi bi-arrow-left"></i> Back</button>
+  <button type="button" class="btn btn-primary tour-wizard-next" data-next-step="4">Next: SEO &amp; Publish <i class="bi bi-arrow-right"></i></button>
 </div>
 </div>
 
-<div class="row mb-3">
-<label class="col-sm-2 col-form-label">Ending Point</label>
-<div class="col-sm-10">
-<input type="text" name="ending_point" class="form-control"
-value="{{ old('ending_point') }}" placeholder="e.g. Arusha, Zanzibar Airport">
-</div>
-</div>
-<!-- SEO -->
-<h5 class="card-title mt-5">SEO Settings</h5>
+<div class="tour-wizard-panel d-none" data-wizard-step="4">
+<h5 class="card-title">SEO &amp; Publish</h5>
+<h6 class="text-muted mt-3 mb-3">Search engine settings</h6>
 <div class="row mb-3">
 <label class="col-sm-2 col-form-label">Meta Title</label>
 <div class="col-sm-10">
@@ -473,9 +503,9 @@ value="{{ old('ending_point') }}" placeholder="e.g. Arusha, Zanzibar Airport">
 <label class="col-sm-2 col-form-label">Status</label>
 <div class="col-sm-5">
 <select name="status" class="form-select">
-<option value="draft">Draft</option>
-<option value="published" selected>Published</option>
-<option value="archived">Archived</option>
+<option value="draft" @selected(old('status', 'draft') === 'draft')>Draft</option>
+<option value="published" @selected(old('status', 'draft') === 'published')>Published</option>
+<option value="archived" @selected(old('status', 'draft') === 'archived')>Archived</option>
 </select>
 </div>
 <div class="col-sm-5">
@@ -485,68 +515,12 @@ value="{{ old('ending_point') }}" placeholder="e.g. Arusha, Zanzibar Airport">
 </div>
 </div>
 </div>
-<!-- FAQ Section -->
-<div class="row mb-5 mt-5"> <!-- mt-5 adds high space on top -->
-  <label class="col-sm-2 col-form-label"><strong>FAQs</strong></label>
-  <div class="col-sm-10">
-    <div id="faqs-wrapper">
-      <!-- First FAQ item -->
-      <div class="faq-item row mb-3 align-items-start">
-        <div class="col-md-5">
-          <input type="text" name="faqs[0][question]" class="form-control" placeholder="Question" >
-        </div>
-        <div class="col-md-5">
-          <textarea name="faqs[0][answer]" class="form-control" rows="3" placeholder="Answer" ></textarea>
-        </div>
-        <div class="col-md-2">
-          <button type="button" class="btn btn-sm btn-danger remove-faq">Remove</button>
-        </div>
-      </div>
-    </div>
-    <button type="button" id="add-faq" class="btn btn-sm btn-primary mt-2">
-      Add FAQ
-    </button>
+<div class="d-flex justify-content-between align-items-center mt-4">
+  <button type="button" class="btn btn-outline-secondary tour-wizard-back" data-previous-step="3"><i class="bi bi-arrow-left"></i> Back</button>
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn btn-success">Finish &amp; Save Tour</button>
+    <a href="{{ route('admin.tour-packages.index') }}" class="btn btn-secondary">Cancel</a>
   </div>
-</div>
-
-<script>
-  $(document).ready(function () {
-    let faqIndex = $('#faqs-wrapper .faq-item').length;
-
-    // Add FAQ
-    $('#add-faq').on('click', function () {
-      faqIndex++;
-
-      const newFaq = `
-        <div class="faq-item row mb-3 align-items-start">
-          <div class="col-md-5">
-            <input type="text" name="faqs[${faqIndex}][question]" class="form-control" placeholder="Question" >
-          </div>
-          <div class="col-md-5">
-            <textarea name="faqs[${faqIndex}][answer]" class="form-control" rows="3" placeholder="Answer" ></textarea>
-          </div>
-          <div class="col-md-2">
-            <button type="button" class="btn btn-sm btn-danger remove-faq">Remove</button>
-          </div>
-        </div>
-      `;
-
-      $('#faqs-wrapper').append(newFaq);
-    });
-
-    // Remove FAQ
-    $(document).on('click', '.remove-faq', function () {
-      $(this).closest('.faq-item').remove();
-    });
-  });
-</script>
-
-<!-- Submit -->
-<div class="row mb-3">
-<label class="col-sm-2 col-form-label"></label>
-<div class="col-sm-10">
-<button type="submit" class="btn btn-primary">Create Tour Package</button>
-<a href="{{ route('admin.tour-packages.index') }}" class="btn btn-secondary">Cancel</a>
 </div>
 </div>
 </form>
@@ -1084,7 +1058,8 @@ $(window).on('resize', function () {
   document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('tour-create-form');
     if (!form) return;
-    form.addEventListener('submit', function () {
+    form.addEventListener('submit', function (event) {
+      if (event.defaultPrevented) return;
       const btn = form.querySelector('button[type="submit"]');
       if (!btn || btn.dataset.saving === '1') return;
       btn.dataset.saving = '1';
@@ -1092,5 +1067,157 @@ $(window).on('resize', function () {
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving…';
     });
   });
+</script>
+<script>
+(function(){
+  var form=document.getElementById('tour-create-form');
+  if(!form)return;
+  var panels=Array.from(form.querySelectorAll('[data-wizard-step]'));
+  var indicators=Array.from(form.querySelectorAll('[data-step-indicator]'));
+  var stepTitle=document.getElementById('tour-wizard-step-title');
+  var progress=document.getElementById('tour-wizard-progress');
+  var saveStatus=document.getElementById('tour-draft-save-status');
+  var draftInput=document.getElementById('tour-draft-id');
+  var titleInput=document.getElementById('tour-title');
+  var slugInput=form.querySelector('[name="slug"]');
+  var autosaveUrl=@json(route('admin.tour-packages.autosave'));
+  var updateUrlTemplate=@json(route('admin.tour-packages.update', ['tour_package' => '__DRAFT_ID__']));
+  var stepNames={1:'Package Information',2:'Pricing & Setup',3:'Itinerary & Experience',4:'SEO & Publish'};
+  var currentStep=1;
+  var draftId=draftInput&&draftInput.value?String(draftInput.value):'';
+  var slugManuallyEdited=!!(slugInput&&slugInput.value.trim());
+  var dirty=false;
+  var saving=false;
+  var saveQueued=false;
+  var activeSave=null;
+  var revision=0;
+  var timer=null;
+  var finalizing=false;
+
+  function updateSaveStatus(text,kind){
+    if(!saveStatus)return;
+    saveStatus.textContent=text;
+    saveStatus.className='small '+(kind==='success'?'text-success':kind==='error'?'text-danger':'text-muted');
+  }
+  function setStep(step,scroll){
+    step=Math.max(1,Math.min(4,Number(step)||1));
+    currentStep=step;
+    panels.forEach(function(panel){panel.classList.toggle('d-none',Number(panel.dataset.wizardStep)!==step);});
+    indicators.forEach(function(button){
+      var selected=Number(button.dataset.stepIndicator)===step;
+      button.classList.toggle('btn-success',selected);
+      button.classList.toggle('btn-outline-secondary',!selected);
+      if(selected)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');
+      button.disabled=Number(button.dataset.stepIndicator)>step;
+    });
+    if(stepTitle)stepTitle.textContent='Step '+step+' of 4 · '+stepNames[step];
+    if(progress){var percent=step*25;progress.style.width=percent+'%';progress.setAttribute('aria-valuenow',String(percent));}
+    if(scroll){var top=form.getBoundingClientRect().top+window.pageYOffset-90;window.scrollTo({top:Math.max(0,top),behavior:'smooth'});}
+    setTimeout(function(){window.dispatchEvent(new Event('resize'));},150);
+  }
+  function slugify(value){return String(value||'').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+  function markChanged(){
+    dirty=true;
+    revision++;
+    updateSaveStatus('Unsaved changes…');
+    if(saving)saveQueued=true;
+    clearTimeout(timer);
+    timer=setTimeout(function(){saveDraft(false);},900);
+  }
+  function applyDraftResponse(data,revisionAtSave){
+    if(!draftId){
+      draftId=String(data.draft_id);
+      draftInput.value=draftId;
+      var method=form.querySelector('input[name="_method"]');
+      if(!method){method=document.createElement('input');method.type='hidden';method.name='_method';method.value='PUT';form.appendChild(method);}
+      form.action=updateUrlTemplate.replace('__DRAFT_ID__',encodeURIComponent(draftId));
+    }
+    if(slugInput&&revision===revisionAtSave&&data.slug){slugInput.value=data.slug;}
+  }
+  async function saveDraft(force){
+    if(saving){saveQueued=true;return activeSave;}
+    if(!dirty&&!force)return true;
+    saving=true;
+    activeSave=(async function(){
+      var successful=true;
+      do{
+        saveQueued=false;
+        if(!dirty&&!force&&draftId)break;
+        if(window.tinymce&&typeof window.tinymce.triggerSave==='function')window.tinymce.triggerSave();
+        var revisionAtSave=revision;
+        var data=new FormData(form);
+        data.set('draft_id',draftId||'');
+        data.delete('_method');
+        dirty=false;
+        updateSaveStatus('Saving draft…');
+        try{
+          var response=await fetch(autosaveUrl,{method:'POST',body:data,credentials:'same-origin',headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}});
+          if(!response.ok)throw new Error('Draft save returned '+response.status);
+          var result=await response.json();
+          applyDraftResponse(result,revisionAtSave);
+          if(revision!==revisionAtSave){dirty=true;saveQueued=true;}
+          else{
+            var savedTime=result.saved_at?new Date(result.saved_at):new Date();
+            updateSaveStatus('Draft saved at '+savedTime.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),'success');
+          }
+        }catch(error){
+          dirty=true;
+          saveQueued=false;
+          successful=false;
+          updateSaveStatus('Could not save draft. Check your connection and try again.','error');
+        }
+        force=false;
+      }while(saveQueued&&successful);
+      saving=false;
+      activeSave=null;
+      return successful&&!dirty;
+    })();
+    return activeSave;
+  }
+
+  form.addEventListener('input',markChanged);
+  form.addEventListener('change',markChanged);
+  if(slugInput)slugInput.addEventListener('input',function(){slugManuallyEdited=true;});
+  if(titleInput)titleInput.addEventListener('input',function(){if(!slugManuallyEdited&&slugInput)slugInput.value=slugify(titleInput.value);});
+  if(window.tinymce){
+    var bindEditor=function(editor){editor.on('input change undo redo',markChanged);};
+    window.tinymce.on('AddEditor',function(event){bindEditor(event.editor);});
+    window.tinymce.editors.forEach(bindEditor);
+  }
+  form.querySelectorAll('.tour-wizard-next').forEach(function(button){button.addEventListener('click',async function(){
+    var next=Number(button.dataset.nextStep);
+    if(currentStep===1&&(!titleInput||!titleInput.value.trim())){
+      setStep(1,true);
+      updateSaveStatus('Add a tour title before continuing.','error');
+      if(titleInput)titleInput.focus();
+      return;
+    }
+    button.disabled=true;
+    var saved=await saveDraft(true);
+    button.disabled=false;
+    if(saved)setStep(next,true);
+  });});
+  form.querySelectorAll('.tour-wizard-back').forEach(function(button){button.addEventListener('click',function(){setStep(Number(button.dataset.previousStep),true);});});
+  indicators.forEach(function(button){button.addEventListener('click',function(){var target=Number(button.dataset.stepIndicator);if(target<currentStep)setStep(target,true);});});
+  form.addEventListener('submit',async function(event){
+    if(finalizing)return;
+    event.preventDefault();
+    if(window.tinymce&&typeof window.tinymce.triggerSave==='function')window.tinymce.triggerSave();
+    if(!titleInput||!titleInput.value.trim()){
+      setStep(1,true);
+      updateSaveStatus('Add a tour title before saving.','error');
+      if(titleInput)titleInput.focus();
+      return;
+    }
+    var submitButton=form.querySelector('button[type="submit"]');
+    if(submitButton){submitButton.disabled=true;submitButton.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span> Saving…';}
+    var saved=await saveDraft(true);
+    if(!saved){if(submitButton){submitButton.disabled=false;submitButton.textContent='Finish & Save Tour';}return;}
+    finalizing=true;
+    form.submit();
+  });
+  window.addEventListener('beforeunload',function(event){if(dirty||saving){event.preventDefault();event.returnValue='';}});
+  setStep(1,false);
+})();
 </script>
 @endpush

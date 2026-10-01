@@ -111,7 +111,8 @@
                       <a href="{{ route('tour.show', $package->slug) }}" target="_blank" class="btn btn-info btn-sm">
                         <i class="bi bi-eye"></i>
                       </a>
-                      <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#packageFormModal" onclick="openPackageForm('{{ route('admin.tour-packages.edit', $package->id) }}')">
+                      @php $packageEditUrl = $package->status === 'draft' ? route('admin.tour-packages.create', ['draft_id' => $package->id]) : route('admin.tour-packages.edit', $package->id); @endphp
+                      <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#packageFormModal" title="{{ $package->status === 'draft' ? 'Continue draft' : 'Edit package' }}" onclick="openPackageForm('{{ $packageEditUrl }}')">
                         <i class="fas fa-edit"></i>
                       </button>
                       <form action="{{ route('admin.tour-packages.destroy', $package->id) }}" method="POST" class="d-inline">
@@ -184,6 +185,8 @@
       document.getElementById('packageFormModalLabel').textContent = 'Add Package';
       if (typeof url === 'string' && url.indexOf('/edit') !== -1) {
         document.getElementById('packageFormModalLabel').textContent = 'Edit Package';
+      } else if (typeof url === 'string' && url.indexOf('draft_id=') !== -1) {
+        document.getElementById('packageFormModalLabel').textContent = 'Continue Draft';
       }
       var sep = url.indexOf('?') === -1 ? '?' : '&';
       frame.src = url + sep + 'modal=1';

@@ -77,6 +77,7 @@ class TourPackage extends Model implements HasMedia
         'mountain_id',
         'mountain_route_ids',
         'related_tour_ids',
+        'draft_payload',
     ];
 
     protected $casts = [
@@ -93,6 +94,7 @@ class TourPackage extends Model implements HasMedia
         'faqs'             => 'array',  // NEW
         'mountain_route_ids' => 'array',
         'related_tour_ids' => 'array',
+        'draft_payload'    => 'array',
         'is_featured'      => 'boolean',
         'no_robots'        => 'boolean',
     ];

@@ -21,9 +21,75 @@ class TourPackageController extends Controller
         return view('admin.tour-packages.index', compact('tourPackages'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('admin.tour-packages.create');
+        $draftId = $request->session()->getOldInput('draft_id') ?: $request->query('draft_id');
+        $draft = $draftId
+            ? TourPackage::where('status', 'draft')->find($draftId)
+            : null;
+
+        if ($draft && $request->query->has('draft_id')) {
+            $draftInput = $draft->draft_payload ?? [];
+            $draftInput['draft_id'] = $draft->getKey();
+            $draftInput['status'] = 'draft';
+            $request->session()->flashInput(array_merge($draftInput, $request->session()->getOldInput()));
+        }
+
+        return view('admin.tour-packages.create', compact('draft'));
+    }
+
+    /**
+     * Save an incomplete tour form as a private draft without running the final
+     * pricing or publication validation. The payload lets the editor restore
+     * fields that have not reached their final database representation yet.
+     */
+    public function autosaveDraft(Request $request)
+    {
+        $request->validate([
+            'draft_id' => 'nullable|integer|exists:tour_packages,id',
+            'title'    => 'nullable|string|max:255',
+            'slug'     => 'nullable|string|max:255',
+        ]);
+
+        $tourPackage = null;
+        if ($request->filled('draft_id')) {
+            $tourPackage = TourPackage::where('status', 'draft')->findOrFail($request->integer('draft_id'));
+        }
+
+        $title = trim((string) $request->input('title', ''));
+        $slug = Str::slug((string) $request->input('slug', ''));
+        if ($slug === '') {
+            $slug = Str::slug($title);
+        }
+        if ($slug === '') {
+            $slug = 'tour-draft-' . Str::lower(Str::random(10));
+        }
+
+        $baseSlug = $slug;
+        $suffix = 1;
+        while (TourPackage::where('slug', $slug)
+            ->when($tourPackage, fn ($query) => $query->whereKeyNot($tourPackage->getKey()))
+            ->exists()) {
+            $slug = $baseSlug . '-' . $suffix++;
+        }
+
+        $payload = $request->input();
+        unset($payload['_token'], $payload['_method'], $payload['draft_id']);
+
+        $tourPackage ??= new TourPackage();
+        $tourPackage->fill([
+            'title'         => $title !== '' ? $title : 'Untitled tour draft',
+            'slug'          => $slug,
+            'status'        => 'draft',
+            'draft_payload' => $payload,
+        ]);
+        $tourPackage->save();
+
+        return response()->json([
+            'draft_id' => $tourPackage->getKey(),
+            'slug'     => $tourPackage->slug,
+            'saved_at' => now()->toIso8601String(),
+        ]);
     }
 
     public function store(Request $request)
@@ -330,6 +396,13 @@ public function edit(TourPackage $tourPackage)
     {
         $tourPackage->load('packagePrices');
 
+        if ($tourPackage->status === 'draft' && is_array($tourPackage->draft_payload)) {
+            $previousInput = request()->session()->getOldInput();
+            $draftInput = $tourPackage->draft_payload;
+            $draftInput['status'] = 'draft';
+            request()->session()->flashInput(array_merge($draftInput, $previousInput));
+        }
+
         return view('admin.tour-packages.edit', compact('tourPackage'));
     }
 
@@ -551,8 +624,13 @@ public function edit(TourPackage $tourPackage)
             'package_duration_type' => $request->input('package_duration_type') ?: null,
             'tour_type'            => $request->input('tour_type') ? strtoupper($request->input('tour_type')) : null,
             'package_category'     => $request->input('package_category') ?: null,
+            'tour_format'          => $request->input('tour_format', 'private'),
+            'mountain_id'          => $request->input('mountain_id'),
+            'mountain_route_ids'   => array_values(array_map('intval', $request->input('mountain_route_ids', []))),
+            'related_tour_ids'     => array_values(array_map('intval', $request->input('related_tour_ids', []))),
 
             'pricing_source'       => $request->input('pricing_source', 'none'),
+            'draft_payload'        => null,
         ]);
 
         // Media Library hero selection — additive alongside the existing direct-upload
