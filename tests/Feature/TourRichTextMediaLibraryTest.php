@@ -9,21 +9,20 @@ use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
- * The Media Library button in the tour form's rich-text editors.
+ * Rich text on the tour form: the Overview is the admin's notepad, and both it and
+ * the remaining Quill editors can take images from the Media Library.
  *
- * The Overview, itinerary day descriptions and extra sections are Quill editors,
- * and their toolbar had no image button at all — so the only way to put an image
- * inside a tour's details was to hand-type <img> HTML, which Quill discards on the
- * next edit because it re-serialises content from its own document model. This
- * covers the wiring that replaced that: a gallery button that opens the same
- * picker modal every <x-media-picker> uses and inserts the chosen image at the
- * cursor.
+ * The Overview used to be a Quill editor with a much smaller toolbar than the
+ * destination form's Description, even though the layout already ships a full
+ * TinyMCE notepad for exactly this. It is now that notepad, verbatim, with a
+ * Media Library button added to its toolbar. The smaller Quill fields (itinerary
+ * day descriptions, extra sections) are left as they are, and keep their own
+ * gallery button.
  *
- * What cannot be asserted here is the click itself — inserting the image is
- * browser-side JavaScript — so these tests pin the pieces it depends on: the
- * button is built into the toolbar, the picker modal it opens exists and is
- * single-select, and it inserts the conversion the picker already resolves rather
- * than a full-size original.
+ * What cannot be asserted here is the clicking itself — inserting an image is
+ * browser-side JavaScript — so these tests pin the pieces it depends on: which
+ * editor the Overview gets, which tools its toolbar carries, and that the button
+ * opens a picker that inserts the library image rather than a thumbnail.
  */
 class TourRichTextMediaLibraryTest extends TestCase
 {
@@ -45,83 +44,144 @@ class TourRichTextMediaLibraryTest extends TestCase
         ]);
     }
 
-    private function assertGalleryButtonIsWired(string $html, string $form): void
+    /**
+     * @return array<string, string> form name => rendered create/edit form
+     */
+    private function bothForms(): array
     {
-        // The button is added to the toolbar config…
-        $this->assertStringContainsString('QuillMedia.galleryButton()', $html, "{$form} does not add the gallery button to its toolbar");
-        $this->assertStringContainsString('QuillMedia.attach(', $html, "{$form} does not register its editors with the gallery button");
+        $forms = [
+            'create' => $this->actingAs($this->admin)
+                ->get(route('admin.tour-packages.create'))
+                ->assertOk()
+                ->getContent(),
+            'edit' => $this->actingAs($this->admin)
+                ->get(route('admin.tour-packages.edit', $this->package()))
+                ->assertOk()
+                ->getContent(),
+        ];
 
-        // …the shared partial is what supplies both, plus the picker modal it opens.
-        $this->assertStringContainsString('window.QuillMedia', $html, "{$form} is missing the QuillMedia helper");
-
-        // The insert uses preview_url, which MediaPickerController maps to the
-        // medium-webp conversion — a tour page should not carry full-size originals.
-        $this->assertStringContainsString('image.preview_url', $html, "{$form} does not insert the picker's preview (medium) conversion");
-        $this->assertStringNotContainsString('image.thumb_url', $html, "{$form} would insert a thumbnail into the page content");
-
-        // A Quill 'image' embed, not pasted markup: markup typed into the source is
-        // what used to vanish on the next edit.
-        $this->assertStringContainsString("insertEmbed(index, 'image'", $html);
+        return $forms;
     }
 
-    public function test_create_form_offers_the_media_library_button(): void
+    private function overviewTag(string $html): string
     {
-        $html = $this->actingAs($this->admin)
-            ->get(route('admin.tour-packages.create'))
-            ->assertOk()
-            ->getContent();
+        $this->assertSame(
+            1,
+            preg_match('/<textarea[^>]*name="overview"[^>]*>/', $html, $matches),
+            'the Overview is not a single form field'
+        );
 
-        $this->assertGalleryButtonIsWired($html, 'the create form');
+        return $matches[0];
     }
 
-    public function test_edit_form_offers_the_media_library_button(): void
+    public function test_overview_is_the_full_notepad_on_both_forms(): void
     {
-        $package = $this->package();
+        foreach ($this->bothForms() as $form => $html) {
+            $tag = $this->overviewTag($html);
 
-        $html = $this->actingAs($this->admin)
-            ->get(route('admin.tour-packages.edit', $package))
-            ->assertOk()
-            ->getContent();
+            $this->assertStringContainsString('id="tour-overview"', $tag, "the {$form} form's Overview lost its id");
 
-        $this->assertGalleryButtonIsWired($html, 'the edit form');
+            // Initialised by the form itself, not by the layout's global
+            // .tinymce-editor pass — that is what lets its toolbar differ.
+            $this->assertStringNotContainsString(
+                'tinymce-editor',
+                $tag,
+                "the {$form} form's Overview is claimed by the global notepad init, so its toolbar cannot be extended"
+            );
+
+            // The notepad itself: the same options the layout gives every
+            // .tinymce-editor, so the Overview is no longer a cut-down editor.
+            $this->assertStringContainsString("selector: '#tour-overview'", $html, "the {$form} form does not initialise the Overview as a notepad");
+            $this->assertStringContainsString("menubar: 'file edit view insert format tools table help'", $html);
+            $this->assertStringContainsString('link image media table', $html, "the {$form} form's notepad lost its image/media/table tools");
+            $this->assertStringContainsString('alignleft aligncenter alignright alignjustify', $html);
+            $this->assertStringContainsString('forecolor backcolor', $html);
+
+            // And it still saves without JavaScript, which the old hidden-input
+            // arrangement also did but only because Quill mirrored it.
+            $this->assertStringContainsString('editor.save()', $html);
+        }
+    }
+
+    public function test_overview_notepad_offers_the_media_library(): void
+    {
+        foreach ($this->bothForms() as $form => $html) {
+            $this->assertStringContainsString(
+                "overviewConfig.toolbar + ' | mediagallery'",
+                $html,
+                "the {$form} form's Overview toolbar has no Media Library button"
+            );
+            $this->assertStringContainsString("addButton('mediagallery'", $html);
+
+            // A picker modal of its own, single-select, under its own id so it
+            // cannot collide with the Quill editors' picker on the same page.
+            $this->assertStringContainsString('id="picker-overview-media"', $html);
+            $this->assertStringContainsString('editor.insertContent(', $html, "the {$form} form's notepad button inserts nothing");
+
+            // The medium-webp conversion, not a grid thumbnail: preview_url is what
+            // MediaPickerController resolves to medium-webp (getUrl('medium-webp')
+            // ?: getUrl()), and the picker's own grid legitimately uses thumb_url.
+            $this->assertStringContainsString('image.preview_url', $html);
+        }
     }
 
     /**
-     * The button opens a picker modal of its own, in single-select mode: it inserts
-     * one image at the cursor, and a tour form full of editors must not render a
-     * grid of them.
+     * The smaller Quill fields (itinerary days, extra sections) are untouched, and
+     * still get a gallery button of their own.
      */
-    public function test_the_button_opens_a_single_select_picker_modal(): void
+    public function test_the_quill_fields_still_offer_the_media_library(): void
     {
-        $html = $this->actingAs($this->admin)
-            ->get(route('admin.tour-packages.create'))
-            ->assertOk()
-            ->getContent();
+        foreach ($this->bothForms() as $form => $html) {
+            $this->assertStringContainsString('QuillMedia.galleryButton()', $html, "the {$form} form does not add the gallery button to its Quill toolbars");
+            $this->assertStringContainsString('QuillMedia.attach(', $html, "the {$form} form does not register its Quill editors with the gallery button");
+            $this->assertStringContainsString('window.QuillMedia', $html);
+            $this->assertStringContainsString('id="picker-quill-media"', $html);
+            $this->assertStringContainsString('data-multiple="0"', $html);
 
-        $this->assertStringContainsString('id="picker-quill-media"', $html);
-        $this->assertStringContainsString('data-multiple="0"', $html);
+            // A Quill 'image' embed, not pasted markup: markup typed into the
+            // source is what used to vanish on the next edit.
+            $this->assertStringContainsString("insertEmbed(index, 'image'", $html);
+            $this->assertStringContainsString('image.preview_url', $html);
 
-        // It is the existing media picker, so it searches the same library the
-        // hero-image picker does — same endpoint, same permissions.
-        $this->assertStringContainsString(route('admin.media.picker.search'), $html);
+            // Both pickers hit the same library the hero-image picker does, so the
+            // form needs the media permission it already needed.
+            $this->assertStringContainsString(route('admin.media.picker.search'), $html);
+        }
     }
 
     /**
-     * Existing content is loaded into Quill through the clipboard parser, so an
-     * image already saved in an overview survives the next edit. Loading it by
-     * assigning quill.root.innerHTML left the document model empty, which is what
-     * made hand-typed images disappear.
+     * Existing Quill content is loaded through the clipboard parser, so an image
+     * already saved in an itinerary day or extra section survives the next edit.
+     * Loading it by assigning quill.root.innerHTML left the document model empty,
+     * which is what made hand-typed images disappear.
      */
-    public function test_existing_editor_content_is_parsed_into_the_document_model(): void
+    public function test_existing_quill_content_is_parsed_into_the_document_model(): void
     {
-        foreach (['create' => route('admin.tour-packages.create'), 'edit' => route('admin.tour-packages.edit', $this->package())] as $form => $url) {
-            $html = $this->actingAs($this->admin)->get($url)->assertOk()->getContent();
-
+        foreach ($this->bothForms() as $form => $html) {
             $this->assertStringContainsString(
                 'dangerouslyPasteHTML',
                 $html,
-                "the {$form} form loads editor content without parsing it, so images in it are lost on save"
+                "the {$form} form loads Quill content without parsing it, so images in it are lost on save"
             );
         }
+    }
+
+    public function test_overview_content_is_still_accepted_by_the_controller(): void
+    {
+        $html = '<p>Day one in the Serengeti.</p><img src="' . asset('storage/media/demo-medium.webp') . '" alt="Serengeti plains">';
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.tour-packages.store'), [
+                'title'          => 'Serengeti Migration',
+                'slug'           => 'serengeti-' . Str::random(5),
+                'status'         => 'published',
+                'pricing_source' => 'none',
+                'overview'       => $html,
+            ])
+            ->assertRedirect();
+
+        $stored = TourPackage::where('slug', 'like', 'serengeti-%')->latest('id')->first();
+
+        $this->assertSame($html, $stored->overview, 'the Overview was not stored verbatim');
     }
 }

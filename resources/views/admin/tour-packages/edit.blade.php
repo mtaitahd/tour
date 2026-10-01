@@ -279,13 +279,16 @@
               <!-- Available Months — 12 checkboxes + a Select all toggle -->
               @include('admin.tour-packages.partials.available-months', ['tourPackage' => $tourPackage, 'idPrefix' => 'tour-edit'])
 
-              <!-- Overview – Quill -->
+              <!-- Overview – the full notepad, the same editor as the destination
+                   form's Description, plus a Media Library button. Not a
+                   .tinymce-editor on purpose: this form initialises the Overview
+                   itself (script at the foot of this file) so its toolbar can carry
+                   that button. The textarea is a real form field, so the Overview
+                   still saves even if the editor fails to start. -->
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Overview</label>
                 <div class="col-sm-10">
-                  <div class="quill-editor border rounded" style="height: 220px;"></div>
-                  <input type="hidden" name="overview" class="quill-hidden-input"
-                         value="{{ old('overview', $tourPackage->overview) }}">
+                  <textarea name="overview" id="tour-overview" class="form-control" rows="8">{{ old('overview', $tourPackage->overview) }}</textarea>
                 </div>
               </div>
 
@@ -1343,8 +1346,33 @@
   .ql-font-courier-new      { font-family: "Courier New", monospace !important; }
 </style>
 
-{{-- Media Library button for the Quill editors below — see the partial. --}}
+{{-- Media Library button for the Quill editors below (itinerary days, extra
+     sections) — see the partial. --}}
 @include('admin.tour-packages.partials.quill-media')
+
+{{-- The Overview is the full notepad: the same options the admin layout gives
+     every .tinymce-editor (the destination form's Description, blog bodies …), with
+     the Media Library button added to the toolbar. The notepad partial must be
+     included first so 'mediagallery' is a known button. --}}
+@include('admin.tour-packages.partials.tinymce-media')
+<script>
+  $(document).ready(function () {
+    if (!document.getElementById('tour-overview') || tinymce.get('tour-overview')) return;
+
+    const overviewConfig = Object.assign({
+      selector: '#tour-overview',
+
+      setup: function (editor) {
+        editor.on('change', function () {
+          editor.save();
+        });
+      }
+    }, @include('admin.partials.tinymce-notepad'));
+
+    overviewConfig.toolbar = overviewConfig.toolbar + ' | mediagallery';
+    tinymce.init(overviewConfig);
+  });
+</script>
 
 <script>
   function initQuill(editorDiv) {

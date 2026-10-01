@@ -80,43 +80,19 @@ document.addEventListener('click', function (e) {
 </script>
 
 <!-- TinyMCE Initialization Script (global for all editors) -->
+{{-- The notepad's options live in admin/partials/tinymce-notepad.blade.php so the
+     tour Overview can use the identical editor (plus its own Media Library button)
+     without this file and that form drifting apart. --}}
 <script>
-tinymce.init({
+tinymce.init(Object.assign({
 selector: '.tinymce-editor',
-height: 360,
-menubar: 'file edit view insert format tools table help',
-plugins: 'advlist autolink lists link image charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste code help wordcount quickbars',
-toolbar:
-'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | ' +
-'alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | ' +
-'link image media table | removeformat | code | help',
-block_formats:
-'Paragraph=p; ' +
-'Heading 1=h1; Heading 2=h2; Heading 3=h3; ' +
-'Heading 4=h4; Heading 5=h5; Heading 6=h6; ' +
-'Preformatted=pre',
-quickbars_selection_toolbar: 'bold italic underline | blocks forecolor backcolor | link image',
-content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px; line-height:1.7; color:#333; } ' +
-'h1, h2, h3, h4, h5, h6 { margin-top:1.8em; margin-bottom:0.6em; } ' +
-'ul, ol { margin-left:1.5em; } ' +
-'img { max-width:100%; height:auto; }',
-extended_valid_elements: 'div[*],span[*]',
-valid_classes: {
-'*': 'row col col-xl-7 col-lg-7 col-md-8 col-md-12 col-md-6 col-md-4 mb-4 mb-lg-0 border-bottom bg-light text-gray-6 avatar avatar-lg rounded-circle d-flex align-items-center justify-content-center flex-wrap justify-content-between align-items-center text-center text-primary fs-24 bg-light-200 shadow-none card-body mb-3 mb-1 mb-0 fs-14 fw-medium me-2 me-3 mb-2'
-},
-valid_elements: '*[*]',
-paste_retain_style_properties: 'all',
-paste_data_images: true,
-image_caption: true,
-quickbars_insert_toolbar: false,
-branding: false,
 
 setup: function (editor) {
 editor.on('change', function () {
 editor.save();
 });
 }
-});
+}, @include('admin.partials.tinymce-notepad')));
 </script>
 {{--
     Removed: a legacy itinerary/accommodation repeater script used to live here.
