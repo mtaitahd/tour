@@ -817,6 +817,8 @@
                 </div>
               </div>
 
+              @include('admin.tour-packages.partials.related-tours', ['tourPackage' => $tourPackage])
+
               <!-- Status & Featured -->
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Status</label>

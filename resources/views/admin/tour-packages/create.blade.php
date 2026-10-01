@@ -499,6 +499,7 @@ value="{{ old("exclusions_items.$index", $item) }}">
 <small>When checked this tour is removed from sitemap.xml and hidden from search engines.</small>
 </div>
 </div>
+@include('admin.tour-packages.partials.related-tours', ['tourPackage' => null])
 <!-- Status -->
 <div class="row mb-3">
 <label class="col-sm-2 col-form-label">Status</label>
