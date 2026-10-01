@@ -67,7 +67,83 @@ class PageController extends Controller
 
     public function create()
     {
-        return view('admin.pages.create');
+        $draftId = request()->session()->getOldInput('draft_id') ?: request()->query('draft_id');
+        $draft = $draftId ? Page::where('status', 'draft')->find($draftId) : null;
+
+        if ($draft && request()->query->has('draft_id')) {
+            $draftInput = $draft->draft_payload ?? [];
+            unset($draftInput['_page_autosave_new']);
+            $draftInput['draft_id'] = $draft->getKey();
+            $draftInput['status'] = 'draft';
+            request()->session()->flashInput(array_merge($draftInput, request()->session()->getOldInput()));
+        }
+
+        return view('admin.pages.create', compact('draft'));
+    }
+
+    /** Save an incomplete page form without publishing or overwriting page content. */
+    public function autosaveDraft(Request $request)
+    {
+        $request->validate([
+            'draft_id' => 'nullable|integer|exists:pages,id',
+            'title'    => 'nullable|string|max:255',
+            'slug'     => 'nullable|string|max:255',
+        ]);
+
+        $page = null;
+        if ($request->filled('draft_id')) {
+            $page = Page::whereNotIn('slug', Page::siteInfoSlugs())->findOrFail($request->integer('draft_id'));
+        }
+
+        $payload = $this->jsonSafe($request->except(['_token', '_method', 'draft_id']));
+        if (json_encode($payload) === false) {
+            return response()->json(['message' => 'This page content could not be saved. Remove unusual pasted characters and try again.'], 422);
+        }
+
+        $title = trim((string) $request->input('title', ''));
+        $slug = Str::slug((string) $request->input('slug', '')) ?: Str::slug($title);
+        if ($slug === '') {
+            $slug = 'page-draft-' . Str::lower(Str::random(10));
+        }
+
+        $isNewDraft = ! $page || (bool) data_get($page->draft_payload, '_page_autosave_new', false);
+        if ($isNewDraft) {
+            $baseSlug = $slug;
+            $suffix = 1;
+            while (Page::where('slug', $slug)->when($page, fn ($query) => $query->whereKeyNot($page->getKey()))->exists()) {
+                $slug = $baseSlug . '-' . $suffix++;
+            }
+            $payload['_page_autosave_new'] = true;
+        }
+
+        $page ??= new Page();
+        if (! $page->exists) {
+            $page->status = 'draft';
+            $page->order = 999;
+        }
+        if ($isNewDraft) {
+            $page->title = $title !== '' ? $title : 'Untitled page draft';
+            $page->slug = $slug;
+        }
+        $page->draft_payload = $payload;
+        $page->save();
+
+        return response()->json([
+            'draft_id' => $page->getKey(),
+            'slug' => $page->slug,
+            'saved_at' => now()->toIso8601String(),
+        ]);
+    }
+
+    private function jsonSafe(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            return array_map(fn ($item) => $this->jsonSafe($item), $value);
+        }
+
+        return ! is_string($value) || mb_check_encoding($value, 'UTF-8')
+            ? $value
+            : mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 
     public function store(Request $request)
@@ -183,6 +259,13 @@ class PageController extends Controller
             return redirect()->route('admin.site-pages.index');
         }
 
+        if ($page->draft_payload) {
+            $draftInput = $page->draft_payload;
+            unset($draftInput['_page_autosave_new']);
+            $draftInput['draft_id'] = $page->getKey();
+            request()->session()->flashInput(array_merge($draftInput, request()->session()->getOldInput()));
+        }
+
         return view('admin.pages.edit', compact('page'));
     }
 
@@ -239,6 +322,7 @@ class PageController extends Controller
     $validated['custom_data'] = $this->encodeTeamMembers($request);
     $validated['story_gallery'] = $this->encodeStoryGallery($request);
     $validated['no_robots'] = $request->boolean('no_robots');
+    $validated['draft_payload'] = null;
 
     return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $page, $validated) {
     $mediaLibrary = app(MediaLibraryService::class);

@@ -98,6 +98,8 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
         Route::put('site-pages/{slug}', [\App\Http\Controllers\Admin\SitePageController::class, 'update'])
             ->name('site-pages.update');
 
+        Route::post('pages/drafts/autosave', [PageController::class, 'autosaveDraft'])
+            ->name('pages.autosave');
         Route::resource('pages', PageController::class);
         // Dedicated editor for just the About page "Our Story" section
         // (story_title heading + story_gallery images/captions).

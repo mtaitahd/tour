@@ -211,6 +211,7 @@ class Page extends Model implements HasMedia
         // Media Library
         'hero_image_id',
         'story_image_id',
+        'draft_payload',
     ];
 
     protected $casts = [
@@ -223,6 +224,7 @@ class Page extends Model implements HasMedia
         'custom_data'    => 'array',
         'story_gallery'  => 'array',
         'no_robots'      => 'boolean',
+        'draft_payload'  => 'array',
     ];
 
     public function registerMediaCollections(): void

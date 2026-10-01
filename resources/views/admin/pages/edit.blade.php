@@ -35,7 +35,10 @@
       <div class="col-lg-12">
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Edit Page: {{ $page->title }}</h5>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div><h5 class="card-title mb-1">Edit Page: {{ $page->title }}</h5><div class="text-muted small">Page information and search settings are organized into two steps.</div></div>
+              @if (!$editingSiteInfo)<div class="small text-success" id="page-draft-status" aria-live="polite">{{ $page->draft_payload ? 'Draft restored' : 'Changes save automatically' }}</div>@endif
+            </div>
 
             @if (session('success'))
               <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -55,9 +58,18 @@
               </div>
             @endif
 
-            <form method="POST" action="{{ $formAction }}" enctype="multipart/form-data">
+            <form id="page-builder-form" method="POST" action="{{ $formAction }}" data-update-url="{{ route('admin.pages.update', ['page' => $page->id]) }}" data-autosave-enabled="{{ $editingSiteInfo ? '0' : '1' }}" enctype="multipart/form-data" novalidate>
               @csrf
               @method('PUT')
+              @if (!$editingSiteInfo)<input type="hidden" name="draft_id" id="page-draft-id" value="{{ old('draft_id', $page->id) }}">@endif
+
+              <div class="progress mb-3" style="height:6px"><div class="progress-bar bg-success" id="page-wizard-progress" style="width:50%" role="progressbar"></div></div>
+              <div class="row g-2 mb-4">
+                <div class="col-6"><button type="button" class="btn btn-success btn-sm w-100 page-step-indicator" data-page-step-indicator="1">1 · Page Information</button></div>
+                <div class="col-6"><button type="button" class="btn btn-outline-secondary btn-sm w-100 page-step-indicator" data-page-step-indicator="2">2 · SEO Settings</button></div>
+              </div>
+
+              <div class="page-step-panel" data-page-step="1">
 
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Title <span class="text-danger">*</span></label>
@@ -385,7 +397,11 @@
                 </div>
               </div>
 
-              <h5 class="card-title mt-5">SEO Settings</h5>
+              <div class="d-flex justify-content-end mt-4"><button type="button" class="btn btn-primary page-step-next">Next: SEO Settings <i class="bi bi-arrow-right"></i></button></div>
+              </div>
+
+              <div class="page-step-panel d-none" data-page-step="2">
+              <h5 class="card-title mt-2 mb-3">SEO Settings</h5>
 
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Meta Title</label>
@@ -424,14 +440,15 @@
                 </div>
               </div>
 
-              <div class="row mb-3">
-                <label class="col-sm-2 col-form-label"></label>
-                <div class="col-sm-10">
+              <div class="d-flex justify-content-between align-items-center mt-4">
+              <button type="button" class="btn btn-outline-secondary page-step-back"><i class="bi bi-arrow-left"></i> Back</button>
+              <div class="d-flex gap-2 mb-3">
                   <button type="submit" class="btn btn-primary">Update Page</button>
                   <a href="{{ $backUrl }}" class="btn btn-secondary ms-2">Cancel</a>
-                </div>
+              </div>
               </div>
             </form>
+</div>
           </div>
         </div>
       </div>
@@ -467,4 +484,5 @@
           });
       });
   </script>
+  @include('admin.pages.partials.wizard-script', ['autosaveEnabled' => !$editingSiteInfo])
 @endsection
