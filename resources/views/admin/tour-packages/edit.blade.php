@@ -186,6 +186,7 @@
                                         : [],
                   'idPrefix'      => 'tour-edit',
               ])
+              @include('admin.tour-packages.partials.mountain-routes', ['tourPackage' => $tourPackage])
               @include('admin.tour-packages.partials.mountain-and-related', ['tourPackage' => $tourPackage])
 
               <div class="row mb-3">

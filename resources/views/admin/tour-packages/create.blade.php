@@ -178,6 +178,7 @@
     'pickerHelp'    => 'Select the activities included in this tour.',
     'idPrefix'      => 'tour-create',
 ])
+@include('admin.tour-packages.partials.mountain-routes', ['tourPackage' => null])
 
 {{-- Video URL and Embed Map are not collected here. Both columns stay on
      tour_packages and the public tour page still reads them
