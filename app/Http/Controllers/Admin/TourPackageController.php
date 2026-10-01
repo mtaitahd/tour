@@ -73,8 +73,17 @@ class TourPackageController extends Controller
             $slug = $baseSlug . '-' . $suffix++;
         }
 
-        $payload = $request->input();
+        $payload = $this->jsonSafe($request->input());
         unset($payload['_token'], $payload['_method'], $payload['draft_id']);
+
+        // Belt and braces: a repaired payload should always encode, but if it does
+        // not, say which field to fix instead of returning a 500 from deep inside
+        // Eloquent's JSON cast.
+        if (json_encode($payload) === false) {
+            throw ValidationException::withMessages([
+                'overview' => 'The Overview contains text that cannot be saved. Remove any pasted content and try again.',
+            ]);
+        }
 
         $tourPackage ??= new TourPackage();
         $tourPackage->fill([
@@ -90,6 +99,33 @@ class TourPackageController extends Controller
             'slug'     => $tourPackage->slug,
             'saved_at' => now()->toIso8601String(),
         ]);
+    }
+
+    /**
+     * Make a posted payload safe to store in a JSON column.
+     *
+     * json_encode() returns false on malformed UTF-8 rather than throwing, and
+     * Eloquent turns that false into a JsonEncodingException — a 500 for
+     * something the editor did to their own text. Pasted content carries lone
+     * surrogates and stray bytes often enough to matter: a draft is saved on every
+     * keystroke pause, so one bad character in the Overview or an itinerary day
+     * takes down every subsequent save, not just the one that pasted it.
+     *
+     * Keys are left alone: they are the form's own field names, not user text.
+     */
+    private function jsonSafe(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            return array_map(fn ($item) => $this->jsonSafe($item), $value);
+        }
+
+        if (! is_string($value) || mb_check_encoding($value, 'UTF-8')) {
+            return $value;
+        }
+
+        // Drops the malformed sequences and keeps the rest, which is what the
+        // browser would have rendered anyway.
+        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 
     public function store(Request $request)
