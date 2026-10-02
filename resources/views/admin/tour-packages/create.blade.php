@@ -1225,6 +1225,7 @@ $(window).on('resize', function () {
       if(force){ return successful; }
       if(force){ return successful; }
       if(force){ return successful; }
+      if(force){ return successful; }
       return successful&&!dirty;
     })();
     return activeSave;
