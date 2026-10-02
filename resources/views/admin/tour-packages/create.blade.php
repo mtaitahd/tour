@@ -1216,6 +1216,8 @@ $(window).on('resize', function () {
         saving=false;
         activeSave=null;
       }
+      if(force){ return successful; }
+      if(force){ return successful; }
       return successful&&!dirty;
     })();
     return activeSave;
