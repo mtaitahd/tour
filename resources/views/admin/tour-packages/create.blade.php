@@ -283,6 +283,7 @@
 --}}
 @if(old('itinerary_days'))
 @foreach(old('itinerary_days') as $index => $day)
+@php $dayExistingImageIds = old("itinerary_days.$index.existing_image_ids", $day['image_ids'] ?? []); @endphp
 <div class="itinerary-day card mb-3 shadow-sm" data-day-index="{{ $index }}">
 <div class="card-header d-flex justify-content-between align-items-center bg-success">
 <h6 class="mb-0">Day {{ $loop->iteration }}</h6>
