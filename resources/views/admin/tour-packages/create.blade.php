@@ -1087,7 +1087,6 @@ $(window).on('resize', function () {
   var titleInput=document.getElementById('tour-title');
   var slugInput=form.querySelector('[name="slug"]');
   var autosaveUrl=@json(route('admin.tour-packages.autosave'));
-  var createUrl=@json(route('admin.tour-packages.create'));
   var updateUrlTemplate=@json(route('admin.tour-packages.update', ['tour_package' => '__DRAFT_ID__']));
   var stepNames={1:'Package Information',2:'Pricing & Setup',3:'Itinerary & Experience',4:'SEO & Publish'};
   var currentStep=1;
@@ -1259,23 +1258,30 @@ $(window).on('resize', function () {
       return;
     }
 
+    var originalButtonHtml=button.innerHTML;
     button.disabled=true;
+    button.setAttribute('aria-busy','true');
+    button.innerHTML='<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Saving…';
     if(window.tinymce&&typeof window.tinymce.triggerSave==='function')window.tinymce.triggerSave();
     updateSaveStatus('Saving this step before opening '+stepNames[next]+'…');
     saveDraft(true).then(function(saved){
       if(!saved){
         updateSaveStatus(lastDraftSaveError||'Could not save this step. Please try again.','error');
+        button.innerHTML=originalButtonHtml;
+        button.removeAttribute('aria-busy');
         button.disabled=false;
         return;
       }
-      // Reload from the server so the next panel is rebuilt from the persisted
-      // draft. This avoids relying on the current page's JavaScript state.
-      var destination=new URL(createUrl,window.location.href);
+      // Keep modal=1 when this form is hosted in the package-list iframe. Reload
+      // the same page with the persisted draft and next step selected.
+      var destination=new URL(window.location.href);
       destination.searchParams.set('draft_id',draftId);
       destination.searchParams.set('step',String(next));
       window.location.assign(destination.toString());
     }).catch(function(error){
       updateSaveStatus(error&&error.message?error.message:'Could not save this step. Please try again.','error');
+      button.innerHTML=originalButtonHtml;
+      button.removeAttribute('aria-busy');
       button.disabled=false;
     });
   });});
