@@ -1240,9 +1240,15 @@ $(window).on('resize', function () {
   if(slugInput)slugInput.addEventListener('input',function(){slugManuallyEdited=true;});
   if(titleInput)titleInput.addEventListener('input',function(){if(!slugManuallyEdited&&slugInput)slugInput.value=slugify(titleInput.value);});
   if(window.tinymce){
-    var bindEditor=function(editor){editor.on('input change undo redo',markChanged);};
-    window.tinymce.on('AddEditor',function(event){bindEditor(event.editor);});
-    window.tinymce.editors.forEach(bindEditor);
+    // Editor integration is optional for moving through the wizard. Keep an
+    // incomplete/late TinyMCE instance from preventing the step listeners below.
+    try{
+      var bindEditor=function(editor){if(editor&&typeof editor.on==='function')editor.on('input change undo redo',markChanged);};
+      if(typeof window.tinymce.on==='function')window.tinymce.on('AddEditor',function(event){bindEditor(event.editor);});
+      if(Array.isArray(window.tinymce.editors))window.tinymce.editors.forEach(bindEditor);
+    }catch(editorBindingError){
+      console.warn('Tour wizard: rich text autosave binding was unavailable.',editorBindingError);
+    }
   }
   function advanceToStep(next,button){
     if(next!==currentStep+1)return;
