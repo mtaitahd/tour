@@ -279,9 +279,9 @@
     load. old('itinerary_days') alone is the correct fallback here, since a create
     form has no prior saved itinerary to fall back to in the first place.
 --}}
-@if(old('itinerary_days'))
-@foreach(old('itinerary_days') as $index => $day)
-@php $dayExistingImageIds = old("itinerary_days.$index.existing_image_ids", $day['image_ids'] ?? []); @endphp
+@php $oldItineraryDays = (array) old('itinerary_days', []); unset($oldItineraryDays['__INDEX__']); @endphp
+@if($oldItineraryDays)
+@foreach($oldItineraryDays as $index => $day)
 <div class="itinerary-day card mb-3 shadow-sm" data-day-index="{{ $index }}">
 <div class="card-header d-flex justify-content-between align-items-center bg-success">
 <h6 class="mb-0">Day {{ $loop->iteration }}</h6>
@@ -328,7 +328,7 @@ value="{{ old("itinerary_days.$index.title") }}">
 <x-media-picker
     name="itinerary_days[{{ $index }}][existing_image_ids]"
     multiple
-    :selected="$dayExistingImageIds"
+    :selected="old('itinerary_days.' . $index . '.existing_image_ids', $day['image_ids'] ?? [])"
     label="Select Day Images"
 />
 <small class="text-muted d-block mt-1">Choose one or more images from the library. Drag to reorder.</small>
@@ -715,6 +715,10 @@ initQuill($('#extra-sections-repeater .quill-editor').last());
 <script>
 $(document).ready(function () {
     /* ── Itinerary day add/remove ───────────────────────────────────── */
+    // The hidden picker template is inside the main form so new day controls can
+    // be cloned from it. Keep its placeholder fields out of FormData/autosaves;
+    // they are enabled again after a real day receives its index below.
+    $('#itinerary-day-picker-template').find('input, select, textarea').prop('disabled', true);
     var dayCounter = $('#itinerary-repeater .itinerary-day').length;
 
     $('#add-itinerary-day').on('click', function () {
@@ -778,6 +782,7 @@ $(document).ready(function () {
 
         var templateHtml = document.getElementById('itinerary-day-picker-template').innerHTML;
         var pickerNodes = $('<div>' + templateHtml.replace(/__INDEX__/g, n) + '</div>').children();
+        pickerNodes.find('input, select, textarea').prop('disabled', false);
         $newDay.find('.day-images-picker-slot').append(pickerNodes.eq(0));
         ['silver', 'gold', 'platinum'].forEach(function (tier, i) {
             $newDay.find('.acc-tier-picker-slot[data-tier="' + tier + '"]').append(pickerNodes.eq(i + 1));
