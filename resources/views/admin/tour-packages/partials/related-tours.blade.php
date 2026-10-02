@@ -1,26 +1,29 @@
 @php
-    $relatedTours = \App\Models\TourPackage::where('status', 'published')
-        ->when(isset($tourPackage) && $tourPackage, fn ($query) => $query->where('id', '!=', $tourPackage->id))
-        ->orderBy('title')
-        ->get();
-    $selectedRelated = array_map('intval', (array) old('related_tour_ids', $tourPackage->related_tour_ids ?? []));
+    $defaultRules = ['tour_type', 'budget', 'categories'];
+    $selectedRules = array_values((array) old('related_tour_rules', $tourPackage->related_tour_rules ?? $defaultRules));
 @endphp
 
-@if($relatedTours->isNotEmpty())
-  <div class="row mb-3">
-    <label class="col-sm-2 col-form-label">Related Tours to Display</label>
-    <div class="col-sm-10">
-      <div class="row g-2">
-        @foreach($relatedTours as $related)
-          <div class="col-md-6">
-            <label class="form-check">
-              <input class="form-check-input" type="checkbox" name="related_tour_ids[]" value="{{ $related->id }}" @checked(in_array($related->id, $selectedRelated, true))>
-              <span class="form-check-label">{{ $related->cardTitle() }}</span>
-            </label>
-          </div>
-        @endforeach
+<div class="row mb-3">
+  <label class="col-sm-2 col-form-label">Related tours</label>
+  <div class="col-sm-10">
+    <div class="border rounded p-3 bg-light">
+      <div class="fw-semibold mb-1">Automatically group similar tours</div>
+      <div class="text-muted small mb-3">Choose how the system finds related tours. Matching tours are shown automatically, so you do not need to select them one by one.</div>
+      <input type="hidden" name="related_tour_rules_submitted" value="1">
+      <div class="d-flex flex-wrap gap-3">
+        <label class="form-check mb-0">
+          <input class="form-check-input" type="checkbox" name="related_tour_rules[]" value="tour_type" @checked(in_array('tour_type', $selectedRules, true))>
+          <span class="form-check-label">Same tour type</span>
+        </label>
+        <label class="form-check mb-0">
+          <input class="form-check-input" type="checkbox" name="related_tour_rules[]" value="budget" @checked(in_array('budget', $selectedRules, true))>
+          <span class="form-check-label">Same budget level</span>
+        </label>
+        <label class="form-check mb-0">
+          <input class="form-check-input" type="checkbox" name="related_tour_rules[]" value="categories" @checked(in_array('categories', $selectedRules, true))>
+          <span class="form-check-label">Share a category</span>
+        </label>
       </div>
-      <small class="text-muted">Select the tours to show in the related tours section.</small>
     </div>
   </div>
-@endif
+</div>

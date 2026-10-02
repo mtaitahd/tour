@@ -150,6 +150,9 @@ class TourPackageController extends Controller
             'mountain_route_ids.*'                          => 'integer|exists:mountain_routes,id',
             'related_tour_ids'                              => 'nullable|array',
             'related_tour_ids.*'                            => 'integer|exists:tour_packages,id',
+            'related_tour_rules'                            => 'nullable|array',
+            'related_tour_rules.*'                          => 'in:tour_type,budget,categories',
+            'related_tour_rules_submitted'                  => 'nullable|boolean',
             'tour_format'                                   => 'nullable|in:private,group',
             'duration_days'                                 => 'nullable|integer|min:1',
             'video_url'                                     => 'nullable|string|max:500',
@@ -346,6 +349,9 @@ class TourPackageController extends Controller
             'mountain_id'          => $request->input('mountain_id'),
             'mountain_route_ids'   => array_values(array_map('intval', $request->input('mountain_route_ids', []))),
             'related_tour_ids'     => array_values(array_map('intval', $request->input('related_tour_ids', []))),
+            'related_tour_rules'   => $request->has('related_tour_rules_submitted')
+                ? array_values(array_unique($request->input('related_tour_rules', [])))
+                : ['tour_type', 'budget', 'categories'],
             'pricing_source'       => $request->input('pricing_source', 'none'),
         ]);
 
@@ -465,6 +471,9 @@ public function edit(TourPackage $tourPackage)
             'mountain_route_ids.*'                          => 'integer|exists:mountain_routes,id',
             'related_tour_ids'                              => 'nullable|array',
             'related_tour_ids.*'                            => 'integer|exists:tour_packages,id',
+            'related_tour_rules'                            => 'nullable|array',
+            'related_tour_rules.*'                          => 'in:tour_type,budget,categories',
+            'related_tour_rules_submitted'                  => 'nullable|boolean',
             'tour_format'                                   => 'nullable|in:private,group',
             'duration_days'                                 => 'nullable|integer|min:1',
             'video_url'                                     => 'nullable|string|max:500',
@@ -670,6 +679,9 @@ public function edit(TourPackage $tourPackage)
             'mountain_id'          => $request->input('mountain_id'),
             'mountain_route_ids'   => array_values(array_map('intval', $request->input('mountain_route_ids', []))),
             'related_tour_ids'     => array_values(array_map('intval', $request->input('related_tour_ids', []))),
+            'related_tour_rules'   => $request->has('related_tour_rules_submitted')
+                ? array_values(array_unique($request->input('related_tour_rules', [])))
+                : ['tour_type', 'budget', 'categories'],
 
             'pricing_source'       => $request->input('pricing_source', 'none'),
             'draft_payload'        => null,
