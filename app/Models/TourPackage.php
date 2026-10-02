@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -166,6 +167,11 @@ class TourPackage extends Model implements HasMedia
     {
         return $this->belongsToMany(Activity::class, 'activity_tour_package')
                     ->withTimestamps();
+    }
+
+    public function groupDepartures(): HasMany
+    {
+        return $this->hasMany(GroupDeparture::class);
     }
 
     /**
