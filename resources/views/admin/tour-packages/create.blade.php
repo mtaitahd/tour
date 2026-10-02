@@ -136,7 +136,7 @@
 <div class="row mb-3">
 <label class="col-sm-2 col-form-label">Title <span class="text-danger">*</span></label>
 <div class="col-sm-10">
-<input type="text" id="tour-title" name="title" class="form-control" value="{{ old('title') }}" >
+<input type="text" id="tour-title" name="title" class="form-control" value="{{ old('title') }}" required>
 </div>
 </div>
 
@@ -1125,7 +1125,14 @@ $(window).on('resize', function () {
   function setStep(step,scroll){
     step=Math.max(1,Math.min(4,Number(step)||1));
     currentStep=step;
-    panels.forEach(function(panel){panel.classList.toggle('d-none',Number(panel.dataset.wizardStep)!==step);});
+    var activePanel=panels.find(function(panel){return Number(panel.dataset.wizardStep)===step;});
+    panels.forEach(function(panel){panel.classList.toggle('d-none',panel!==activePanel);});
+    // Native form validation normally ignores buttons with type="button".
+    // Scope required fields to the visible step so hidden steps cannot block it.
+    form.querySelectorAll('[required], [data-wizard-required]').forEach(function(field){
+      if(!field.dataset.wizardRequired)field.dataset.wizardRequired=field.required?'true':'false';
+      field.required=!!activePanel&&activePanel.contains(field)&&field.dataset.wizardRequired==='true';
+    });
     indicators.forEach(function(button){
       var selected=Number(button.dataset.stepIndicator)===step;
       button.classList.toggle('btn-success',selected);
@@ -1221,11 +1228,6 @@ $(window).on('resize', function () {
         saving=false;
         activeSave=null;
       }
-      if(force){ return successful; }
-      if(force){ return successful; }
-      if(force){ return successful; }
-      if(force){ return successful; }
-      if(force){ return successful; }
       return successful&&!dirty;
     })();
     return activeSave;
@@ -1240,51 +1242,38 @@ $(window).on('resize', function () {
     window.tinymce.on('AddEditor',function(event){bindEditor(event.editor);});
     window.tinymce.editors.forEach(bindEditor);
   }
-  form.querySelectorAll('.tour-wizard-next').forEach(function(button){button.addEventListener('click',async function(){
+  form.querySelectorAll('.tour-wizard-next').forEach(function(button){button.addEventListener('click',function(){
     var next=Number(button.dataset.nextStep);
     var nextPanel=panels.find(function(panel){return Number(panel.dataset.wizardStep)===next;});
     if(!nextPanel){
-      await showStepFeedback({icon:'error',title:'Next step unavailable',text:'Refresh the page and try again.'});
+      showStepFeedback({icon:'error',title:'Next step unavailable',text:'Refresh the page and try again.'});
       return;
     }
-    if(currentStep===1&&(!titleInput||!titleInput.value.trim())){
-      setStep(1,true);
-      var titleMessage='Add a tour title before continuing.';
-      updateSaveStatus(titleMessage,'error');
-      await showStepFeedback({icon:'warning',title:'Tour title required',text:titleMessage});
-      if(titleInput)titleInput.focus();
+    var activePanel=panels.find(function(panel){return Number(panel.dataset.wizardStep)===currentStep;});
+    var invalidField=activePanel&&activePanel.querySelector(':invalid');
+    if(invalidField){
+      updateSaveStatus('Complete the highlighted required field to continue.','error');
+      invalidField.focus();
+      invalidField.reportValidity();
       return;
     }
 
     button.disabled=true;
-    if(window.Swal&&typeof window.Swal.fire==='function'){
-      window.Swal.fire({title:'Saving draft…',text:'Please wait while we save your changes.',allowOutsideClick:false,allowEscapeKey:false,didOpen:function(){window.Swal.showLoading();}});
-    }
-    try{
-      var saved=await saveDraft(true);
-      if(!saved){
-        var currentDraftId = (draftId||(draftInput&&draftInput.value))||'';
-        if(!currentDraftId){
-          var reason=lastDraftSaveError||(saveStatus&&saveStatus.textContent.trim())||'The draft could not be confirmed as saved. Please try again.';
-          if(reason==='Saving draft…'||reason==='Unsaved changes…')reason='The draft could not be confirmed as saved. Please try again.';
-          updateSaveStatus(reason,'error');
-          await showStepFeedback({icon:'error',title:'Could not continue',text:reason,confirmButtonText:'OK'});
-          return;
-        }
-        // Draft exists server-side even if still marked dirty locally
+    if(window.tinymce&&typeof window.tinymce.triggerSave==='function')window.tinymce.triggerSave();
+    var saveRequest=saveDraft(true);
+    setStep(next,true);
+    updateSaveStatus(stepNames[next]+' is open. Saving draft…');
+    Promise.resolve(saveRequest).then(function(saved){
+      if(saved){
+        updateSaveStatus(stepNames[next]+' is ready. Draft saved.','success');
+      }else{
+        var reason=lastDraftSaveError||'Draft save failed. Your form is still open; try saving again when you finish.';
+        updateSaveStatus(stepNames[next]+' is open, but the draft could not be saved: '+reason,'error');
       }
-
-      setStep(next,true);
-      if(currentStep!==next||nextPanel.classList.contains('d-none'))throw new Error('The draft saved, but the next step did not open. Refresh the page and try again.');
-      updateSaveStatus('Draft saved. '+stepNames[next]+' is ready.','success');
-      await showStepFeedback({toast:true,position:'top-end',icon:'success',title:'Draft saved',text:'Moving to '+stepNames[next]+'.',showConfirmButton:false,timer:1600,timerProgressBar:true});
-    }catch(error){
-      var message=error&&error.message?error.message:'Something went wrong while moving to the next step.';
-      updateSaveStatus(message,'error');
-      await showStepFeedback({icon:'error',title:'Could not continue',text:message,confirmButtonText:'OK'});
-    }finally{
-      button.disabled=false;
-    }
+    }).catch(function(error){
+      var reason=error&&error.message?error.message:'Draft save failed.';
+      updateSaveStatus(stepNames[next]+' is open, but the draft could not be saved: '+reason,'error');
+    }).finally(function(){button.disabled=false;});
   });});
   form.querySelectorAll('.tour-wizard-back').forEach(function(button){button.addEventListener('click',function(){setStep(Number(button.dataset.previousStep),true);});});
   indicators.forEach(function(button){button.addEventListener('click',function(){var target=Number(button.dataset.stepIndicator);if(target<currentStep)setStep(target,true);});});
