@@ -365,11 +365,13 @@ class TourPackageController extends Controller
 
         // ── Gallery Images ────────────────────────────────────────────────────
         // Picker-only per decision: direct upload removed entirely for this field.
-        app(\App\Services\MediaLibraryService::class)->setOrderedUsages(
-            $tourPackage,
-            'gallery',
-            array_values($request->input('gallery_image_ids', []))
-        );
+        if ($request->has('gallery_image_ids')) {
+            app(\App\Services\MediaLibraryService::class)->setOrderedUsages(
+                $tourPackage,
+                'gallery',
+                array_values($request->input('gallery_image_ids', []))
+            );
+        }
 
         // ── Safari Car Images ─────────────────────────────────────────────────
         // Picker-only per decision: direct upload removed entirely for this field.
@@ -637,13 +639,13 @@ public function edit(TourPackage $tourPackage)
             'slug'               => $request->slug,
             'title'              => $request->title,
             'duration_days'      => $request->duration_days,
-            'video_url'          => $request->video_url,
+            'video_url'          => $request->input('video_url', $tourPackage->video_url),
             'embed_map'          => $request->has('embed_map') ? $request->embed_map : $tourPackage->embed_map,
             'season_pricing'     => !empty($seasonPricing) ? $seasonPricing : null,
             'currency'           => $request->input('currency', 'USD'),
             'physical_rating'    => $request->input('physical_rating', 'moderate'),
             'tour_level'         => $request->input('tour_level', 'mid_range'),
-            'is_group_departure' => $request->has('is_group_departure') ? 1 : 0,
+            'is_group_departure' => $request->has('is_group_departure') ? 1 : $tourPackage->is_group_departure,
             'available_months'   => $this->normalizeMonths($request->input('available_months')),
             'starting_point'     => $request->starting_point,
             'ending_point'       => $request->ending_point,
@@ -694,11 +696,13 @@ public function edit(TourPackage $tourPackage)
         // ── Gallery — picker-only (direct upload, manual reorder inputs removed) ──
         // setOrderedUsages() does a full replace, which is correct since the picker
         // always submits the complete current gallery state, not a delta.
-        app(\App\Services\MediaLibraryService::class)->setOrderedUsages(
-            $tourPackage,
-            'gallery',
-            array_values($request->input('gallery_image_ids', []))
-        );
+        if ($request->has('gallery_image_ids')) {
+            app(\App\Services\MediaLibraryService::class)->setOrderedUsages(
+                $tourPackage,
+                'gallery',
+                array_values($request->input('gallery_image_ids', []))
+            );
+        }
 
         // ── Hero Image ────────────────────────────────────────────────────────
         // Picker-only: see the matching note in store() — the direct-upload

@@ -180,12 +180,10 @@
 ])
 @include('admin.tour-packages.partials.mountain-routes', ['tourPackage' => null])
 
-{{-- Video URL and Embed Map are not collected here. Both columns stay on
-     tour_packages and the public tour page still reads them
-     (TourController::buildEmbedUrl / tours.show), but they are no longer part of
-     creating a tour — a new tour starts with neither, and they are filled in
-     later on the edit form, which still offers Video URL and shows Embed Map for
-     tours that already have one. --}}
+{{-- Video URL, Embed Map, and the legacy is_group_departure flag are not
+     collected by either the Add or Edit form. Their database values remain
+     available to existing public tour pages and are preserved when other fields
+     are edited. --}}
 
 <div class="row mb-3">
   <label class="col-sm-2 col-form-label">Transfer Cars Images</label>
@@ -1096,6 +1094,14 @@ $(window).on('resize', function () {
   var revision=0;
   var timer=null;
   var finalizing=false;
+  var lastDraftSaveError='';
+
+  function showStepFeedback(options){
+    if(window.Swal&&typeof window.Swal.fire==='function')return window.Swal.fire(options);
+    var kind=options.icon==='error'||options.icon==='warning'?'error':'success';
+    updateSaveStatus([options.title,options.text].filter(Boolean).join(' — '),kind);
+    return Promise.resolve();
+  }
 
   function updateSaveStatus(text,kind){
     if(!saveStatus)return;
@@ -1165,40 +1171,51 @@ $(window).on('resize', function () {
   async function saveDraft(force){
     if(saving){saveQueued=true;return activeSave;}
     if(!dirty&&!force)return true;
+    lastDraftSaveError='';
     saving=true;
     activeSave=(async function(){
       var successful=true;
-      do{
-        saveQueued=false;
-        if(!dirty&&!force&&draftId)break;
-        if(window.tinymce&&typeof window.tinymce.triggerSave==='function')window.tinymce.triggerSave();
-        var revisionAtSave=revision;
-        var data=new FormData(form);
-        data.set('draft_id',draftId||'');
-        data.delete('_method');
-        dirty=false;
-        updateSaveStatus('Saving draft…');
-        try{
-          var response=await fetch(autosaveUrl,{method:'POST',body:data,credentials:'same-origin',headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}});
-          if(!response.ok)throw new Error(await draftFailureMessage(response));
-          var result=await response.json();
-          if(!result||!result.draft_id)throw new Error('The server response was incomplete. Refresh the page and try again.');
-          applyDraftResponse(result,revisionAtSave);
-          if(revision!==revisionAtSave){dirty=true;saveQueued=true;}
-          else{
-            var savedTime=result.saved_at?new Date(result.saved_at):new Date();
-            updateSaveStatus('Draft saved at '+savedTime.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),'success');
-          }
-        }catch(error){
-          dirty=true;
+      try{
+        do{
           saveQueued=false;
-          successful=false;
-          updateSaveStatus(error&&error.message==='Failed to fetch'?'Cannot reach the server. Check your connection, then try again.':(error&&error.message?error.message:'Could not save draft. Check the connection and try again.'),'error');
-        }
-        force=false;
-      }while(saveQueued&&successful);
-      saving=false;
-      activeSave=null;
+          if(!dirty&&!force&&draftId)break;
+          if(window.tinymce&&typeof window.tinymce.triggerSave==='function')window.tinymce.triggerSave();
+          var revisionAtSave=revision;
+          var data=new FormData(form);
+          data.set('draft_id',draftId||'');
+          data.delete('_method');
+          dirty=false;
+          updateSaveStatus('Saving draft…');
+          try{
+            var response=await fetch(autosaveUrl,{method:'POST',body:data,credentials:'same-origin',headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}});
+            if(!response.ok)throw new Error(await draftFailureMessage(response));
+            var result=await response.json();
+            if(!result||!result.draft_id)throw new Error('The server response was incomplete. Refresh the page and try again.');
+            applyDraftResponse(result,revisionAtSave);
+            if(revision!==revisionAtSave){dirty=true;saveQueued=true;}
+            else{
+              var savedTime=result.saved_at?new Date(result.saved_at):new Date();
+              updateSaveStatus('Draft saved at '+savedTime.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),'success');
+            }
+          }catch(error){
+            dirty=true;
+            saveQueued=false;
+            successful=false;
+            lastDraftSaveError=error&&error.message==='Failed to fetch'?'Cannot reach the server. Check your connection, then try again.':(error&&error.message?error.message:'Could not save draft. Check the connection and try again.');
+            updateSaveStatus(lastDraftSaveError,'error');
+          }
+          force=false;
+        }while(saveQueued&&successful);
+      }catch(error){
+        dirty=true;
+        saveQueued=false;
+        successful=false;
+        lastDraftSaveError=error&&error.message?error.message:'Could not prepare the draft for saving.';
+        updateSaveStatus(lastDraftSaveError,'error');
+      }finally{
+        saving=false;
+        activeSave=null;
+      }
       return successful&&!dirty;
     })();
     return activeSave;
@@ -1215,16 +1232,45 @@ $(window).on('resize', function () {
   }
   form.querySelectorAll('.tour-wizard-next').forEach(function(button){button.addEventListener('click',async function(){
     var next=Number(button.dataset.nextStep);
+    var nextPanel=panels.find(function(panel){return Number(panel.dataset.wizardStep)===next;});
+    if(!nextPanel){
+      await showStepFeedback({icon:'error',title:'Next step unavailable',text:'Refresh the page and try again.'});
+      return;
+    }
     if(currentStep===1&&(!titleInput||!titleInput.value.trim())){
       setStep(1,true);
-      updateSaveStatus('Add a tour title before continuing.','error');
+      var titleMessage='Add a tour title before continuing.';
+      updateSaveStatus(titleMessage,'error');
+      await showStepFeedback({icon:'warning',title:'Tour title required',text:titleMessage});
       if(titleInput)titleInput.focus();
       return;
     }
+
     button.disabled=true;
-    var saved=await saveDraft(true);
-    button.disabled=false;
-    if(saved)setStep(next,true);
+    if(window.Swal&&typeof window.Swal.fire==='function'){
+      window.Swal.fire({title:'Saving draft…',text:'Please wait while we save your changes.',allowOutsideClick:false,allowEscapeKey:false,didOpen:function(){window.Swal.showLoading();}});
+    }
+    try{
+      var saved=await saveDraft(true);
+      if(!saved){
+        var reason=lastDraftSaveError||(saveStatus&&saveStatus.textContent.trim())||'The draft could not be confirmed as saved. Please try again.';
+        if(reason==='Saving draft…'||reason==='Unsaved changes…')reason='The draft could not be confirmed as saved. Please try again.';
+        updateSaveStatus(reason,'error');
+        await showStepFeedback({icon:'error',title:'Could not continue',text:reason,confirmButtonText:'OK'});
+        return;
+      }
+
+      setStep(next,true);
+      if(currentStep!==next||nextPanel.classList.contains('d-none'))throw new Error('The draft saved, but the next step did not open. Refresh the page and try again.');
+      updateSaveStatus('Draft saved. '+stepNames[next]+' is ready.','success');
+      await showStepFeedback({toast:true,position:'top-end',icon:'success',title:'Draft saved',text:'Moving to '+stepNames[next]+'.',showConfirmButton:false,timer:1600,timerProgressBar:true});
+    }catch(error){
+      var message=error&&error.message?error.message:'Something went wrong while moving to the next step.';
+      updateSaveStatus(message,'error');
+      await showStepFeedback({icon:'error',title:'Could not continue',text:message,confirmButtonText:'OK'});
+    }finally{
+      button.disabled=false;
+    }
   });});
   form.querySelectorAll('.tour-wizard-back').forEach(function(button){button.addEventListener('click',function(){setStep(Number(button.dataset.previousStep),true);});});
   indicators.forEach(function(button){button.addEventListener('click',function(){var target=Number(button.dataset.stepIndicator);if(target<currentStep)setStep(target,true);});});

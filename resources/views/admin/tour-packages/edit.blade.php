@@ -129,6 +129,27 @@
               @csrf
               @method('PUT')
 
+              <div class="tour-wizard-header mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                  <div>
+                    <div class="small text-uppercase text-muted fw-semibold">Tour builder</div>
+                    <div class="fw-semibold" id="tour-edit-step-title">Step 1 of 4 · Package Information</div>
+                  </div>
+                </div>
+                <div class="progress mb-3" style="height:6px" aria-label="Tour form progress">
+                  <div class="progress-bar bg-success" id="tour-edit-step-progress" role="progressbar" style="width:25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="row g-2" aria-label="Tour form steps">
+                  <div class="col-6 col-lg-3"><button type="button" class="btn btn-sm btn-success w-100 tour-edit-step-indicator" data-step-indicator="1" aria-current="step">1 · Package Info</button></div>
+                  <div class="col-6 col-lg-3"><button type="button" class="btn btn-sm btn-outline-secondary w-100 tour-edit-step-indicator" data-step-indicator="2">2 · Pricing &amp; Setup</button></div>
+                  <div class="col-6 col-lg-3"><button type="button" class="btn btn-sm btn-outline-secondary w-100 tour-edit-step-indicator" data-step-indicator="3">3 · Itinerary</button></div>
+                  <div class="col-6 col-lg-3"><button type="button" class="btn btn-sm btn-outline-secondary w-100 tour-edit-step-indicator" data-step-indicator="4">4 · SEO &amp; Publish</button></div>
+                </div>
+              </div>
+
+              <div class="tour-edit-panel" data-wizard-step="1">
+              <h5 class="card-title">Package Information</h5>
+
               <!-- Basic Info -->
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Title <span class="text-danger">*</span></label>
@@ -197,31 +218,6 @@
                 </div>
               </div>
 
-              <!-- Video URL -->
-              <div class="row mb-3">
-                <label class="col-sm-2 col-form-label">Video URL</label>
-                <div class="col-sm-10">
-                  <input type="text" name="video_url" class="form-control"
-                         value="{{ old('video_url', $tourPackage->video_url) }}">
-                </div>
-              </div>
-
-              <!-- Legacy Embed Map (collapsed unless already has data) -->
-              @if(!empty($tourPackage->embed_map))
-              <div class="row mb-3">
-                <div class="col-sm-10 offset-sm-2">
-                  <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#embedMapCollapse" aria-expanded="false">
-                    Legacy Google Map — Existing Tour Only
-                  </button>
-                  <div class="collapse mt-2" id="embedMapCollapse">
-                    <label class="form-label">Embed Map</label>
-                    <textarea name="embed_map" class="form-control" rows="3">{{ old('embed_map', $tourPackage->embed_map) }}</textarea>
-                    <small class="form-text text-muted">Existing Google Maps embed. New tours should use the per-day itinerary location pickers below.</small>
-                  </div>
-                </div>
-              </div>
-              @endif
-
               <!-- Transfer Cars Images -->
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Transfer Cars Images</label>
@@ -242,6 +238,13 @@
                 </div>
               </div>
 
+              <div class="d-flex justify-content-end mt-4">
+                <button type="button" class="btn btn-primary tour-edit-next" data-next-step="2">Next: Pricing &amp; Setup <i class="bi bi-arrow-right"></i></button>
+              </div>
+              </div>
+
+              <div class="tour-edit-panel d-none" data-wizard-step="2">
+              <h5 class="card-title">Pricing &amp; Trip Setup</h5>
               @php
                 $latestCalculation = $tourPackage->priceCalculations()->latest('id')->first();
                 $existingCalculationPayload = $latestCalculation ? ($latestCalculation->breakdown['payload'] ?? null) : null;
@@ -281,6 +284,63 @@
               <!-- Available Months — 12 checkboxes + a Select all toggle -->
               @include('admin.tour-packages.partials.available-months', ['tourPackage' => $tourPackage, 'idPrefix' => 'tour-edit'])
 
+
+              <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Starting Point</label>
+                <div class="col-sm-10">
+                  <input type="text" name="starting_point" class="form-control"
+                         value="{{ old('starting_point', $tourPackage->starting_point) }}"
+                         placeholder="e.g. Nairobi, Kilimanjaro Airport">
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Ending Point</label>
+                <div class="col-sm-10">
+                  <input type="text" name="ending_point" class="form-control"
+                         value="{{ old('ending_point', $tourPackage->ending_point) }}"
+                         placeholder="e.g. Arusha, Zanzibar Airport">
+                </div>
+              </div>
+
+                            <!-- Hero -->
+              <div class="row mb-3">
+                <label class="col-sm-2 col-form-label fw-bold">Hero Image (main cover)</label>
+                <div class="col-sm-10">
+                  <div class="mb-3">
+                    {{-- Picker-only: the Media Library is the single source of images. --}}
+                    <x-media-picker
+                        name="hero_image_id"
+                        :selected="old('hero_image_id', $tourPackage->hero_image_id)"
+                        label="Select from Media Library"
+                    />
+                    <small class="text-muted d-block mt-1">Choose an existing image from the library.</small>
+                  </div>
+                  {{--
+                      Legacy: tours created before the Media Library picker have their
+                      hero in the Spatie 'hero' collection rather than hero_image_id.
+                      Shown read-only so those tours keep rendering, but it can no
+                      longer be changed from here — pick a library image above to
+                      take over.
+                  --}}
+                  @if(!$tourPackage->hero_image_id && $tourPackage->getFirstMedia('hero'))
+                    <div class="mb-2">
+                      <img src="{{ $tourPackage->getFirstMediaUrl('hero', 'thumb') }}" alt="Hero" style="max-height: 200px;">
+                      <small class="text-muted d-block mt-1">
+                        Legacy uploaded image (read-only). Select a Media Library image above to replace it.
+                      </small>
+                    </div>
+                  @endif
+                </div>
+              </div>
+              <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-secondary tour-edit-back" data-previous-step="1"><i class="bi bi-arrow-left"></i> Back</button>
+                <button type="button" class="btn btn-primary tour-edit-next" data-next-step="3">Next: Itinerary <i class="bi bi-arrow-right"></i></button>
+              </div>
+              </div>
+
+              <div class="tour-edit-panel d-none" data-wizard-step="3">
+              <h5 class="card-title">Itinerary &amp; Experience</h5>
               <!-- Overview – the full notepad, the same editor as the destination
                    form's Description, plus a Media Library button. Not a
                    .tinymce-editor on purpose: this form initialises the Overview
@@ -544,238 +604,57 @@
                 </div>
               </div>
 
-              <!-- Hero -->
-              <div class="row mb-3">
-                <label class="col-sm-2 col-form-label fw-bold">Hero Image (main cover)</label>
-                <div class="col-sm-10">
-                  <div class="mb-3">
-                    {{-- Picker-only: the Media Library is the single source of images. --}}
-                    <x-media-picker
-                        name="hero_image_id"
-                        :selected="old('hero_image_id', $tourPackage->hero_image_id)"
-                        label="Select from Media Library"
-                    />
-                    <small class="text-muted d-block mt-1">Choose an existing image from the library.</small>
-                  </div>
-                  {{--
-                      Legacy: tours created before the Media Library picker have their
-                      hero in the Spatie 'hero' collection rather than hero_image_id.
-                      Shown read-only so those tours keep rendering, but it can no
-                      longer be changed from here — pick a library image above to
-                      take over.
-                  --}}
-                  @if(!$tourPackage->hero_image_id && $tourPackage->getFirstMedia('hero'))
-                    <div class="mb-2">
-                      <img src="{{ $tourPackage->getFirstMediaUrl('hero', 'thumb') }}" alt="Hero" style="max-height: 200px;">
-                      <small class="text-muted d-block mt-1">
-                        Legacy uploaded image (read-only). Select a Media Library image above to replace it.
-                      </small>
-                    </div>
-                  @endif
-                </div>
-              </div>
 
-              <!-- Gallery -->
-              <div class="row mb-3">
-                <label class="col-sm-2 col-form-label fw-bold">Gallery Images (multiple)</label>
+              <!-- FAQs -->
+              <div class="row mb-5 mt-5">
+                <label class="col-sm-2 col-form-label"><strong>FAQs</strong></label>
                 <div class="col-sm-10">
-                  {{--
-                      Picker-only, per decision: direct upload removed entirely for
-                      this field. Existing galleries uploaded the old way were
-                      migrated into this same system via the one-time
-                      `media:migrate-galleries` command.
-                  --}}
-                  <x-media-picker
-                      name="gallery_image_ids"
-                      multiple
-                      :selected="old('gallery_image_ids', app(\App\Services\MediaLibraryService::class)->orderedImagesFor($tourPackage, 'gallery')->pluck('id')->all())"
-                      label="Select Gallery Images"
-                  />
-                  <small class="text-muted d-block mt-1">Choose one or more images from the library. Drag to reorder.</small>
-                </div>
-              </div>
-
-
-              <!-- Group Departure checkbox -->
-              <div class="row mb-3">
-                <label class="col-sm-2 col-form-label">Group Departure</label>
-                <div class="col-sm-10">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="is_group_departure" value="1"
-                           {{ old('is_group_departure', $tourPackage->is_group_departure) ? 'checked' : '' }}>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Group Departures Repeater -->
-              <div class="row mt-3">
-                <label class="col-sm-2 col-form-label fw-bold">Group Departures</label>
-                <div class="col-sm-10">
-                  <div id="departures-repeater">
-                    @if(old('departures', $tourPackage->groupDepartures ?? []))
-                      @foreach(old('departures', $tourPackage->groupDepartures ?? []) as $index => $dep)
-                        <div class="departure-item card mb-3 shadow-sm">
-                          <div class="card-header d-flex justify-content-between align-items-center bg-light">
-                            <h6 class="mb-0">Departure {{ $loop->iteration }}</h6>
-                            <button type="button" class="btn btn-sm btn-danger remove-departure">
-                              <i class="bi bi-trash"></i> Remove
-                            </button>
+                  <div id="faqs-wrapper">
+                    @php
+                      $existingFaqs = old('faqs', $tourPackage->faqs ?? []);
+                    @endphp
+                    @if(!empty($existingFaqs))
+                      @foreach($existingFaqs as $faqIdx => $faq)
+                        <div class="faq-item row mb-3 align-items-start">
+                          <div class="col-md-5">
+                            <input type="text" name="faqs[{{ $faqIdx }}][question]" class="form-control"
+                                   placeholder="Question"
+                                   value="{{ old("faqs.$faqIdx.question", $faq['question'] ?? '') }}">
                           </div>
-                          <div class="card-body">
-                            <div class="row g-3">
-                              <div class="col-md-6">
-                                <label class="form-label">Departure Date *</label>
-                                <input type="date" name="departures[{{ $index }}][departure_date]"
-                                       class="form-control" required
-                                       value="{{ old("departures.$index.departure_date", $dep->departure_date?->format('Y-m-d')) }}">
-                              </div>
-                              <div class="col-md-6">
-                                <label class="form-label">Return Date</label>
-                                <input type="date" name="departures[{{ $index }}][return_date]"
-                                       class="form-control"
-                                       value="{{ old("departures.$index.return_date", $dep->return_date?->format('Y-m-d')) }}">
-                              </div>
-                              <div class="col-md-4">
-                                <label class="form-label">Total Spots</label>
-                                <input type="number" name="departures[{{ $index }}][total_spots]"
-                                       class="form-control" min="1"
-                                       value="{{ old("departures.$index.total_spots", $dep->total_spots ?? 12) }}">
-                              </div>
-                              <div class="col-md-4">
-                                <label class="form-label">Available Spots</label>
-                                <input type="number" name="departures[{{ $index }}][available_spots]"
-                                       class="form-control" min="0"
-                                       value="{{ old("departures.$index.available_spots", $dep->available_spots ?? 12) }}">
-                              </div>
-                              <div class="col-md-4">
-                                <label class="form-label">Group Price (optional)</label>
-                                <input type="number" step="0.01" name="departures[{{ $index }}][group_price]"
-                                       class="form-control"
-                                       value="{{ old("departures.$index.group_price", $dep->group_price) }}">
-                              </div>
-                              <div class="col-md-6">
-                                <label class="form-label">Status</label>
-                                <select name="departures[{{ $index }}][status]" class="form-select">
-                                  <option value="open"        {{ old("departures.$index.status", $dep->status ?? 'open') == 'open'        ? 'selected' : '' }}>Open</option>
-                                  <option value="guaranteed"  {{ old("departures.$index.status", $dep->status) == 'guaranteed'  ? 'selected' : '' }}>Guaranteed</option>
-                                  <option value="limited"     {{ old("departures.$index.status", $dep->status) == 'limited'     ? 'selected' : '' }}>Limited Seats</option>
-                                  <option value="sold_out"    {{ old("departures.$index.status", $dep->status) == 'sold_out'    ? 'selected' : '' }}>Sold Out</option>
-                                  <option value="cancelled"   {{ old("departures.$index.status", $dep->status) == 'cancelled'   ? 'selected' : '' }}>Cancelled</option>
-                                </select>
-                              </div>
-                              <div class="col-md-6">
-                                <label class="form-label">Featured</label>
-                                <div class="form-check mt-2">
-                                  <input type="checkbox" name="departures[{{ $index }}][is_featured]" value="1"
-                                         class="form-check-input"
-                                         {{ old("departures.$index.is_featured", $dep->is_featured ?? false) ? 'checked' : '' }}>
-                                  <label class="form-check-label">Show as featured departure</label>
-                                </div>
-                              </div>
-                            </div>
+                          <div class="col-md-5">
+                            <textarea name="faqs[{{ $faqIdx }}][answer]" class="form-control" rows="3"
+                                      placeholder="Answer">{{ old("faqs.$faqIdx.answer", $faq['answer'] ?? '') }}</textarea>
+                          </div>
+                          <div class="col-md-2">
+                            <button type="button" class="btn btn-sm btn-danger remove-faq">Remove</button>
                           </div>
                         </div>
                       @endforeach
-                    @endif
-                  </div>
-                  <button type="button" id="add-departure" class="btn btn-outline-primary my-3">
-                    <i class="bi bi-plus-circle"></i> Add New Departure
-                  </button>
-                </div>
-              </div>
-
-              <div class="row mb-3">
-                <label class="col-sm-2 col-form-label">Starting Point</label>
-                <div class="col-sm-10">
-                  <input type="text" name="starting_point" class="form-control"
-                         value="{{ old('starting_point', $tourPackage->starting_point) }}"
-                         placeholder="e.g. Nairobi, Kilimanjaro Airport">
-                </div>
-              </div>
-
-              <div class="row mb-3">
-                <label class="col-sm-2 col-form-label">Ending Point</label>
-                <div class="col-sm-10">
-                  <input type="text" name="ending_point" class="form-control"
-                         value="{{ old('ending_point', $tourPackage->ending_point) }}"
-                         placeholder="e.g. Arusha, Zanzibar Airport">
-                </div>
-              </div>
-
-              <!-- Extra Sections -->
-              <div class="row mt-5">
-                <label class="col-sm-2 col-form-label fw-bold">Extra Sections (below main content)</label>
-                <div class="col-sm-10">
-                  <div id="extra-sections-repeater">
-                    @if(old('extra_sections', $tourPackage->extra_sections ?? []))
-                      @foreach(old('extra_sections', $tourPackage->extra_sections ?? []) as $index => $section)
-                        <div class="section-item card mb-4 shadow-sm">
-                          <div class="card-header d-flex justify-content-between align-items-center bg-light">
-                            <h6 class="mb-0">Section {{ $loop->iteration }}</h6>
-                            <button type="button" class="btn btn-sm btn-danger remove-section">
-                              <i class="bi bi-trash"></i> Remove
-                            </button>
-                          </div>
-                          <div class="card-body">
-                            <div class="row g-3">
-                              <div class="col-md-6">
-                                <label class="form-label">Section Image</label>
-                                {{--
-                                    Picker-only, per decision: direct upload and the
-                                    old remove-flag UI removed entirely. Field name
-                                    (existing_image_id) unchanged, so the controller's
-                                    existing extra-sections JSON-construction logic
-                                    keeps working without modification.
-                                --}}
-                                @php $sectionExistingImageId = old("extra_sections.$index.existing_image_id", $section['image_id'] ?? null); @endphp
-                                <x-media-picker
-                                    name="extra_sections[{{ $index }}][existing_image_id]"
-                                    :selected="$sectionExistingImageId"
-                                    label="Select Section Image"
-                                />
-                              </div>
-                              <div class="col-md-6">
-                                <label class="form-label">Section Title</label>
-                                <input type="text" name="extra_sections[{{ $index }}][title]" class="form-control"
-                                       value="{{ old("extra_sections.$index.title", $section['title'] ?? '') }}">
-                              </div>
-                              <div class="col-12">
-                                <label class="form-label">Section Content</label>
-                                <div class="quill-editor quill-mini border rounded" style="height: 180px;"></div>
-                                <input type="hidden" name="extra_sections[{{ $index }}][content]"
-                                       class="quill-hidden-input"
-                                       value="{{ old("extra_sections.$index.content", $section['content'] ?? '') }}">
-                              </div>
-                              <div class="col-md-6">
-                                <label class="form-label">Image Position</label>
-                                <select name="extra_sections[{{ $index }}][image_side]" class="form-select">
-                                  <option value="left"  {{ ($section['image_side'] ?? 'left') == 'left'  ? 'selected' : '' }}>Image on Left</option>
-                                  <option value="right" {{ ($section['image_side'] ?? 'left') == 'right' ? 'selected' : '' }}>Image on Right</option>
-                                </select>
-                              </div>
-                            </div>
-                          </div>
+                    @else
+                      <div class="faq-item row mb-3 align-items-start">
+                        <div class="col-md-5">
+                          <input type="text" name="faqs[0][question]" class="form-control" placeholder="Question">
                         </div>
-                      @endforeach
+                        <div class="col-md-5">
+                          <textarea name="faqs[0][answer]" class="form-control" rows="3" placeholder="Answer"></textarea>
+                        </div>
+                        <div class="col-md-2">
+                          <button type="button" class="btn btn-sm btn-danger remove-faq">Remove</button>
+                        </div>
+                      </div>
                     @endif
                   </div>
-                  <button type="button" id="add-extra-section" class="btn btn-outline-primary mt-3">
-                    <i class="bi bi-plus-circle"></i> Add New Section
-                  </button>
-
-                  {{-- Hidden template picker for new sections added client-side — same
-                       clone-and-rename approach as the itinerary day-images template
-                       above. See that block's comment for the full rationale. --}}
-                  <div id="extra-section-picker-template" class="d-none">
-                    <x-media-picker
-                        name="extra_sections[__INDEX__][existing_image_id]"
-                        :selected="null"
-                        label="Select Section Image"
-                    />
-                  </div>
+                  <button type="button" id="add-faq" class="btn btn-sm btn-primary mt-2">Add FAQ</button>
                 </div>
               </div>
+              <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-secondary tour-edit-back" data-previous-step="2"><i class="bi bi-arrow-left"></i> Back</button>
+                <button type="button" class="btn btn-primary tour-edit-next" data-next-step="4">Next: SEO &amp; Publish <i class="bi bi-arrow-right"></i></button>
+              </div>
+              </div>
 
+              <div class="tour-edit-panel d-none" data-wizard-step="4">
+              <h5 class="card-title">SEO &amp; Publish</h5>
               <!-- SEO -->
               <h5 class="card-title mt-5">SEO Settings</h5>
 
@@ -838,79 +717,15 @@
                 </div>
               </div>
 
-              <!-- Trip Details -->
-              <div class="row mb-5 mt-5">
-                <label class="col-sm-2 col-form-label"><strong>Trip Details</strong></label>
-                <div class="col-sm-10">
-                  @php
-                    $tripDetailsDecoded = !empty($tourPackage->trip_details)
-                      ? (is_array($tourPackage->trip_details) ? $tourPackage->trip_details : json_decode($tourPackage->trip_details, true))
-                      : [];
-                  @endphp
-                  <div class="detail-item row mb-3 align-items-start">
-                    <div class="col-md-5">
-                      <input type="text" name="detail[title]" class="form-control"
-                             placeholder="Make Your Dream Trip Come True With Afro-vertex Tours and Safaris"
-                             value="{{ old('detail.title', $tripDetailsDecoded['title'] ?? '') }}">
-                    </div>
-                    <div class="col-md-7">
-                      <textarea name="detail[description]" class="form-control" rows="3"
-                                placeholder="Detail Description (e.g. Adjust sample itineraries to your preferences)">{{ old('detail.description', $tripDetailsDecoded['description'] ?? '') }}</textarea>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- FAQs -->
-              <div class="row mb-5 mt-5">
-                <label class="col-sm-2 col-form-label"><strong>FAQs</strong></label>
-                <div class="col-sm-10">
-                  <div id="faqs-wrapper">
-                    @php
-                      $existingFaqs = old('faqs', $tourPackage->faqs ?? []);
-                    @endphp
-                    @if(!empty($existingFaqs))
-                      @foreach($existingFaqs as $faqIdx => $faq)
-                        <div class="faq-item row mb-3 align-items-start">
-                          <div class="col-md-5">
-                            <input type="text" name="faqs[{{ $faqIdx }}][question]" class="form-control"
-                                   placeholder="Question"
-                                   value="{{ old("faqs.$faqIdx.question", $faq['question'] ?? '') }}">
-                          </div>
-                          <div class="col-md-5">
-                            <textarea name="faqs[{{ $faqIdx }}][answer]" class="form-control" rows="3"
-                                      placeholder="Answer">{{ old("faqs.$faqIdx.answer", $faq['answer'] ?? '') }}</textarea>
-                          </div>
-                          <div class="col-md-2">
-                            <button type="button" class="btn btn-sm btn-danger remove-faq">Remove</button>
-                          </div>
-                        </div>
-                      @endforeach
-                    @else
-                      <div class="faq-item row mb-3 align-items-start">
-                        <div class="col-md-5">
-                          <input type="text" name="faqs[0][question]" class="form-control" placeholder="Question">
-                        </div>
-                        <div class="col-md-5">
-                          <textarea name="faqs[0][answer]" class="form-control" rows="3" placeholder="Answer"></textarea>
-                        </div>
-                        <div class="col-md-2">
-                          <button type="button" class="btn btn-sm btn-danger remove-faq">Remove</button>
-                        </div>
-                      </div>
-                    @endif
-                  </div>
-                  <button type="button" id="add-faq" class="btn btn-sm btn-primary mt-2">Add FAQ</button>
-                </div>
-              </div>
 
               <!-- Submit -->
-              <div class="row mb-3">
-                <label class="col-sm-2 col-form-label"></label>
-                <div class="col-sm-10">
-                  <button type="submit" class="btn btn-primary">Update Tour Package</button>
-                  <a href="{{ route('admin.tour-packages.index') }}" class="btn btn-secondary ms-2">Cancel</a>
+              <div class="d-flex justify-content-between align-items-center mt-4">
+                <button type="button" class="btn btn-outline-secondary tour-edit-back" data-previous-step="3"><i class="bi bi-arrow-left"></i> Back</button>
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-success">Update Tour Package</button>
+                  <a href="{{ route('admin.tour-packages.index') }}" class="btn btn-secondary">Cancel</a>
                 </div>
+              </div>
               </div>
 
             </form>
@@ -1005,9 +820,11 @@
 <!-- Group Departures repeater (unchanged) -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+    const addDepartureButton = document.getElementById('add-departure');
+    if (!addDepartureButton) return;
     let depIndex = document.querySelectorAll('#departures-repeater .departure-item').length;
 
-    document.getElementById('add-departure').addEventListener('click', function () {
+    addDepartureButton.addEventListener('click', function () {
       depIndex++;
       const newDep = document.createElement('div');
       newDep.className = 'departure-item card mb-3 shadow-sm';
@@ -1712,5 +1529,93 @@ $(window).on('resize', function () {
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving…';
     });
   });
+</script>
+<script>
+(function () {
+  var form = document.getElementById('tour-edit-form');
+  if (!form) return;
+
+  var panels = Array.from(form.querySelectorAll('[data-wizard-step]'));
+  var indicators = Array.from(form.querySelectorAll('[data-step-indicator]'));
+  var title = document.getElementById('tour-edit-step-title');
+  var progress = document.getElementById('tour-edit-step-progress');
+  var names = {
+    1: 'Package Information',
+    2: 'Pricing & Setup',
+    3: 'Itinerary & Experience',
+    4: 'SEO & Publish'
+  };
+  var currentStep = 1;
+
+  function updateStep(step, scroll) {
+    currentStep = Math.max(1, Math.min(4, Number(step) || 1));
+    var activePanel = panels.find(function (panel) {
+      return Number(panel.dataset.wizardStep) === currentStep;
+    });
+
+    panels.forEach(function (panel) {
+      panel.classList.toggle('d-none', panel !== activePanel);
+    });
+
+    // Keep browser validation on the visible step while leaving every field
+    // enabled and included in the final update request.
+    form.querySelectorAll('[required], [data-wizard-required]').forEach(function (field) {
+      if (!field.dataset.wizardRequired) field.dataset.wizardRequired = 'true';
+      field.required = activePanel.contains(field) && field.dataset.wizardRequired === 'true';
+    });
+
+    indicators.forEach(function (button) {
+      var number = Number(button.dataset.stepIndicator);
+      var selected = number === currentStep;
+      button.classList.toggle('btn-success', selected);
+      button.classList.toggle('btn-outline-secondary', !selected);
+      button.disabled = number > currentStep;
+      if (selected) button.setAttribute('aria-current', 'step');
+      else button.removeAttribute('aria-current');
+    });
+
+    if (title) title.textContent = 'Step ' + currentStep + ' of 4 · ' + names[currentStep];
+    if (progress) {
+      var percent = currentStep * 25;
+      progress.style.width = percent + '%';
+      progress.setAttribute('aria-valuenow', String(percent));
+    }
+
+    if (scroll) {
+      var top = form.getBoundingClientRect().top + window.pageYOffset - 90;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+    setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 150);
+  }
+
+  form.querySelectorAll('.tour-edit-next').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var activePanel = panels.find(function (panel) {
+        return Number(panel.dataset.wizardStep) === currentStep;
+      });
+      var invalid = activePanel && activePanel.querySelector(':invalid');
+      if (invalid) {
+        invalid.reportValidity();
+        return;
+      }
+      updateStep(button.dataset.nextStep, true);
+    });
+  });
+
+  form.querySelectorAll('.tour-edit-back').forEach(function (button) {
+    button.addEventListener('click', function () {
+      updateStep(button.dataset.previousStep, true);
+    });
+  });
+
+  indicators.forEach(function (button) {
+    button.addEventListener('click', function () {
+      var target = Number(button.dataset.stepIndicator);
+      if (target < currentStep) updateStep(target, true);
+    });
+  });
+
+  updateStep(1, false);
+})();
 </script>
 @endpush
