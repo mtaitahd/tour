@@ -1263,11 +1263,15 @@ $(window).on('resize', function () {
     try{
       var saved=await saveDraft(true);
       if(!saved){
-        var reason=lastDraftSaveError||(saveStatus&&saveStatus.textContent.trim())||'The draft could not be confirmed as saved. Please try again.';
-        if(reason==='Saving draft…'||reason==='Unsaved changes…')reason='The draft could not be confirmed as saved. Please try again.';
-        updateSaveStatus(reason,'error');
-        await showStepFeedback({icon:'error',title:'Could not continue',text:reason,confirmButtonText:'OK'});
-        return;
+        var currentDraftId = (draftId||(draftInput&&draftInput.value))||'';
+        if(!currentDraftId){
+          var reason=lastDraftSaveError||(saveStatus&&saveStatus.textContent.trim())||'The draft could not be confirmed as saved. Please try again.';
+          if(reason==='Saving draft…'||reason==='Unsaved changes…')reason='The draft could not be confirmed as saved. Please try again.';
+          updateSaveStatus(reason,'error');
+          await showStepFeedback({icon:'error',title:'Could not continue',text:reason,confirmButtonText:'OK'});
+          return;
+        }
+        // Draft exists server-side even if still marked dirty locally
       }
 
       setStep(next,true);
