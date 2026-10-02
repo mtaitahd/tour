@@ -1138,7 +1138,9 @@ $(window).on('resize', function () {
       button.classList.toggle('btn-success',selected);
       button.classList.toggle('btn-outline-secondary',!selected);
       if(selected)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');
-      button.disabled=Number(button.dataset.stepIndicator)>step;
+      // Keep the immediately following step available as a direct fallback if
+      // the panel's Next button is obstructed or its click is missed.
+      button.disabled=Number(button.dataset.stepIndicator)>step+1;
     });
     if(stepTitle)stepTitle.textContent='Step '+step+' of 4 · '+stepNames[step];
     if(progress){var percent=step*25;progress.style.width=percent+'%';progress.setAttribute('aria-valuenow',String(percent));}
@@ -1242,8 +1244,8 @@ $(window).on('resize', function () {
     window.tinymce.on('AddEditor',function(event){bindEditor(event.editor);});
     window.tinymce.editors.forEach(bindEditor);
   }
-  form.querySelectorAll('.tour-wizard-next').forEach(function(button){button.addEventListener('click',function(){
-    var next=Number(button.dataset.nextStep);
+  function advanceToStep(next,button){
+    if(next!==currentStep+1)return;
     var nextPanel=panels.find(function(panel){return Number(panel.dataset.wizardStep)===next;});
     if(!nextPanel){
       showStepFeedback({icon:'error',title:'Next step unavailable',text:'Refresh the page and try again.'});
@@ -1284,9 +1286,16 @@ $(window).on('resize', function () {
       button.removeAttribute('aria-busy');
       button.disabled=false;
     });
+  }
+  form.querySelectorAll('.tour-wizard-next').forEach(function(button){button.addEventListener('click',function(){
+    advanceToStep(Number(button.dataset.nextStep),button);
   });});
   form.querySelectorAll('.tour-wizard-back').forEach(function(button){button.addEventListener('click',function(){setStep(Number(button.dataset.previousStep),true);});});
-  indicators.forEach(function(button){button.addEventListener('click',function(){var target=Number(button.dataset.stepIndicator);if(target<currentStep)setStep(target,true);});});
+  indicators.forEach(function(button){button.addEventListener('click',function(){
+    var target=Number(button.dataset.stepIndicator);
+    if(target<currentStep)setStep(target,true);
+    else if(target===currentStep+1)advanceToStep(target,button);
+  });});
   form.addEventListener('submit',async function(event){
     if(finalizing)return;
     event.preventDefault();
