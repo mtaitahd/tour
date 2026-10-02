@@ -1087,6 +1087,7 @@ $(window).on('resize', function () {
   var titleInput=document.getElementById('tour-title');
   var slugInput=form.querySelector('[name="slug"]');
   var autosaveUrl=@json(route('admin.tour-packages.autosave'));
+  var createUrl=@json(route('admin.tour-packages.create'));
   var updateUrlTemplate=@json(route('admin.tour-packages.update', ['tour_package' => '__DRAFT_ID__']));
   var stepNames={1:'Package Information',2:'Pricing & Setup',3:'Itinerary & Experience',4:'SEO & Publish'};
   var currentStep=1;
@@ -1260,20 +1261,23 @@ $(window).on('resize', function () {
 
     button.disabled=true;
     if(window.tinymce&&typeof window.tinymce.triggerSave==='function')window.tinymce.triggerSave();
-    var saveRequest=saveDraft(true);
-    setStep(next,true);
-    updateSaveStatus(stepNames[next]+' is open. Saving draft…');
-    Promise.resolve(saveRequest).then(function(saved){
-      if(saved){
-        updateSaveStatus(stepNames[next]+' is ready. Draft saved.','success');
-      }else{
-        var reason=lastDraftSaveError||'Draft save failed. Your form is still open; try saving again when you finish.';
-        updateSaveStatus(stepNames[next]+' is open, but the draft could not be saved: '+reason,'error');
+    updateSaveStatus('Saving this step before opening '+stepNames[next]+'…');
+    saveDraft(true).then(function(saved){
+      if(!saved){
+        updateSaveStatus(lastDraftSaveError||'Could not save this step. Please try again.','error');
+        button.disabled=false;
+        return;
       }
+      // Reload from the server so the next panel is rebuilt from the persisted
+      // draft. This avoids relying on the current page's JavaScript state.
+      var destination=new URL(createUrl,window.location.href);
+      destination.searchParams.set('draft_id',draftId);
+      destination.searchParams.set('step',String(next));
+      window.location.assign(destination.toString());
     }).catch(function(error){
-      var reason=error&&error.message?error.message:'Draft save failed.';
-      updateSaveStatus(stepNames[next]+' is open, but the draft could not be saved: '+reason,'error');
-    }).finally(function(){button.disabled=false;});
+      updateSaveStatus(error&&error.message?error.message:'Could not save this step. Please try again.','error');
+      button.disabled=false;
+    });
   });});
   form.querySelectorAll('.tour-wizard-back').forEach(function(button){button.addEventListener('click',function(){setStep(Number(button.dataset.previousStep),true);});});
   indicators.forEach(function(button){button.addEventListener('click',function(){var target=Number(button.dataset.stepIndicator);if(target<currentStep)setStep(target,true);});});
@@ -1295,7 +1299,8 @@ $(window).on('resize', function () {
     form.submit();
   });
   window.addEventListener('beforeunload',function(event){if(dirty||saving){event.preventDefault();event.returnValue='';}});
-  setStep(1,false);
+  var requestedStep=Number(new URLSearchParams(window.location.search).get('step'))||1;
+  setStep(draftId?requestedStep:1,false);
 })();
 </script>
 @endpush
