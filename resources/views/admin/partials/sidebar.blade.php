@@ -62,18 +62,14 @@
 
     {{-- Static Pages --}}
     @if($can('pages'))
-        <li class="nav-item {{ in_array($currentPage, ['pages', 'our-story']) ? 'active' : '' }}">
-            <a class="nav-link {{ in_array($currentPage, ['pages', 'our-story']) ? '' : 'collapsed' }}"
+        <li class="nav-item {{ $currentPage === 'pages' ? 'active' : '' }}">
+            <a class="nav-link {{ $currentPage === 'pages' ? '' : 'collapsed' }}"
                href="#" data-bs-target="#pages-nav" data-bs-toggle="collapse">
                 <i class="fas fa-fw fa-file-alt"></i>
                 <span>Pages</span>
                 <i class="fas fa-chevron-down ms-auto"></i>
             </a>
-            <div id="pages-nav" class="collapse {{ in_array($currentPage, ['pages', 'our-story']) ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
-                <a class="nav-link" href="{{ route('admin.our-story.edit') }}">
-                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
-                    <span>Our Story Images & Captions</span>
-                </a>
+            <div id="pages-nav" class="collapse {{ $currentPage === 'pages' ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
                 <a class="nav-link" href="{{ route('admin.pages.index') }}">
                     <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
                     <span>All Pages</span>
@@ -291,7 +287,9 @@
                 <span>Sitemap</span>
             </a>
         </li>
-        @php $websiteContentPages = ['homepage-content', 'traveller-stories', 'subscribe', 'footer', 'starting-points', 'listing-titles']; @endphp
+    @endif
+    @php $websiteContentPages = ['homepage-content', 'traveller-stories', 'subscribe', 'footer', 'starting-points', 'listing-titles', 'our-story']; @endphp
+    @if($can('settings') || $can('pages'))
         <li class="nav-item {{ in_array($currentPage, $websiteContentPages) ? 'active' : '' }}">
             <a class="nav-link {{ in_array($currentPage, $websiteContentPages) ? '' : 'collapsed' }}"
                href="#" data-bs-target="#website-content-nav" data-bs-toggle="collapse">
@@ -300,6 +298,7 @@
                 <i class="fas fa-chevron-down ms-auto"></i>
             </a>
             <div id="website-content-nav" class="collapse {{ in_array($currentPage, $websiteContentPages) ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
+                @if($can('settings'))
                 <a class="nav-link" href="{{ route('admin.homepage-content') }}">
                     <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
                     <span>Homepage Buttons &amp; Captions</span>
@@ -327,6 +326,13 @@
                     <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
                     <span>Listing Titles</span>
                 </a>
+                @endif
+                @if($can('pages'))
+                    <a class="nav-link {{ $currentPage === 'our-story' ? 'active' : '' }}" href="{{ route('admin.our-story.edit') }}">
+                        <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
+                        <span>Our Story Images &amp; Captions</span>
+                    </a>
+                @endif
             </div>
         </li>
     @endif
