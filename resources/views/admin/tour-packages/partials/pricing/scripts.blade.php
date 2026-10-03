@@ -397,6 +397,12 @@ window.__pricing = {
     function bind() {
         $('input[name="pricing_source"]').on('change', function () { setSource($(this).val()); });
 
+        $('#pricing-calculator-payload').closest('form').on('submit', function () {
+            if (P.source === 'calculator') {
+                $('#pricing-calculator-payload').val(JSON.stringify(buildCalculatorPayload()));
+            }
+        });
+
         $('#pricing-duration').on('change', function () {
             P.duration = $(this).val();
             var categoryEls = $('#pricing-category');
