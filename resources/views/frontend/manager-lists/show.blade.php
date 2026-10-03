@@ -2,9 +2,13 @@
 
 @php
     use Illuminate\Support\Str;
+    use App\Models\Setting;
     $listHeading = $managerList->caption ?: $managerList->title;
     $fallbackImage = asset('assets/images/safari-hero.jpg');
+    $operatorName = Setting::get('site_name', 'Afro-Vertex Tours & Safaris');
+    $operatorLogo = Setting::logoUrlOrDefault();
     $isTourList = $managerList->content_type === 'tours';
+    $isPageList = $managerList->content_type === 'pages';
     $selectedCategorySlugs = collect((array) request('categories'))->filter()->values();
     $selectedCountryCodes = collect((array) request('countries'))->filter()->values();
     $categoryFacetMap = ($facets['categories'] ?? collect())->keyBy('slug');
@@ -26,6 +30,36 @@
     $durationMaxValue = request('duration_max');
     $priceMinValue = request('price_min');
     $priceMaxValue = request('price_max');
+    $readFilters = $facets['readFilters'] ?? [];
+    $updatedFilters = $facets['updatedFilters'] ?? [];
+    $readLabels = $facets['readLabels'] ?? [];
+    $updatedLabels = $facets['updatedLabels'] ?? [];
+    $readCounts = $facets['readCounts'] ?? [];
+    $updatedCounts = $facets['updatedCounts'] ?? [];
+    $pageSearch = $facets['search'] ?? '';
+    $pageSortLabels = ['alpha' => 'Title (A to Z)', 'featured' => 'Featured order', 'recent' => 'Recently updated'];
+    $pageActiveSort = $facets['sort'] ?? 'alpha';
+    $readOptions = array_filter($readCounts, fn ($count, $key) => $count > 0 || in_array($key, $readFilters, true), ARRAY_FILTER_USE_BOTH);
+    $updatedOptions = array_filter($updatedCounts, fn ($count, $key) => $count > 0 || in_array($key, $updatedFilters, true), ARRAY_FILTER_USE_BOTH);
+    $hasPageFilters = $pageSearch !== '' || $readFilters !== [] || $updatedFilters !== [] || $pageActiveSort !== 'alpha';
+    $removePageFilter = function (?string $key = null, ?string $value = null) {
+        $query = request()->query();
+        unset($query['page']);
+        if ($key !== null) {
+            if ($value !== null && isset($query[$key]) && is_array($query[$key])) {
+                $query[$key] = array_values(array_filter($query[$key], fn ($item) => (string) $item !== $value));
+                if ($query[$key] === []) unset($query[$key]);
+            } else {
+                unset($query[$key]);
+            }
+        }
+        return request()->url() . ($query ? '?' . http_build_query($query) : '');
+    };
+    $pageChips = [];
+    if ($pageSearch !== '') $pageChips[] = ['label' => '“' . $pageSearch . '”', 'url' => $removePageFilter('search')];
+    foreach ($readFilters as $value) $pageChips[] = ['label' => $readLabels[$value] ?? $value, 'url' => $removePageFilter('read', $value)];
+    foreach ($updatedFilters as $value) $pageChips[] = ['label' => $updatedLabels[$value] ?? $value, 'url' => $removePageFilter('updated', $value)];
+    if ($pageActiveSort !== 'alpha') $pageChips[] = ['label' => 'Sorted by ' . ($pageSortLabels[$pageActiveSort] ?? $pageActiveSort), 'url' => $removePageFilter('sort')];
     $removeQueryParam = function (string $key, $value = null) {
         $query = request()->query();
         unset($query['page']);
@@ -46,8 +80,8 @@
         @if($previewMode ?? false)
             <div class="alert alert-info" role="status"><strong>Preview mode:</strong> This listing is visible only to authorized admins. <a href="{{ $managerList->content_type === 'pages' ? route('admin.manager-lists.pages') : route('admin.manager-lists.tours') }}">Back to Manager Lists</a></div>
         @endif
-        @if($isTourList)
-            <button type="button" class="sfb-mobile-filter-toggle" data-manager-open-filters aria-controls="managerListFilters" aria-expanded="false"><i class="isax isax-filter" aria-hidden="true"></i> Filter Tours</button>
+        @if($isTourList || $isPageList)
+            <button type="button" class="sfb-mobile-filter-toggle" data-manager-open-filters aria-controls="managerListFilters" aria-expanded="false"><i class="isax isax-filter" aria-hidden="true"></i> {{ $isTourList ? 'Filter Tours' : 'Filter Pages' }}</button>
             <div class="manager-list-drawer-backdrop" data-manager-close-filters hidden></div>
         @endif
         <div class="sfb-layout manager-list-layout{{ $isTourList ? ' manager-tour-layout' : ' manager-page-layout' }}">
@@ -178,6 +212,50 @@
                         <div class="sfb-filter-actions"><button type="submit">Apply Filters</button><a href="{{ request()->url() }}">Clear All Filters</a></div>
                     </form>
                 </aside>
+            @elseif($isPageList)
+                <aside class="sfb-sidebar sfb-sidebar--pages" id="managerListFilters" aria-label="Page filters" data-manager-filter-drawer>
+                    <div class="sfb-sidebar__mobile-head"><strong>Filter Pages</strong><button type="button" data-manager-close-filters aria-label="Close filters">&times;</button></div>
+                    <form method="GET" action="{{ request()->url() }}" class="sfb-filter-form" data-sfb-filter-form>
+                        <section class="sfb-safari-panel" aria-labelledby="manager-page-search-title">
+                            <h2 id="manager-page-search-title">Search Pages</h2>
+                            <div class="sfb-safari-control">
+                                <i class="isax isax-search-1 sfb-safari-control__icon" aria-hidden="true"></i>
+                                <div class="sfb-pages-search"><input type="search" name="search" class="sfb-pages-search__input" placeholder="Search pages, e.g. travel guide" value="{{ $pageSearch }}" autocomplete="off" aria-label="Search pages"></div>
+                            </div>
+                            <button type="submit" class="sfb-show-tours">Search Pages</button>
+                            <p class="sfb-pages-filters__hint" aria-live="polite"><strong>{{ number_format($items->total()) }}</strong> {{ Str::plural('page', $items->total()) }} {{ $hasPageFilters ? 'match your filters' : 'in this list' }}</p>
+                        </section>
+                        @if($readOptions)
+                            <section class="sfb-filter-section" aria-labelledby="manager-page-reading-title">
+                                <h3 id="manager-page-reading-title">Reading time</h3>
+                                <div class="sfb-check-list">
+                                    @foreach($readOptions as $value => $count)
+                                        <label><input type="checkbox" name="read[]" value="{{ $value }}" {{ in_array($value, $readFilters, true) ? 'checked' : '' }} data-sfb-auto><span>{{ $readLabels[$value] }}</span><em>{{ $count }}</em></label>
+                                    @endforeach
+                                </div>
+                            </section>
+                        @endif
+                        @if($updatedOptions)
+                            <section class="sfb-filter-section" aria-labelledby="manager-page-updated-title">
+                                <h3 id="manager-page-updated-title">Last updated</h3>
+                                <div class="sfb-check-list">
+                                    @foreach($updatedOptions as $value => $count)
+                                        <label><input type="checkbox" name="updated[]" value="{{ $value }}" {{ in_array($value, $updatedFilters, true) ? 'checked' : '' }} data-sfb-auto><span>{{ $updatedLabels[$value] }}</span><em>{{ $count }}</em></label>
+                                    @endforeach
+                                </div>
+                            </section>
+                        @endif
+                        <section class="sfb-filter-section" aria-labelledby="manager-page-sort-title">
+                            <h3 id="manager-page-sort-title">Sort results by</h3>
+                            <div class="sfb-check-list">
+                                @foreach($pageSortLabels as $value => $label)
+                                    <label><input type="radio" name="sort" value="{{ $value }}" {{ $pageActiveSort === $value ? 'checked' : '' }} data-sfb-auto><span>{{ $label }}</span></label>
+                                @endforeach
+                            </div>
+                        </section>
+                        <div class="sfb-filter-actions"><button type="submit">Apply Filters</button><a href="{{ request()->url() }}">Clear all filters</a></div>
+                    </form>
+                </aside>
             @endif
             <main class="sfb-results" id="sfb-results-start" aria-label="{{ $managerList->title }}">
                 <header class="sfb-results-header">
@@ -210,6 +288,18 @@
                             <a class="sfb-selected-chip sfb-selected-chip--clear" href="{{ request()->url() }}">Clear All Filters</a>
                         @endif
                     </div>
+                @elseif($isPageList)
+                    <div class="sfb-selected-filters" aria-label="Selected filters">
+                        <span>Selected filters:</span>
+                        @if(!$hasPageFilters)
+                            <span class="sfb-selected-chip sfb-selected-chip--muted">All pages in this list</span>
+                        @else
+                            @foreach($pageChips as $chip)
+                                <a class="sfb-selected-chip" href="{{ $chip['url'] }}">{{ $chip['label'] }} <b>&times;</b></a>
+                            @endforeach
+                            <a class="sfb-selected-chip sfb-selected-chip--clear" href="{{ request()->url() }}">Clear all</a>
+                        @endif
+                    </div>
                 @endif
                 <div class="sfb-results-info"><strong>{{ $items->firstItem() ?: 0 }}&ndash;{{ $items->lastItem() ?: 0 }} of {{ number_format($items->total()) }}</strong><span>{{ Str::plural($isTourList ? 'tour' : 'page', $items->total()) }}</span></div>
                 <div class="sfb-tour-grid">
@@ -238,14 +328,15 @@
                                 <a class="sfb-tour-card__full-link" href="{{ route('page.show', $item->slug) }}" aria-label="Read {{ $item->title }}"></a>
                                 <div class="sfb-tour-card__image-wrap"><img src="{{ $heroImage }}" alt="{{ $item->title }}" loading="lazy"><div class="sfb-tour-card__gradient" aria-hidden="true"></div><h2>{{ $item->title }}</h2></div>
                                 <div class="sfb-tour-card__body">
-                                    <div class="sfb-tour-card__meta-grid"><div><span>Type</span><strong>Information</strong></div><div><span>Reading time</span><strong>{{ $item->readingMinutes() }} min</strong></div><div><span>Length</span><strong>{{ number_format(str_word_count($plainText)) }} words</strong></div><div><span>Updated</span><strong>{{ $item->updated_at?->format('j M Y') ?: 'Recently' }}</strong></div></div>
-                                    <div class="sfb-tour-card__footer"><div class="sfb-tour-card__rating"><strong>Read online</strong><span>Helpful travel information</span></div><div class="sfb-tour-card__price"><span>Access</span><strong>Free</strong></div></div>
+                                    <div class="sfb-tour-card__meta-grid"><div><span>Type</span><strong>Information</strong></div><div><span>Reading time</span><strong>{{ $item->readingMinutes() }} {{ Str::plural('min', $item->readingMinutes()) }}</strong></div><div><span>Length</span><strong>{{ number_format(str_word_count($plainText)) }} {{ Str::plural('word', str_word_count($plainText)) }}</strong></div><div><span>Last updated</span><strong>{{ $item->updated_at?->format('j M Y') ?: 'Recently' }}</strong></div></div>
+                                    <div class="sfb-tour-card__operator"><img src="{{ $operatorLogo }}" alt="" loading="lazy"><div><span>Published by</span><strong>{{ $operatorName }}</strong></div></div>
+                                    <div class="sfb-tour-card__footer"><div class="sfb-tour-card__rating"><strong>Read online</strong><span>No booking required</span></div><div class="sfb-tour-card__price"><span>Access</span><strong>Free</strong><em>any time</em></div></div>
                                     <a href="{{ route('page.show', $item->slug) }}" class="sfb-tour-card__cta">Read More</a>
                                 </div>
                             </article>
                         @endif
                     @empty
-                        <div class="sfb-empty-results"><h2>{{ $isTourList && request()->query() ? 'No tours found matching your filters.' : 'No ' . ($isTourList ? 'tours' : 'pages') . ' are available in this listing yet.' }}</h2><p>{{ $isTourList && request()->query() ? 'Try clearing one or more filters to see more tours.' : 'Please check back soon.' }}</p>@if($isTourList && request()->query())<a href="{{ request()->url() }}">Clear All Filters</a>@endif</div>
+                        <div class="sfb-empty-results"><h2>{{ ($isTourList && request()->query()) || ($isPageList && $hasPageFilters) ? 'No ' . ($isTourList ? 'tours' : 'pages') . ' found matching your filters.' : 'No ' . ($isTourList ? 'tours' : 'pages') . ' are available in this listing yet.' }}</h2><p>{{ ($isTourList && request()->query()) || ($isPageList && $hasPageFilters) ? 'Try clearing one or more filters to see more results.' : 'Please check back soon.' }}</p>@if(($isTourList && request()->query()) || ($isPageList && $hasPageFilters))<a href="{{ request()->url() }}">Clear All Filters</a>@endif</div>
                     @endforelse
                 </div>
                 @if($items->hasPages())<div class="sfb-pagination">{{ $items->links() }}</div>@endif
@@ -264,12 +355,12 @@
     @endif
 </div>
 <style>
-.manager-tour-layout{align-items:flex-start}.manager-page-layout{display:block}.manager-list-introduction{margin-top:14px;line-height:1.75;color:#343a40!important;font-family:inherit!important}.manager-list-introduction *{color:#343a40!important;font-family:inherit!important}.manager-list-introduction :is(code,pre,kbd,samp){background:transparent!important;white-space:normal;font-size:inherit}.manager-list-faq{margin:42px 0 20px}.manager-list-faq .sfb-faq{margin:0}.sfb-pagination{margin-top:28px}.manager-list-drawer-backdrop{position:fixed;inset:0;background:rgba(18,29,48,.45);z-index:1040}.manager-list-drawer-backdrop[hidden]{display:none}@media(max-width:991.98px){.manager-tour-layout{display:block}.manager-tour-layout .sfb-sidebar{position:fixed;top:0;left:0;bottom:0;width:min(430px,90vw);max-height:100vh;overflow-y:auto;z-index:1050;transform:translateX(-105%);transition:transform .25s ease}.manager-tour-layout .sfb-sidebar.is-open{transform:translateX(0)}body.manager-filter-lock{overflow:hidden}}
+.manager-tour-layout,.manager-page-layout{align-items:flex-start}.manager-list-introduction{margin-top:14px;line-height:1.75;color:#343a40!important;font-family:inherit!important}.manager-list-introduction *{color:#343a40!important;font-family:inherit!important}.manager-list-introduction :is(code,pre,kbd,samp){background:transparent!important;white-space:normal;font-size:inherit}.manager-list-faq{margin:42px 0 20px}.manager-list-faq .sfb-faq{margin:0}.sfb-pagination{margin-top:28px}.manager-list-drawer-backdrop{position:fixed;inset:0;background:rgba(18,29,48,.45);z-index:1040}.manager-list-drawer-backdrop[hidden]{display:none}@media(max-width:991.98px){.manager-tour-layout,.manager-page-layout{display:block}.manager-tour-layout .sfb-sidebar,.manager-page-layout .sfb-sidebar{position:fixed;top:0;left:0;bottom:0;width:min(430px,90vw);max-height:100vh;overflow-y:auto;z-index:1050;transform:translateX(-105%);transition:transform .25s ease}.manager-tour-layout .sfb-sidebar.is-open,.manager-page-layout .sfb-sidebar.is-open{transform:translateX(0)}body.manager-filter-lock{overflow:hidden}}
 </style>
 @endsection
 
 @section('extra-scripts')
-    @if($isTourList)
+    @if($isTourList || $isPageList)
     <script>
     (function(){'use strict';var form=document.querySelector('[data-sfb-filter-form]'),drawer=document.querySelector('[data-manager-filter-drawer]'),backdrop=document.querySelector('.manager-list-drawer-backdrop'),open=document.querySelector('[data-manager-open-filters]'),timer;function submitSoon(){if(!form)return;window.clearTimeout(timer);timer=window.setTimeout(function(){if(form.requestSubmit)form.requestSubmit();else form.submit()},250)}if(form){form.querySelectorAll('[data-sfb-auto]').forEach(function(field){field.addEventListener('change',submitSoon)});form.querySelectorAll('[data-sfb-range]').forEach(function(range){var target=form.querySelector('[name="'+range.dataset.sfbRange+'"]');if(!target)return;range.addEventListener('input',function(){target.value=range.value});range.addEventListener('change',submitSoon)})}var calendar=document.getElementById('startDateCalendar');if(calendar)calendar.addEventListener('click',function(event){if(event.target.closest('.calendar-day[data-iso]'))window.setTimeout(submitSoon,50)});var travellersDone=document.getElementById('tpDone');if(travellersDone)travellersDone.addEventListener('click',function(){window.setTimeout(submitSoon,50)});function close(){if(!drawer||!backdrop)return;drawer.classList.remove('is-open');backdrop.hidden=true;document.body.classList.remove('manager-filter-lock');if(open)open.setAttribute('aria-expanded','false')}if(open&&drawer&&backdrop){open.addEventListener('click',function(){drawer.classList.add('is-open');backdrop.hidden=false;document.body.classList.add('manager-filter-lock');open.setAttribute('aria-expanded','true')});document.querySelectorAll('[data-manager-close-filters]').forEach(function(el){el.addEventListener('click',close)});document.addEventListener('keydown',function(e){if(e.key==='Escape')close()})}})();
     </script>

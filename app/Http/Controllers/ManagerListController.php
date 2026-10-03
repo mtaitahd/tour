@@ -9,7 +9,10 @@ use App\Models\Page;
 use App\Models\Setting;
 use App\Models\TourCategory;
 use App\Models\TourPackage;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 
 class ManagerListController extends Controller
@@ -162,11 +165,60 @@ class ManagerListController extends Controller
             $facets['priceMax'] = max($facets['priceMin'] + 1, (int) ($priceValues->max() ?: 5000));
             $filters = $request->query();
         } else {
-            $items = Page::where('status', 'published')
-                ->where('no_robots', false)
-                ->whereIn('id', $managerList->page_ids ?: [0])
-                ->whereNotIn('slug', Page::siteInfoSlugs())
-                ->orderBy('order')->orderBy('title')->paginate(12);
+            $queryValues = $request->query();
+            foreach (['read', 'updated'] as $key) {
+                if (array_key_exists($key, $queryValues)) $queryValues[$key] = Arr::wrap($queryValues[$key]);
+            }
+            $validator = Validator::make($queryValues, [
+                'page' => ['nullable', 'integer', 'min:1'],
+                'search' => ['nullable', 'string', 'max:255'],
+                'read' => ['nullable', 'array'],
+                'read.*' => ['string', 'in:short,medium,long'],
+                'updated' => ['nullable', 'array'],
+                'updated.*' => ['string', 'in:recent,year,older'],
+                'sort' => ['nullable', 'string', 'in:alpha,featured,recent'],
+            ]);
+            if ($validator->fails()) {
+                $offending = collect(array_keys($validator->failed()))
+                    ->map(fn ($key) => explode('.', $key)[0])->unique()->all();
+                return redirect()->to($request->fullUrlWithoutQuery($offending), 302);
+            }
+
+            $search = trim((string) $request->query('search', ''));
+            $readFilters = collect(Arr::wrap($queryValues['read'] ?? []))->filter(fn ($value) => in_array($value, array_keys(Page::readingBucketLabels()), true))->unique()->values()->all();
+            $updatedFilters = collect(Arr::wrap($queryValues['updated'] ?? []))->filter(fn ($value) => in_array($value, ['recent', 'year', 'older'], true))->unique()->values()->all();
+            $sort = (string) $request->query('sort', 'alpha');
+            if (! in_array($sort, ['alpha', 'featured', 'recent'], true)) $sort = 'alpha';
+
+            $query = $this->applyManagerPageFilters($this->managerPagesBaseQuery($managerList), $search, $readFilters, $updatedFilters);
+            if ($sort === 'alpha') $query->orderBy('title');
+            elseif ($sort === 'recent') $query->orderByDesc('updated_at')->orderBy('title');
+            else $query->orderBy('order')->orderBy('title');
+            $items = $query->paginate(12)->withQueryString();
+
+            $readCounts = [];
+            foreach (array_keys(Page::readingBucketLabels()) as $bucket) {
+                $readCounts[$bucket] = $this->applyManagerPageFilters(
+                    $this->managerPagesBaseQuery($managerList), $search, [$bucket], $updatedFilters
+                )->count();
+            }
+            $updatedCounts = [];
+            foreach (['recent', 'year', 'older'] as $bucket) {
+                $updatedCounts[$bucket] = $this->applyManagerPageFilters(
+                    $this->managerPagesBaseQuery($managerList), $search, $readFilters, [$bucket]
+                )->count();
+            }
+
+            $facets = [
+                'search' => $search,
+                'readFilters' => $readFilters,
+                'updatedFilters' => $updatedFilters,
+                'sort' => $sort,
+                'readLabels' => Page::readingBucketLabels(),
+                'updatedLabels' => ['recent' => 'Updated in the last 3 months', 'year' => 'Updated earlier this year', 'older' => 'Updated a year ago or earlier'],
+                'readCounts' => $readCounts,
+                'updatedCounts' => $updatedCounts,
+            ];
         }
 
         $faqs = collect($managerList->faqs ?? [])->filter(fn ($faq) => trim((string) ($faq['question'] ?? '')) !== '' && trim((string) ($faq['answer'] ?? '')) !== '')->values();
@@ -186,5 +238,44 @@ class ManagerListController extends Controller
         ];
 
         return view('frontend.manager-lists.show', compact('managerList', 'items', 'faqs', 'faqExpert', 'meta', 'previewMode', 'filters', 'facets'));
+    }
+
+    private function managerPagesBaseQuery(ManagerList $managerList): Builder
+    {
+        return Page::query()->where('status', 'published')->where('no_robots', false)
+            ->whereIn('id', $managerList->page_ids ?: [0])
+            ->whereNotIn('slug', Page::siteInfoSlugs())->with('heroImage');
+    }
+
+    private function applyManagerPageFilters(Builder $query, string $search, array $read, array $updated): Builder
+    {
+        if ($search !== '') {
+            $term = '%' . $search . '%';
+            $query->where(fn ($q) => $q->where('title', 'like', $term)->orWhere('slug', 'like', $term)->orWhere('content', 'like', $term));
+        }
+        if ($read !== []) {
+            $query->where(function ($q) use ($read) {
+                foreach ($read as $bucket) {
+                    [$min, $max] = Page::readingBucketSql($bucket);
+                    $length = Page::readingLengthSql();
+                    $q->orWhere(function ($bucketQuery) use ($length, $min, $max) {
+                        $bucketQuery->whereRaw("{$length} >= ?", [$min]);
+                        if ($max !== null) $bucketQuery->whereRaw("{$length} <= ?", [$max]);
+                    });
+                }
+            });
+        }
+        if ($updated !== []) {
+            $recentFrom = Carbon::now()->subMonths(3)->startOfDay();
+            $yearFrom = Carbon::now()->startOfYear();
+            $query->where(function ($q) use ($updated, $recentFrom, $yearFrom) {
+                foreach ($updated as $bucket) {
+                    if ($bucket === 'recent') $q->orWhere('updated_at', '>=', $recentFrom);
+                    elseif ($bucket === 'year') $q->orWhere(fn ($year) => $year->where('updated_at', '>=', $yearFrom)->where('updated_at', '<', $recentFrom));
+                    else $q->orWhere('updated_at', '<', $yearFrom);
+                }
+            });
+        }
+        return $query;
     }
 }
