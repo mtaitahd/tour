@@ -108,10 +108,21 @@
                     </td>
                     <td>{{ $package->is_featured ? 'Yes' : 'No' }}</td>
                     <td>
-                      <a href="{{ route('tour.show', $package->slug) }}" target="_blank" class="btn btn-info btn-sm">
-                        <i class="bi bi-eye"></i>
-                      </a>
-                      @php $packageEditUrl = $package->status === 'draft' ? route('admin.tour-packages.create', ['draft_id' => $package->id]) : route('admin.tour-packages.edit', $package->id); @endphp
+                      @if($package->status === 'published')
+                        <a href="{{ route('tour.show', $package->slug) }}" target="_blank" class="btn btn-info btn-sm" title="View published tour">
+                          <i class="bi bi-eye"></i>
+                        </a>
+                      @else
+                        <button type="button" class="btn btn-secondary btn-sm" disabled title="Publish this tour to view it publicly">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                      @endif
+                      @php
+                        $hasWizardDraft = $package->status === 'draft' && !empty($package->draft_payload);
+                        $packageEditUrl = $hasWizardDraft
+                          ? route('admin.tour-packages.create', ['draft_id' => $package->id])
+                          : route('admin.tour-packages.edit', $package->id);
+                      @endphp
                       <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#packageFormModal" title="{{ $package->status === 'draft' ? 'Continue draft' : 'Edit package' }}" onclick="openPackageForm('{{ $packageEditUrl }}')">
                         <i class="fas fa-edit"></i>
                       </button>
