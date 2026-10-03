@@ -34086,12 +34086,8 @@ body.td-lock {
    the same, so sharing the classes means a change to one is a change to
    both. Anything pages-only would look like a fork.
 
-   That leaves only three things that cannot be shared:
+   That leaves only two things that cannot be shared:
 
-     - .sfb-sidebar--pages  widths the sidebar to ~25% of the content
-                            area, leaving ~75% for the cards. Percentage
-                            rather than the tours' fixed 430px so the
-                            proportion holds at every desktop size.
      - .sfb-pages-search__input  the tours search is a submit button,
                             not a text input, so an <input> needs its
                             own font/placeholder rules. Height, radius
@@ -34111,13 +34107,6 @@ body.td-lock {
    nothing replacing them: A-Z navigation has no equivalent anywhere in
    this block or in the template that renders it.
    ------------------------------------------------------------------ */
-
-.sfb-sidebar--pages {
-  flex: 0 0 25%;
-  width: 25%;
-  max-width: 430px;
-  min-width: 288px;
-}
 
 .sfb-pages-filters__hint {
   margin: 10px 0 0;
@@ -34157,34 +34146,4 @@ body.td-lock {
 .sfb-pages-search__input:focus {
   border-color: #0B6B3A;
   box-shadow: 0 0 0 2px rgba(11, 107, 58, 0.12);
-}
-
-/* Narrower desktop: hold the proportion instead of a fixed 360px/320px,
-   so the cards keep roughly three quarters of the row. */
-@media (max-width: 1399.98px) {
-  .sfb-sidebar--pages {
-    flex: 0 0 27%;
-    width: 27%;
-    max-width: none;
-  }
-}
-
-@media (max-width: 1199.98px) and (min-width: 992px) {
-  .sfb-sidebar--pages {
-    flex: 0 0 30%;
-    width: 30%;
-    min-width: 0;
-  }
-}
-
-/* Below 992px the sidebar is the slide-in drawer, not a column. This has to
-   restate the drawer width because .sfb-sidebar--pages is declared later in
-   this file than the drawer's own rules and would otherwise win on order. */
-@media (max-width: 991.98px) {
-  .sfb-sidebar--pages {
-    flex: none;
-    width: min(400px, calc(100vw - 24px));
-    max-width: none;
-    min-width: 0;
-  }
 }
