@@ -237,14 +237,6 @@
 <!-- Available Months — 12 checkboxes + a Select all toggle -->
 @include('admin.tour-packages.partials.available-months', ['tourPackage' => null, 'idPrefix' => 'tour-create'])
 <div class="row mb-3">
-  <label class="col-sm-2 col-form-label" for="tour-starting-point">Starting Point</label>
-  <div class="col-sm-10"><input type="text" id="tour-starting-point" name="starting_point" class="form-control" value="{{ old('starting_point') }}" placeholder="e.g. Arusha"></div>
-</div>
-<div class="row mb-3">
-  <label class="col-sm-2 col-form-label" for="tour-ending-point">Ending Point</label>
-  <div class="col-sm-10"><input type="text" id="tour-ending-point" name="ending_point" class="form-control" value="{{ old('ending_point') }}" placeholder="e.g. Arusha, Zanzibar Airport"></div>
-</div>
-<div class="row mb-3">
   <label class="col-sm-2 col-form-label fw-bold">Hero Image (main cover)</label>
   <div class="col-sm-10"><x-media-picker name="hero_image_id" :selected="old('hero_image_id')" label="Select from Media Library" /><small class="text-muted d-block mt-1">Choose an existing image from the library.</small></div>
 </div>
