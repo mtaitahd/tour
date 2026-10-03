@@ -7,6 +7,9 @@
     $isTourList = $managerList->content_type === 'tours';
     $selectedCategorySlugs = collect((array) request('categories'))->filter()->values();
     $selectedCountryCodes = collect((array) request('countries'))->filter()->values();
+    $categoryFacetMap = ($facets['categories'] ?? collect())->keyBy('slug');
+    $countryFacetMap = ($facets['countries'] ?? collect())->keyBy('code');
+    $parkFacetMap = ($facets['parks'] ?? collect())->keyBy('id');
     $removeQueryParam = function (string $key, $value = null) {
         $query = request()->query();
         unset($query['page']);
@@ -124,23 +127,20 @@
                         @else
                             @if(request('search'))<a class="sfb-selected-chip" href="{{ $removeQueryParam('search') }}">{{ request('search') }} <b>&times;</b></a>@endif
                             @foreach($selectedCategorySlugs as $slug)
-                                @php($category = ($facets['categories'] ?? collect())->firstWhere('slug', $slug))
-                                @if($category)
-                                    <a class="sfb-selected-chip" href="{{ $removeQueryParam('categories', $slug) }}">{{ $category->name }} <b>&times;</b></a>
+                                @if($categoryFacetMap->has($slug))
+                                    <a class="sfb-selected-chip" href="{{ $removeQueryParam('categories', $slug) }}">{{ $categoryFacetMap->get($slug)->name }} <b>&times;</b></a>
                                 @endif
                             @endforeach
                             @if(request()->filled('duration_min') || request()->filled('duration_max'))<a class="sfb-selected-chip" href="{{ $removeQueryParam('duration_min') }}">{{ request('duration_min', 'Any') }}–{{ request('duration_max', 'Any') }} days <b>&times;</b></a>@endif
                             @if(request()->filled('price_min') || request()->filled('price_max'))<a class="sfb-selected-chip" href="{{ $removeQueryParam('price_min') }}">Price range <b>&times;</b></a>@endif
                             @foreach($selectedCountryCodes as $code)
-                                @php($country = ($facets['countries'] ?? collect())->firstWhere('code', $code))
-                                @if($country)
-                                    <a class="sfb-selected-chip sfb-selected-chip--blue" href="{{ $removeQueryParam('countries', $code) }}">{{ $country->name }} <b>&times;</b></a>
+                                @if($countryFacetMap->has($code))
+                                    <a class="sfb-selected-chip sfb-selected-chip--blue" href="{{ $removeQueryParam('countries', $code) }}">{{ $countryFacetMap->get($code)->name }} <b>&times;</b></a>
                                 @endif
                             @endforeach
                             @foreach((array) request('parks') as $parkId)
-                                @php($park = ($facets['parks'] ?? collect())->firstWhere('id', (int) $parkId))
-                                @if($park)
-                                    <a class="sfb-selected-chip" href="{{ $removeQueryParam('parks', $parkId) }}">{{ $park->name }} <b>&times;</b></a>
+                                @if($parkFacetMap->has((int) $parkId))
+                                    <a class="sfb-selected-chip" href="{{ $removeQueryParam('parks', $parkId) }}">{{ $parkFacetMap->get((int) $parkId)->name }} <b>&times;</b></a>
                                 @endif
                             @endforeach
                             <a class="sfb-selected-chip sfb-selected-chip--clear" href="{{ request()->url() }}">Clear All Filters</a>
