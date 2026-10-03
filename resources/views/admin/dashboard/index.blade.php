@@ -18,7 +18,7 @@
         {{-- Stat Cards --}}
         <div class="row mb-4">
             {{-- Total Tours Card --}}
-            <div class="col-xl-4 col-md-6 mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
                 <a href="{{ route('admin.tour-packages.index') }}"
                    style="text-decoration:none"
                    {{ auth()->user()->canAccess('tours') ? '' : 'data-perm-denied data-perm-label="Tours & Packages"' }}>
@@ -42,8 +42,30 @@
                 </a>
             </div>
 
+            {{-- Total Pages Card --}}
+            <div class="col-xl-3 col-md-6 mb-4">
+                <a href="{{ route('admin.pages.index') }}"
+                   style="text-decoration:none"
+                   {{ auth()->user()->canAccess('pages') ? '' : 'data-perm-denied data-perm-label="Pages"' }}>
+                    <div class="card h-100" style="cursor:pointer; transition: transform .15s, box-shadow .15s;">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-uppercase mb-1">Total Pages</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $totalPages ?? 0 }}</div>
+                                    <div class="mt-2 mb-0 text-muted text-xs">Content pages</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-file-alt fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
             {{-- Inquiries Card --}}
-            <div class="col-xl-4 col-md-6 mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
                 <a href="{{ route('admin.inquiries.index') }}"
                    style="text-decoration:none"
                    {{ auth()->user()->canAccess('inquiries') ? '' : 'data-perm-denied data-perm-label="Bookings / Inquiries"' }}>
@@ -68,7 +90,7 @@
             </div>
 
             {{-- Revenue Card --}}
-            <div class="col-xl-4 col-md-6 mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card h-100">
                     <div class="card-body">
                         <div class="row align-items-center">

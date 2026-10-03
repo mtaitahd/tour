@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Inquiry;
+use App\Models\Page;
 use App\Models\TourPackage;
 use App\Models\Destination;
 use App\Models\User;
@@ -16,6 +17,7 @@ class DashboardController extends Controller
         // Total Tours
         $totalTours = TourPackage::count();
         $newToursThisMonth = TourPackage::whereMonth('created_at', now()->month)->count();
+        $totalPages = Page::whereNotIn('slug', Page::siteInfoSlugs())->count();
 
         // Inquiries (assuming you have an Inquiry model)
         $totalInquiriesThisMonth = Inquiry::whereMonth('created_at', now()->month)->count();
@@ -86,7 +88,7 @@ class DashboardController extends Controller
         $featuredToursCount = TourPackage::where('is_featured', true)->count();
 
         return view('admin.dashboard.index', compact(
-            'totalTours', 'newToursThisMonth',
+            'totalTours', 'newToursThisMonth', 'totalPages',
             'totalInquiriesThisMonth', 'newInquiriesToday', 'pendingInquiries',
             'totalCustomers', 'newCustomersThisMonth',
             'revenueThisMonth', 'revenueGrowthPercent',
