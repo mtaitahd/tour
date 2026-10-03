@@ -1,5 +1,14 @@
 @php
     use App\Models\Setting;
+    use App\Models\Inquiry;
+
+    $canViewInquiries = auth()->user()?->canAccess('inquiries') ?? false;
+    $pendingInquiryCount = $canViewInquiries
+        ? Inquiry::where('status', 'pending')->count()
+        : 0;
+    $pendingInquiries = $canViewInquiries
+        ? Inquiry::with('tour')->where('status', 'pending')->latest()->take(5)->get()
+        : collect();
 @endphp
 <nav class="navbar navbar-expand navbar-light bg-navbar topbar mb-4 static-top" id="topbar">
     <div class="d-flex align-items-center topbar-left">
@@ -21,12 +30,40 @@
 
     {{-- Right side nav --}}
     <ul class="navbar-nav ms-auto">
-        {{-- Notifications (placeholder) --}}
-        <li class="nav-item no-arrow mr-2 position-relative">
-            <a class="nav-link" href="#" title="Notifications" style="padding-top:12px;">
+        {{-- Pending inquiries --}}
+        @if($canViewInquiries)
+        <li class="nav-item dropdown no-arrow mr-2">
+            <a class="nav-link dropdown-toggle position-relative" href="#" id="inquiryNotificationsDropdown" role="button"
+               data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+               aria-label="{{ $pendingInquiryCount }} pending inquiries" title="Pending inquiries" style="padding-top:12px;">
                 <i class="fas fa-bell" style="font-size:1.1rem; color:var(--text-muted);"></i>
+                @if($pendingInquiryCount > 0)
+                    <span class="badge rounded-pill bg-danger position-absolute" style="top:2px; right:-3px; font-size:.62rem; min-width:18px;">
+                        {{ $pendingInquiryCount > 99 ? '99+' : $pendingInquiryCount }}
+                    </span>
+                @endif
             </a>
+            <div class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="inquiryNotificationsDropdown" style="width:min(360px, calc(100vw - 24px));">
+                <h6 class="dropdown-header d-flex justify-content-between align-items-center">
+                    <span>Pending inquiries</span><span class="badge bg-danger">{{ $pendingInquiryCount }}</span>
+                </h6>
+                @forelse($pendingInquiries as $pendingInquiry)
+                    <a class="dropdown-item d-flex align-items-start py-2" href="{{ route('admin.inquiries.show', $pendingInquiry) }}">
+                        <span class="me-2 mt-1 text-primary"><i class="fas {{ $pendingInquiry->isTourBooking() ? 'fa-suitcase' : 'fa-envelope' }}"></i></span>
+                        <span class="text-truncate">
+                            <strong class="d-block text-truncate">{{ $pendingInquiry->name }}</strong>
+                            <small class="d-block text-muted text-truncate">{{ $pendingInquiry->isTourBooking() ? ($pendingInquiry->tour?->title ?? 'Tour booking request') : 'General inquiry' }}</small>
+                            <small class="text-muted">{{ $pendingInquiry->created_at?->diffForHumans() }}</small>
+                        </span>
+                    </a>
+                @empty
+                    <span class="dropdown-item-text text-muted py-3">No pending inquiries.</span>
+                @endforelse
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item text-center small text-primary" href="{{ route('admin.inquiries.index', ['status' => 'pending']) }}">View all pending inquiries</a>
+            </div>
         </li>
+        @endif
 
         <div class="topbar-divider d-none d-sm-block"></div>
 
