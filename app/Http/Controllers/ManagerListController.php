@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
 use App\Models\Destination;
 use App\Models\ManagerList;
 use App\Models\Page;
@@ -38,6 +39,10 @@ class ManagerListController extends Controller
             $rules = [
                 'page' => ['nullable', 'integer', 'min:1'],
                 'search' => ['nullable', 'string', 'max:255'],
+                'when' => ['nullable', 'date'],
+                'adults' => ['nullable', 'integer', 'min:1'],
+                'children' => ['nullable', 'integer', 'min:0'],
+                'travellers' => ['nullable', 'integer', 'min:1'],
                 'duration_min' => ['nullable', 'integer', 'min:1'],
                 'duration_max' => ['nullable', 'integer', 'min:1', 'gte:duration_min'],
                 'price_min' => ['nullable', 'numeric', 'min:0'],
@@ -52,7 +57,10 @@ class ManagerListController extends Controller
                 'countries.*' => ['string', 'size:2'],
                 'parks' => ['nullable', 'array'],
                 'parks.*' => ['integer'],
+                'activities' => ['nullable', 'array'],
+                'activities.*' => ['integer'],
                 'starting_point' => ['nullable', 'string', 'max:255'],
+                'destination' => ['nullable', 'string', 'max:255'],
             ];
             $validator = Validator::make($request->query(), $rules);
             if ($validator->fails()) {
@@ -105,6 +113,23 @@ class ManagerListController extends Controller
                 $query->whereHas('destinations', fn ($q) => $q->whereIn('destinations.id', array_map('intval', (array) $request->input('parks'))));
             }
             if ($request->filled('starting_point')) $query->where('starting_point', $request->input('starting_point'));
+            if ($request->filled('activities')) {
+                $query->whereHas('activities', fn ($q) => $q->whereIn('activities.id', array_map('intval', (array) $request->input('activities'))));
+            }
+            $headerDestination = null;
+            if ($request->filled('destination')) {
+                $destinationValue = $request->input('destination');
+                $headerDestination = Destination::where(function ($q) use ($destinationValue) {
+                    if (is_numeric($destinationValue)) $q->where('id', (int) $destinationValue);
+                    $q->orWhere('slug', $destinationValue);
+                })->whereHas('tours', fn ($q) => $q->whereIn('tour_packages.id', (clone $baseQuery)->select('tour_packages.id')))
+                    ->first();
+                if ($headerDestination) {
+                    $query->whereHas('destinations', fn ($q) => $q->where('destinations.id', $headerDestination->id));
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+            }
 
             $items = $query->paginate(10)->withQueryString();
             $scopedTourIds = (clone $baseQuery)->select('tour_packages.id');
@@ -126,7 +151,12 @@ class ManagerListController extends Controller
                 ->distinct()->orderBy('starting_point')->pluck('starting_point');
             $durationValues = (clone $baseQuery)->whereNotNull('duration_days')->pluck('duration_days');
             $priceValues = (clone $baseQuery)->whereNotNull('base_price')->pluck('base_price');
-            $facets = compact('categories', 'countries', 'parks', 'startingPoints');
+            $durationCounts = (clone $baseQuery)->selectRaw('duration_days, count(*) as c')->groupBy('duration_days')->pluck('c', 'duration_days');
+            $activities = Activity::where('is_active', true)
+                ->whereHas('tours', fn ($q) => $q->whereIn('tour_packages.id', clone $scopedTourIds))
+                ->orderBy('name')->get();
+            $totalListTours = (clone $baseQuery)->count();
+            $facets = compact('categories', 'countries', 'parks', 'startingPoints', 'activities', 'durationCounts', 'headerDestination', 'totalListTours');
             $facets['durationMax'] = max(1, min(28, (int) ($durationValues->max() ?: 14)));
             $facets['priceMin'] = (int) ($priceValues->min() ?: 0);
             $facets['priceMax'] = max($facets['priceMin'] + 1, (int) ($priceValues->max() ?: 5000));
