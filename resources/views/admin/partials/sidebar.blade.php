@@ -66,7 +66,7 @@
             <a class="nav-link {{ in_array($currentPage, ['pages', 'our-story']) ? '' : 'collapsed' }}"
                href="#" data-bs-target="#pages-nav" data-bs-toggle="collapse">
                 <i class="fas fa-fw fa-file-alt"></i>
-                <span>Edit About</span>
+                <span>Pages</span>
                 <i class="fas fa-chevron-down ms-auto"></i>
             </a>
             <div id="pages-nav" class="collapse {{ in_array($currentPage, ['pages', 'our-story']) ? 'show' : '' }}" data-bs-parent="#accordionSidebar">

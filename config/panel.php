@@ -26,7 +26,7 @@ return [
         ],
 
         'pages' => [
-            'label'       => 'Edit About',
+            'label'       => 'Pages',
             'icon'        => 'fa-file-alt',
             'route'       => 'admin.pages.index',
             'description' => 'Edit static pages such as the About page.',
