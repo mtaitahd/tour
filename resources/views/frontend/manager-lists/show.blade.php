@@ -10,6 +10,9 @@
 <div class="sfb-listing-page">
     <div class="sfb-breadcrumb"><div class="sfb-container"><a href="{{ route('home') }}">Home</a><span>/</span><span>{{ $managerList->title }}</span></div></div>
     <div class="sfb-container sfb-main-wrap">
+        @if($previewMode ?? false)
+            <div class="alert alert-info" role="status"><strong>Preview mode:</strong> This listing is visible only to authorized admins. <a href="{{ $managerList->content_type === 'pages' ? route('admin.manager-lists.pages') : route('admin.manager-lists.tours') }}">Back to Manager Lists</a></div>
+        @endif
         <div class="sfb-layout manager-list-layout">
             <main class="sfb-results" id="sfb-results-start" aria-label="{{ $managerList->title }}">
                 <header class="sfb-results-header">

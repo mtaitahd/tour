@@ -17,6 +17,10 @@
                 <td><span class="badge {{ $list->status === 'published' ? 'bg-success' : 'bg-secondary' }}">{{ ucfirst($list->status) }}</span></td>
                 <td>@if($list->status === 'published')<a href="{{ route('manager-lists.show', $list->slug) }}" target="_blank">/collections/{{ $list->slug }} <i class="bi bi-box-arrow-up-right"></i></a>@else<span class="text-muted">Not public</span>@endif</td>
                 <td class="text-end">
+                    <a class="btn btn-sm btn-outline-info" href="{{ route('admin.manager-lists.preview', $list) }}" target="_blank" rel="noopener" title="Preview listing"><i class="bi bi-eye"></i> Preview</a>
+                    @if($list->status === 'published')
+                        <a class="btn btn-sm btn-info" href="{{ route('manager-lists.show', $list->slug) }}" target="_blank" rel="noopener" title="View live listing"><i class="bi bi-box-arrow-up-right"></i> View Live</a>
+                    @endif
                     <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.manager-lists.edit', $list) }}" data-manager-list-modal-url="{{ route('admin.manager-lists.edit', $list) }}" data-modal-title="Edit {{ $listType === 'tours' ? 'Tour' : 'Page' }} List">Edit</a>
                     <form class="d-inline" method="POST" action="{{ route('admin.manager-lists.destroy', $list) }}" onsubmit="return confirm('Delete this listing?')">@csrf @method('DELETE')<button class="btn btn-sm btn-outline-danger">Delete</button></form>
                 </td>

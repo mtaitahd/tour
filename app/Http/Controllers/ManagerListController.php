@@ -11,6 +11,20 @@ class ManagerListController extends Controller
     public function show(string $slug)
     {
         $managerList = ManagerList::where('slug', $slug)->where('status', 'published')->firstOrFail();
+        return $this->renderListing($managerList);
+    }
+
+    /** This action is registered only inside the permission-protected admin routes. */
+    public function preview(ManagerList $managerList)
+    {
+        // Prevent search engines from indexing this admin-only rendering,
+        // including when the listing itself is already published.
+        $managerList->setAttribute('no_robots', true);
+        return $this->renderListing($managerList, true);
+    }
+
+    private function renderListing(ManagerList $managerList, bool $previewMode = false)
+    {
         $items = collect();
 
         if ($managerList->content_type === 'tours') {
@@ -36,6 +50,6 @@ class ManagerListController extends Controller
             'no_robots' => $managerList->no_robots,
         ];
 
-        return view('frontend.manager-lists.show', compact('managerList', 'items', 'faqs', 'meta'));
+        return view('frontend.manager-lists.show', compact('managerList', 'items', 'faqs', 'meta', 'previewMode'));
     }
 }
