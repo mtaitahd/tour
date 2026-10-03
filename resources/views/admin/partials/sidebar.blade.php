@@ -36,9 +36,18 @@
         </li>
     @endif
 
-    @if($can('pages') || $can('tours') || $can('mega-nav') || $can('users') || $can('blog'))
+    @if($can('pages') || $can('tours') || $can('manager-lists') || $can('mega-nav') || $can('users') || $can('blog'))
     <hr class="sidebar-divider">
     <div class="sidebar-heading">Content</div>
+    @endif
+
+    @if($can('manager-lists'))
+        <li class="nav-item {{ $currentPage === 'manager-lists' ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('admin.manager-lists.index') }}">
+                <i class="fas fa-fw fa-list-alt"></i>
+                <span>Manager Lists</span>
+            </a>
+        </li>
     @endif
 
     {{-- Static Pages --}}

@@ -7,7 +7,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Title -->
     <title>
-        @if(isset($post) && $post instanceof \App\Models\BlogPost)
+        @if(isset($managerList) && $managerList instanceof \App\Models\ManagerList)
+            {{ $managerList->meta_title ?? $managerList->title . ' | Afro-Vertex Tours & Safaris' }}
+        @elseif(isset($post) && $post instanceof \App\Models\BlogPost)
             {{ $post->meta_title ?? $post->title . ' | Afro-Vertex Tours & Safaris' }}
         @elseif(isset($tour) && $tour instanceof \App\Models\TourPackage)
             {{ $tour->meta_title ?? $tour->title . ' | Afro-Vertex Tours & Safaris' }}
@@ -24,7 +26,9 @@
 
     <!-- Meta Description -->
     <meta name="description" content="
-        @if(isset($post) && $post instanceof \App\Models\BlogPost)
+        @if(isset($managerList) && $managerList instanceof \App\Models\ManagerList)
+            {{ $managerList->meta_description ?? Str::limit(strip_tags($managerList->caption ?: $managerList->introduction ?: ''), 160) }}
+        @elseif(isset($post) && $post instanceof \App\Models\BlogPost)
             {{ $post->meta_description ?? Str::limit(strip_tags($post->content), 160) }}
         @elseif(isset($tour) && $tour instanceof \App\Models\TourPackage)
             {{ $tour->meta_description ?? Str::limit(strip_tags($tour->overview ?? ''), 160) }}
@@ -41,7 +45,9 @@
 
     <!-- Meta Keywords -->
     <meta name="keywords" content="
-        @if(isset($post) && $post instanceof \App\Models\BlogPost)
+        @if(isset($managerList) && $managerList instanceof \App\Models\ManagerList)
+            {{ $managerList->meta_keywords ?? 'East Africa tours, safaris, travel information' }}
+        @elseif(isset($post) && $post instanceof \App\Models\BlogPost)
             {{ $post->meta_keywords ?? 'travel blog, safari tips, tanzania travel, africa adventures' }}
         @elseif(isset($tour) && $tour instanceof \App\Models\TourPackage)
             {{ $tour->meta_keywords ?? 'safari, kilimanjaro, zanzibar, tanzania tours' }}
@@ -59,7 +65,9 @@
     <!-- Robots -->
     @php
         $noIndex = false;
-        if (isset($tour) && $tour instanceof \App\Models\TourPackage && !empty($tour->no_robots)) {
+        if (isset($managerList) && $managerList instanceof \App\Models\ManagerList && !empty($managerList->no_robots)) {
+            $noIndex = true;
+        } elseif (isset($tour) && $tour instanceof \App\Models\TourPackage && !empty($tour->no_robots)) {
             $noIndex = true;
         } elseif (isset($post) && $post instanceof \App\Models\BlogPost && !empty($post->no_robots)) {
             $noIndex = true;
@@ -73,7 +81,9 @@
 
     <!-- Open Graph -->
     <meta property="og:title" content="
-        @if(isset($post) && $post instanceof \App\Models\BlogPost)
+        @if(isset($managerList) && $managerList instanceof \App\Models\ManagerList)
+            {{ $managerList->meta_title ?? $managerList->title }}
+        @elseif(isset($post) && $post instanceof \App\Models\BlogPost)
             {{ $post->meta_title ?? $post->title }}
         @elseif(isset($tour) && $tour instanceof \App\Models\TourPackage)
             {{ $tour->meta_title ?? $tour->title }}
@@ -89,7 +99,9 @@
     ">
 
     <meta property="og:description" content="
-        @if(isset($post) && $post instanceof \App\Models\BlogPost)
+        @if(isset($managerList) && $managerList instanceof \App\Models\ManagerList)
+            {{ $managerList->meta_description ?? Str::limit(strip_tags($managerList->caption ?: $managerList->introduction ?: ''), 200) }}
+        @elseif(isset($post) && $post instanceof \App\Models\BlogPost)
             {{ $post->meta_description ?? Str::limit(strip_tags($post->content), 200) }}
         @elseif(isset($tour) && $tour instanceof \App\Models\TourPackage)
             {{ $tour->meta_description ?? Str::limit(strip_tags($tour->overview ?? ''), 200) }}
@@ -107,7 +119,9 @@
     @php
         $ogImage = $meta['og_image'] ?? asset('asset/img/og-default.jpg');
 
-        if (isset($post) && $post instanceof \App\Models\BlogPost && $post->hasFeaturedImage()) {
+        if (isset($managerList) && isset($items) && $managerList->content_type === 'tours' && $items->first()?->hasHeroImage()) {
+            $ogImage = $items->first()->heroUrl();
+        } elseif (isset($post) && $post instanceof \App\Models\BlogPost && $post->hasFeaturedImage()) {
             $ogImage = $post->featuredImageUrl();
         } elseif (isset($tour) && $tour instanceof \App\Models\TourPackage && $tour->hasHeroImage()) {
             $ogImage = $tour->heroUrl();
@@ -120,7 +134,9 @@
 
     <!-- Canonical URL -->
     <link rel="canonical" href="
-        @if(isset($post) && $post instanceof \App\Models\BlogPost)
+        @if(isset($managerList) && $managerList instanceof \App\Models\ManagerList)
+            {{ route('manager-lists.show', $managerList->slug) }}
+        @elseif(isset($post) && $post instanceof \App\Models\BlogPost)
             {{ route('blog.show', $post->slug) }}
         @elseif(isset($tour) && $tour instanceof \App\Models\TourPackage)
             {{ route('tour.show', $tour->slug) }}
@@ -143,7 +159,9 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="
-        @if(isset($post) && $post instanceof \App\Models\BlogPost)
+        @if(isset($managerList) && $managerList instanceof \App\Models\ManagerList)
+            {{ $managerList->meta_title ?? $managerList->title }}
+        @elseif(isset($post) && $post instanceof \App\Models\BlogPost)
             {{ $post->meta_title ?? $post->title }}
         @elseif(isset($tour) && $tour instanceof \App\Models\TourPackage)
             {{ $tour->meta_title ?? $tour->title }}
@@ -156,7 +174,9 @@
         @endif
     ">
     <meta name="twitter:description" content="
-        @if(isset($post) && $post instanceof \App\Models\BlogPost)
+        @if(isset($managerList) && $managerList instanceof \App\Models\ManagerList)
+            {{ $managerList->meta_description ?? Str::limit(strip_tags($managerList->caption ?: $managerList->introduction ?: ''), 200) }}
+        @elseif(isset($post) && $post instanceof \App\Models\BlogPost)
             {{ $post->meta_description ?? Str::limit(strip_tags($post->content), 200) }}
         @elseif(isset($tour) && $tour instanceof \App\Models\TourPackage)
             {{ $tour->meta_description ?? Str::limit(strip_tags($tour->overview ?? ''), 200) }}

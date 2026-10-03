@@ -80,6 +80,11 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
         Route::post('users/{user}/permissions', [\App\Http\Controllers\Admin\ManageUsersController::class, 'updatePermissions'])->name('users.permissions');
     });
 
+    Route::middleware('permission:manager-lists')->group(function () {
+        Route::resource('manager-lists', \App\Http\Controllers\Admin\ManagerListController::class)
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    });
+
     // ── Static Pages (module: pages) ─────────────────────────────────────
     Route::middleware('permission:pages')->group(function () {
         // NOTE: registered before the 'pages' resource below. The resource
@@ -258,6 +263,7 @@ Route::post('/contact', [ContactController::class, 'submit'])->name('contact.sub
 // /pages/{slug} below, otherwise the index would be swallowed by that
 // parameterised show route and 404 on the literal slug "pages".
 Route::get('/pages', [PublicPageController::class, 'index'])->name('pages.index');
+Route::get('/collections/{slug}', [\App\Http\Controllers\ManagerListController::class, 'show'])->name('manager-lists.show');
 Route::get('/pages/{slug}', [PageController::class, 'show'])->name('page.show');
 Route::get('/tours', [TourController::class, 'index'])->name('tours.index');
 Route::get('/tours/search-destinations', [TourController::class, 'searchDestinations'])->name('tours.searchDestinations');

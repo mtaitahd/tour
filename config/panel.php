@@ -32,6 +32,13 @@ return [
             'description' => 'Edit static pages such as the About page.',
         ],
 
+        'manager-lists' => [
+            'label'       => 'Manager Lists',
+            'icon'        => 'fa-list-alt',
+            'route'       => 'admin.manager-lists.index',
+            'description' => 'Create SEO listing pages for selected tour categories or pages.',
+        ],
+
         'tours' => [
             'label'       => 'Tours & Packages',
             'icon'        => 'fa-briefcase',

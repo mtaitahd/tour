@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\BlogPost;
 use App\Models\Destination;
 use App\Models\Page;
+use App\Models\ManagerList;
 use App\Models\TourCategory;
 use App\Models\TourPackage;
 use Illuminate\Support\Facades\File;
@@ -165,6 +166,7 @@ class SitemapGenerator
             TourPackage::where('status', 'published')->max('updated_at'),
             Destination::max('updated_at'),
             Page::where('status', 'published')->max('updated_at'),
+            ManagerList::where('status', 'published')->max('updated_at'),
             BlogPost::where('status', 'published')->max('updated_at'),
         ])->filter()->max();
 
@@ -217,6 +219,23 @@ class SitemapGenerator
                 'priority'  => '0.6',
                 'changefreq'=> 'monthly',
                 'lastmod'   => $page->updated_at?->format('Y-m-d') ?: date('Y-m-d'),
+            ];
+        }
+
+        foreach (ManagerList::where('status', 'published')->where('no_robots', false)->get() as $managerList) {
+            $hasSelection = $managerList->content_type === 'tours'
+                ? ! empty($managerList->category_ids) && TourPackage::where('status', 'published')->where('no_robots', false)
+                    ->whereHas('categories', fn ($query) => $query->whereIn('tour_categories.id', $managerList->category_ids))->exists()
+                : ! empty($managerList->page_ids) && Page::where('status', 'published')->where('no_robots', false)
+                    ->whereNotIn('slug', Page::siteInfoSlugs())->whereIn('id', $managerList->page_ids)->exists();
+            if (! $hasSelection) {
+                continue;
+            }
+            $entries[] = [
+                'loc' => route('manager-lists.show', $managerList->slug),
+                'priority' => '0.7',
+                'changefreq' => 'weekly',
+                'lastmod' => $managerList->updated_at?->format('Y-m-d') ?: date('Y-m-d'),
             ];
         }
 
