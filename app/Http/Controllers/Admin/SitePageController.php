@@ -23,6 +23,40 @@ use Illuminate\Http\Request;
  */
 class SitePageController extends Controller
 {
+    public function create(string $slug)
+    {
+        abort_unless(array_key_exists($slug, Page::SITE_INFO_PAGES), 404);
+
+        if (Page::where('slug', $slug)->exists()) {
+            return redirect()->route('admin.site-pages.edit', $slug);
+        }
+
+        return view('admin.pages.create', [
+            'creatingSiteInfo' => true,
+            'sitePageSlug' => $slug,
+            'sitePageLabel' => Page::SITE_INFO_PAGES[$slug],
+            'draft' => null,
+        ]);
+    }
+
+    public function store(Request $request, string $slug)
+    {
+        abort_unless(array_key_exists($slug, Page::SITE_INFO_PAGES), 404);
+
+        if (Page::where('slug', $slug)->exists()) {
+            return redirect()->route('admin.site-pages.edit', $slug);
+        }
+
+        // The URL identifies one of the fixed site-information pages; keep its
+        // canonical slug and label even if the submitted form is altered.
+        $request->merge([
+            'slug' => $slug,
+            'title' => Page::SITE_INFO_PAGES[$slug],
+        ]);
+
+        return app(PageController::class)->store($request, 'admin.site-pages.index');
+    }
+
     /**
      * The site-information pages, in display order, each paired with its
      * database row when one exists.

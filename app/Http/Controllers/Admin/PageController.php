@@ -146,7 +146,7 @@ class PageController extends Controller
             : mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 
-    public function store(Request $request)
+    public function store(Request $request, ?string $redirectTo = null)
     {
         $validated = $request->validate([
         'title'             => 'required|string|max:255',
@@ -205,7 +205,7 @@ class PageController extends Controller
         $validated['story_gallery'] = $this->encodeStoryGallery($request);
         $validated['no_robots'] = $request->boolean('no_robots');
 
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $validated) {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $validated, $redirectTo) {
         // Create the page
         $page = Page::create($validated);
 
@@ -245,7 +245,7 @@ class PageController extends Controller
 
         \App\Services\SitemapGenerator::generate();
 
-        return redirect()->route('admin.pages.index')
+        return redirect()->route($redirectTo ?? 'admin.pages.index')
                          ->with('success', 'Page created successfully!');
         });
     }

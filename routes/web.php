@@ -100,8 +100,12 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
         // is the identity, so a missing row is a 404 rather than a create form.
         Route::get('site-pages', [\App\Http\Controllers\Admin\SitePageController::class, 'index'])
             ->name('site-pages.index');
+        Route::get('site-pages/{slug}/create', [\App\Http\Controllers\Admin\SitePageController::class, 'create'])
+            ->name('site-pages.create');
         Route::get('site-pages/{slug}', [\App\Http\Controllers\Admin\SitePageController::class, 'edit'])
             ->name('site-pages.edit');
+        Route::post('site-pages/{slug}', [\App\Http\Controllers\Admin\SitePageController::class, 'store'])
+            ->name('site-pages.store');
         Route::put('site-pages/{slug}', [\App\Http\Controllers\Admin\SitePageController::class, 'update'])
             ->name('site-pages.update');
 

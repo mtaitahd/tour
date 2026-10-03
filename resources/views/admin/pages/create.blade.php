@@ -1,13 +1,13 @@
 @extends('admin.layouts.app')
-@section('title', 'Create Page')
+@section('title', !empty($creatingSiteInfo) ? 'Create ' . $sitePageLabel : 'Create Page')
 
 @section('content')
   <div class="pagetitle">
-    <h1>Create New Page</h1>
+    <h1>{{ !empty($creatingSiteInfo) ? 'Create ' . $sitePageLabel : 'Create New Page' }}</h1>
     <nav>
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('admin.pages.index') }}">Pages</a></li>
+        <li class="breadcrumb-item"><a href="{{ !empty($creatingSiteInfo) ? route('admin.site-pages.index') : route('admin.pages.index') }}">{{ !empty($creatingSiteInfo) ? 'Site Information' : 'Pages' }}</a></li>
         <li class="breadcrumb-item active">Create</li>
       </ol>
     </nav>
@@ -19,8 +19,8 @@
         <div class="card">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-3">
-              <div><h5 class="card-title mb-1">Page Builder</h5><div class="text-muted small">Create and save your page in two clear steps.</div></div>
-              <div class="small text-success" id="page-draft-status" aria-live="polite">Draft not saved yet</div>
+              <div><h5 class="card-title mb-1">{{ !empty($creatingSiteInfo) ? $sitePageLabel . ' Page' : 'Page Builder' }}</h5><div class="text-muted small">Create and save your page in two clear steps.</div></div>
+              <div class="small {{ !empty($creatingSiteInfo) ? 'text-muted' : 'text-success' }}" id="page-draft-status" aria-live="polite">{{ !empty($creatingSiteInfo) ? 'Save the page to create this Site Information entry' : 'Draft not saved yet' }}</div>
             </div>
 
             @if ($errors->any())
@@ -34,7 +34,7 @@
               </div>
             @endif
 
-            <form id="page-builder-form" method="POST" action="{{ route('admin.pages.store') }}" data-update-url="{{ route('admin.pages.update', ['page' => '__PAGE_ID__']) }}" enctype="multipart/form-data" novalidate>
+            <form id="page-builder-form" method="POST" action="{{ !empty($creatingSiteInfo) ? route('admin.site-pages.store', $sitePageSlug) : route('admin.pages.store') }}" data-update-url="{{ route('admin.pages.update', ['page' => '__PAGE_ID__']) }}" enctype="multipart/form-data" novalidate>
               @csrf
               <input type="hidden" name="draft_id" id="page-draft-id" value="{{ old('draft_id', $draft->id ?? '') }}">
               <input type="hidden" name="_method" id="page-method" value="">
@@ -52,15 +52,15 @@
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Title <span class="text-danger">*</span></label>
                 <div class="col-sm-10">
-                  <input type="text" name="title" class="form-control" required value="{{ old('title', request('title')) }}">
+                  <input type="text" name="title" class="form-control" required value="{{ old('title', !empty($creatingSiteInfo) ? $sitePageLabel : request('title')) }}" {{ !empty($creatingSiteInfo) ? 'readonly' : '' }}>
                 </div>
               </div>
 
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Slug</label>
                 <div class="col-sm-10">
-                  <input type="text" name="slug" class="form-control" value="{{ old('slug', request('slug')) }}">
-                  <small class="text-muted">Leave empty to auto-generate from title</small>
+                  <input type="text" name="slug" class="form-control" value="{{ old('slug', !empty($creatingSiteInfo) ? $sitePageSlug : request('slug')) }}" {{ !empty($creatingSiteInfo) ? 'readonly' : '' }}>
+                  <small class="text-muted">{{ !empty($creatingSiteInfo) ? 'This is the fixed URL for this Site Information page.' : 'Leave empty to auto-generate from title' }}</small>
                 </div>
               </div>
 
@@ -152,8 +152,8 @@
                 <button type="button" class="btn btn-outline-secondary page-step-back"><i class="bi bi-arrow-left"></i> Back</button>
               <!-- Submit -->
               <div class="d-flex gap-2 mb-3">
-                  <button type="submit" class="btn btn-primary">Create Page</button>
-                  <a href="{{ route('admin.pages.index') }}" class="btn btn-secondary ms-2">Cancel</a>
+                  <button type="submit" class="btn btn-primary">{{ !empty($creatingSiteInfo) ? 'Create Site Information Page' : 'Create Page' }}</button>
+                  <a href="{{ !empty($creatingSiteInfo) ? route('admin.site-pages.index') : route('admin.pages.index') }}" class="btn btn-secondary ms-2">Cancel</a>
               </div>
               </div>
             </form>
@@ -164,5 +164,5 @@
   </div>
   </section>
 
-  @include('admin.pages.partials.wizard-script', ['autosaveEnabled' => true])
+  @include('admin.pages.partials.wizard-script', ['autosaveEnabled' => empty($creatingSiteInfo)])
 @endsection

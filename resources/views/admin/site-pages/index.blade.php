@@ -97,7 +97,7 @@
                           {{-- No row for this slug yet. Creating it is optional: the
                                screen stays useful without it, and a missing page
                                simply is not linked anywhere. --}}
-                          <a href="{{ route('admin.pages.create') }}?title={{ urlencode($entry['label']) }}&slug={{ urlencode($entry['slug']) }}"
+                          <a href="{{ route('admin.site-pages.create', $entry['slug']) }}"
                              class="btn btn-sm btn-outline-success" title="Create this page">
                             <i class="bi bi-plus-circle"></i> Create
                           </a>
