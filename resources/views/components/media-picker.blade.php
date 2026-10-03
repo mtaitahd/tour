@@ -9,7 +9,7 @@
   @if ($multiple)
     <div class="media-picker-preview media-picker-sortable d-flex flex-wrap gap-2 mb-2">
       @foreach ($selectedImages as $image)
-        <div class="position-relative media-picker-thumb" data-id="{{ $image->id }}" style="cursor: grab;">
+        <div class="position-relative media-picker-thumb" data-id="{{ $image->id }}" data-name="{{ $image->display_title }}" data-thumb-url="{{ $image->getUrl('thumb-webp') ?: $image->getUrl() }}" style="cursor: grab;">
           <img src="{{ $image->getUrl('thumb-webp') ?: $image->getUrl() }}" class="img-thumbnail" style="width: 90px; height: 90px; object-fit: cover;">
           <input type="hidden" name="{{ $name }}[]" value="{{ $image->id }}">
           <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 media-picker-remove" style="padding: 0 4px;">&times;</button>
@@ -22,7 +22,7 @@
   @else
     <div class="media-picker-preview mb-2">
       @if ($selectedImage)
-        <div class="position-relative d-inline-block media-picker-thumb" data-id="{{ $selectedImage->id }}">
+        <div class="position-relative d-inline-block media-picker-thumb" data-id="{{ $selectedImage->id }}" data-name="{{ $selectedImage->display_title }}" data-thumb-url="{{ $selectedImage->getUrl('thumb-webp') ?: $selectedImage->getUrl() }}">
           <img src="{{ $selectedImage->getUrl('thumb-webp') ?: $selectedImage->getUrl() }}" class="img-thumbnail" style="max-height: 160px; object-fit: cover;">
           <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 media-picker-remove">&times;</button>
         </div>
@@ -61,10 +61,8 @@ document.addEventListener('media-picker:selected', function (e) {
     const preview = widget.querySelector('.media-picker-preview');
 
     if (multiple) {
+        preview.innerHTML = '';
         images.forEach(function (image) {
-            if (preview.querySelector(`.media-picker-thumb[data-id="${image.id}"]`)) {
-                return; // already added
-            }
             const wrapper = document.createElement('div');
             wrapper.className = 'position-relative media-picker-thumb';
             wrapper.style.cursor = 'grab';
@@ -74,6 +72,8 @@ document.addEventListener('media-picker:selected', function (e) {
                 <input type="hidden" name="${inputName}[]" value="${image.id}">
                 <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 media-picker-remove" style="padding: 0 4px;">&times;</button>
             `;
+            wrapper.dataset.name = image.display_title || image.name || 'Selected image';
+            wrapper.dataset.thumbUrl = image.thumb_url;
             preview.appendChild(wrapper);
         });
     } else {
@@ -84,6 +84,9 @@ document.addEventListener('media-picker:selected', function (e) {
                 <img src="${image.thumb_url}" class="img-thumbnail" style="max-height: 160px; object-fit: cover;">
                 <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 media-picker-remove">&times;</button>
             </div>`;
+        const thumb = preview.querySelector('.media-picker-thumb');
+        thumb.dataset.name = image.display_title || image.name || 'Selected image';
+        thumb.dataset.thumbUrl = image.thumb_url;
         const input = widget.querySelector('.media-picker-input');
         if (input) input.value = image.id;
     }

@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let searchTimeout = null;
 
         function updateFooter() {
-            confirmBtn.disabled = selected.size === 0;
+            confirmBtn.disabled = !multiple && selected.size === 0;
             summaryEl.textContent = selected.size === 0
                 ? 'No image selected'
                 : (selected.size === 1
@@ -95,18 +95,40 @@ document.addEventListener('DOMContentLoaded', function () {
                     : `${selected.size} images selected`);
         }
 
+        function setCardSelected(cardEl, isSelected) {
+            cardEl.classList.toggle('border-primary', isSelected);
+            cardEl.classList.toggle('border-3', isSelected);
+            const existingMark = cardEl.querySelector('.picker-selected-check');
+            if (existingMark) existingMark.remove();
+            if (!isSelected) return;
+
+            const mark = document.createElement('span');
+            mark.className = 'picker-selected-check';
+            mark.setAttribute('role', 'img');
+            mark.setAttribute('aria-label', 'Selected');
+            mark.textContent = '✓';
+            Object.assign(mark.style, {
+                position: 'absolute', top: '6px', right: '6px', zIndex: '2',
+                width: '28px', height: '28px', borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: '#198754', color: '#fff', fontSize: '18px',
+                fontWeight: '700', boxShadow: '0 1px 5px rgba(0,0,0,.35)',
+            });
+            cardEl.appendChild(mark);
+        }
+
         function toggleSelect(image, cardEl) {
             if (!multiple) {
                 selected.clear();
-                resultsEl.querySelectorAll('.picker-item').forEach(el => el.classList.remove('border-primary', 'border-3'));
+                resultsEl.querySelectorAll('.picker-item').forEach(el => setCardSelected(el, false));
             }
 
             if (selected.has(image.id)) {
                 selected.delete(image.id);
-                cardEl.classList.remove('border-primary', 'border-3');
+                setCardSelected(cardEl, false);
             } else {
                 selected.set(image.id, image);
-                cardEl.classList.add('border-primary', 'border-3');
+                setCardSelected(cardEl, true);
             }
 
             updateFooter();
@@ -127,9 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const card = document.createElement('div');
                 card.className = 'card picker-item border';
                 card.style.cursor = 'pointer';
-                if (selected.has(image.id)) {
-                    card.classList.add('border-primary', 'border-3');
-                }
+                card.style.position = 'relative';
 
                 const img = document.createElement('img');
                 img.src = image.thumb_url;
@@ -140,6 +160,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 img.loading = 'lazy';
 
                 card.appendChild(img);
+                setCardSelected(card, selected.has(image.id));
                 card.addEventListener('click', () => toggleSelect(image, card));
                 col.appendChild(card);
                 resultsEl.appendChild(col);
@@ -190,7 +211,22 @@ document.addEventListener('DOMContentLoaded', function () {
         categorySelect.addEventListener('change', () => search(1));
         sortSelect.addEventListener('change', () => search(1));
 
-        modalEl.addEventListener('show.bs.modal', () => search(1));
+        modalEl.addEventListener('show.bs.modal', function () {
+            selected.clear();
+            const pickerId = modalEl.id.replace('picker-', '');
+            const widget = document.querySelector(`.media-picker[data-picker-id="${pickerId}"]`);
+            widget?.querySelectorAll('.media-picker-thumb[data-id]').forEach(function (thumb) {
+                const id = Number(thumb.dataset.id);
+                const image = thumb.querySelector('img');
+                selected.set(id, {
+                    id: id,
+                    name: thumb.dataset.name || image?.alt || 'Selected image',
+                    thumb_url: thumb.dataset.thumbUrl || image?.src || '',
+                });
+            });
+            updateFooter();
+            search(1);
+        });
 
         confirmBtn.addEventListener('click', function () {
             const event = new CustomEvent('media-picker:selected', {
