@@ -14,14 +14,30 @@ class ManagerListController extends Controller
 {
     public function index()
     {
-        $lists = ManagerList::orderBy('order')->orderBy('title')->paginate(25);
-
-        return view('admin.manager-lists.index', compact('lists'));
+        return redirect()->route('admin.manager-lists.tours');
     }
 
-    public function create()
+    public function tours()
     {
-        return view('admin.manager-lists.form', $this->formData(new ManagerList(['content_type' => 'tours', 'status' => 'draft'])));
+        return $this->listing('tours');
+    }
+
+    public function pages()
+    {
+        return $this->listing('pages');
+    }
+
+    private function listing(string $type)
+    {
+        $lists = ManagerList::where('content_type', $type)->orderBy('order')->orderBy('title')->paginate(25);
+
+        return view('admin.manager-lists.index', ['lists' => $lists, 'listType' => $type]);
+    }
+
+    public function create(Request $request)
+    {
+        $type = $request->query('type') === 'pages' ? 'pages' : 'tours';
+        return view('admin.manager-lists.form', $this->formData(new ManagerList(['content_type' => $type, 'status' => 'draft'])));
     }
 
     public function store(Request $request)
@@ -31,7 +47,10 @@ class ManagerListController extends Controller
         $validated = $this->normaliseContent($validated);
         ManagerList::create($validated);
 
-        return redirect()->route('admin.manager-lists.index')->with('success', 'Listing created successfully.');
+        $redirect = route($validated['content_type'] === 'pages' ? 'admin.manager-lists.pages' : 'admin.manager-lists.tours');
+        return $request->expectsJson()
+            ? response()->json(['message' => 'Listing created successfully.', 'redirect' => $redirect])
+            : redirect($redirect)->with('success', 'Listing created successfully.');
     }
 
     public function edit(ManagerList $managerList)
@@ -45,14 +64,18 @@ class ManagerListController extends Controller
         $validated['slug'] = $this->uniqueSlug($validated['slug'] ?: $validated['title'], $managerList->id);
         $managerList->update($this->normaliseContent($validated));
 
-        return redirect()->route('admin.manager-lists.index')->with('success', 'Listing updated successfully.');
+        $redirect = route($managerList->content_type === 'pages' ? 'admin.manager-lists.pages' : 'admin.manager-lists.tours');
+        return $request->expectsJson()
+            ? response()->json(['message' => 'Listing updated successfully.', 'redirect' => $redirect])
+            : redirect($redirect)->with('success', 'Listing updated successfully.');
     }
 
     public function destroy(ManagerList $managerList)
     {
+        $type = $managerList->content_type;
         $managerList->delete();
 
-        return redirect()->route('admin.manager-lists.index')->with('success', 'Listing deleted.');
+        return redirect()->route($type === 'pages' ? 'admin.manager-lists.pages' : 'admin.manager-lists.tours')->with('success', 'Listing deleted.');
     }
 
     private function validated(Request $request, ?ManagerList $list = null): array
@@ -60,7 +83,7 @@ class ManagerListController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('manager_lists', 'slug')->ignore($list?->id)],
-            'content_type' => ['required', Rule::in(['tours', 'pages'])],
+            'content_type' => ['required', $list ? Rule::in([$list->content_type]) : Rule::in(['tours', 'pages'])],
             'caption' => ['nullable', 'string', 'max:500'],
             'introduction' => ['nullable', 'string'],
             'category_ids' => ['required_if:content_type,tours', 'array', 'min:1'],
@@ -109,6 +132,7 @@ class ManagerListController extends Controller
     {
         return [
             'managerList' => $managerList,
+            'listType' => $managerList->content_type,
             'categories' => TourCategory::orderBy('order')->orderBy('name')->get(['id', 'name']),
             'pages' => Page::where('status', 'published')->whereNotIn('slug', Page::siteInfoSlugs())->orderBy('title')->get(['id', 'title', 'slug']),
         ];

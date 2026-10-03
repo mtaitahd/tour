@@ -42,11 +42,21 @@
     @endif
 
     @if($can('manager-lists'))
-        <li class="nav-item {{ $currentPage === 'manager-lists' ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('admin.manager-lists.index') }}">
+        @php $managerListSection = $currentPage === 'manager-lists'; $managerListType = request()->segment(3); @endphp
+        <li class="nav-item {{ $managerListSection ? 'active' : '' }}">
+            <a class="nav-link {{ $managerListSection ? '' : 'collapsed' }}" href="#" data-bs-target="#manager-lists-nav" data-bs-toggle="collapse" aria-expanded="{{ $managerListSection ? 'true' : 'false' }}">
                 <i class="fas fa-fw fa-list-alt"></i>
                 <span>Manager Lists</span>
+                <i class="fas fa-chevron-down ms-auto"></i>
             </a>
+            <div id="manager-lists-nav" class="collapse {{ $managerListSection ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
+                <a class="nav-link {{ $managerListType === 'tours' || ($managerListSection && $managerListType === 'create' && request('type') !== 'pages') ? 'active' : '' }}" href="{{ route('admin.manager-lists.tours') }}">
+                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i><span>Manager Tour Lists</span>
+                </a>
+                <a class="nav-link {{ $managerListType === 'pages' || ($managerListSection && $managerListType === 'create' && request('type') === 'pages') ? 'active' : '' }}" href="{{ route('admin.manager-lists.pages') }}">
+                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i><span>Manager Page Lists</span>
+                </a>
+            </div>
         </li>
     @endif
 

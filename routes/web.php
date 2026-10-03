@@ -81,6 +81,8 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
     });
 
     Route::middleware('permission:manager-lists')->group(function () {
+        Route::get('manager-lists/tours', [\App\Http\Controllers\Admin\ManagerListController::class, 'tours'])->name('manager-lists.tours');
+        Route::get('manager-lists/pages', [\App\Http\Controllers\Admin\ManagerListController::class, 'pages'])->name('manager-lists.pages');
         Route::resource('manager-lists', \App\Http\Controllers\Admin\ManagerListController::class)
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     });
