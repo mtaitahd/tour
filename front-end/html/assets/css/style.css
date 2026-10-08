@@ -30203,6 +30203,7 @@ body.td-lock { overflow: hidden; }
     .avf-grid { grid-template-columns: 1fr 1fr; gap: 28px 22px; }
     .avf-inner { width: 92%; padding: 46px 0 30px; }
     .avf-about { flex-direction: column; gap: 16px; }
+    .avf-about-text { flex: 0 0 auto; }
     .avf-copyright-inner { padding-right: 84px; }
 }
 @media (max-width: 520px) {
@@ -32771,6 +32772,11 @@ body.av-no-scroll { overflow: hidden; }
     width: 180px;
     height: 72px;
   }
+
+  .scw__tl-track,
+  .scw__tl-tick {
+    min-width: 0;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -32811,7 +32817,7 @@ body.av-no-scroll { overflow: hidden; }
   }
 
   .scw__wall {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     height: auto;
     gap: 12px;
   }
@@ -32820,6 +32826,8 @@ body.av-no-scroll { overflow: hidden; }
   .scw__stage {
     order: 1;
     height: auto;
+    aspect-ratio: 16 / 10;
+    min-width: 0;
     border-radius: 6px;
   }
 
@@ -33692,7 +33700,7 @@ body { overflow-x: clip; }
 /* Already has extensive rules — add 430px and 360px for completeness */
 
 @media (max-width: 430px) {
-  .scw__stage { height: auto; min-height: 220px; }
+  .scw__stage { height: auto; min-height: 220px; max-width: 100%; }
   .scw__frame-title { font-size: clamp(18px, 5vw, 22px); }
   .scw__explore { width: 64px; height: 64px; }
   .scw__explore-play svg { width: 22px; height: 22px; }
