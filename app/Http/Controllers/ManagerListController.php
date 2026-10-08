@@ -8,7 +8,6 @@ use App\Models\ManagerList;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Models\TourCategory;
-use App\Models\TourPackage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -73,9 +72,7 @@ class ManagerListController extends Controller
             }
 
             $categoryIds = array_map('intval', $managerList->category_ids ?: []);
-            $baseQuery = TourPackage::where('status', 'published')
-                ->where('no_robots', false)
-                ->whereHas('categories', fn ($query) => $query->whereIn('tour_categories.id', $categoryIds ?: [0]));
+            $baseQuery = $managerList->scopedTours();
             $query = (clone $baseQuery)->with(['categories', 'destinations'])
                 ->orderByDesc('is_featured')->orderBy('order')->orderBy('title');
 
@@ -136,9 +133,16 @@ class ManagerListController extends Controller
 
             $items = $query->paginate(10)->withQueryString();
             $scopedTourIds = (clone $baseQuery)->select('tour_packages.id');
+            // Facet options follow the same group order as the admin form
+            // (country, region, tour type, duration, then listing categories)
+            // so the sidebar can render one labelled block per group.
+            $typeOrder = array_merge(array_keys(TourCategory::FORM_GROUPS), [TourCategory::TYPE_CATEGORY]);
+            $typeRank = fn (TourCategory $category) => (($index = array_search($category->type, $typeOrder, true)) === false ? count($typeOrder) : $index);
             $categories = TourCategory::whereIn('id', $categoryIds)
                 ->whereHas('tourPackages', fn ($q) => $q->whereIn('tour_packages.id', clone $scopedTourIds))
-                ->orderBy('order')->orderBy('name')->get();
+                ->get()
+                ->sortBy(fn (TourCategory $category) => sprintf('%02d|%04d|%s', $typeRank($category), $category->order, $category->name))
+                ->values();
             $allDestinations = Destination::whereHas('tours', fn ($q) => $q->whereIn('tour_packages.id', clone $scopedTourIds))
                 ->withCount(['tours' => fn ($q) => $q->whereIn('tour_packages.id', clone $scopedTourIds)])
                 ->orderBy('name')->get();

@@ -147,16 +147,16 @@
                                 <input type="number" name="price_max" min="{{ $priceSliderMin }}" max="{{ $priceSliderMax }}" placeholder="{{ number_format($priceSliderMax) }}" value="{{ $priceMaxValue }}" data-sfb-auto>
                             </div>
                         </section>
-                        @if(($facets['categories'] ?? collect())->isNotEmpty())
-                            <section class="sfb-filter-section" aria-labelledby="manager-type-title">
-                                <h3 id="manager-type-title">Tour Type</h3>
+                        @foreach(($facets['categories'] ?? collect())->groupBy('type') as $type => $group)
+                            <section class="sfb-filter-section" aria-labelledby="manager-cat-{{ $type }}-title">
+                                <h3 id="manager-cat-{{ $type }}-title">{{ \App\Models\TourCategory::typeLabel((string) $type) }}</h3>
                                 <div class="sfb-check-list">
-                                    @foreach($facets['categories'] as $category)
+                                    @foreach($group as $category)
                                         <label><input type="checkbox" name="categories[]" value="{{ $category->slug }}" {{ $selectedCategorySlugs->contains($category->slug) ? 'checked' : '' }} data-sfb-auto><span>{{ $category->name }}</span></label>
                                     @endforeach
                                 </div>
                             </section>
-                        @endif
+                        @endforeach
                         <section class="sfb-filter-section" aria-labelledby="manager-accommodation-title">
                             <h3 id="manager-accommodation-title">Accommodation</h3>
                             <div class="sfb-check-list">

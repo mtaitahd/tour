@@ -229,8 +229,7 @@ class SitemapGenerator
 
         foreach (ManagerList::where('status', 'published')->where('no_robots', false)->get() as $managerList) {
             $hasSelection = $managerList->content_type === 'tours'
-                ? ! empty($managerList->category_ids) && TourPackage::where('status', 'published')->where('no_robots', false)
-                    ->whereHas('categories', fn ($query) => $query->whereIn('tour_categories.id', $managerList->category_ids))->exists()
+                ? $managerList->scopedTours()->exists()
                 : ! empty($managerList->page_ids) && Page::where('status', 'published')->where('no_robots', false)
                     ->whereNotIn('slug', Page::siteInfoSlugs())->whereIn('id', $managerList->page_ids)->exists();
             if (! $hasSelection) {

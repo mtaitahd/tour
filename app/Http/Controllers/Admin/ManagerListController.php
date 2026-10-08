@@ -43,7 +43,7 @@ class ManagerListController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validated($request);
-        $validated['slug'] = $this->uniqueSlug($validated['slug'] ?: $validated['title']);
+        $validated['slug'] = $this->uniqueSlug(($validated['slug'] ?? '') ?: $validated['title']);
         $validated = $this->normaliseContent($validated);
         ManagerList::create($validated);
 
@@ -61,7 +61,7 @@ class ManagerListController extends Controller
     public function update(Request $request, ManagerList $managerList)
     {
         $validated = $this->validated($request, $managerList);
-        $validated['slug'] = $this->uniqueSlug($validated['slug'] ?: $validated['title'], $managerList->id);
+        $validated['slug'] = $this->uniqueSlug(($validated['slug'] ?? '') ?: $validated['title'], $managerList->id);
         $managerList->update($this->normaliseContent($validated));
 
         $redirect = route($managerList->content_type === 'pages' ? 'admin.manager-lists.pages' : 'admin.manager-lists.tours');
@@ -130,13 +130,22 @@ class ManagerListController extends Controller
 
     private function formData(ManagerList $managerList): array
     {
+        // Every option — the grouped taxonomy rows (country, region, tour
+        // type, duration) and the legacy listing categories — lives in
+        // tour_categories, so the form ticks them all into the same
+        // category_ids column the public /collections/{slug} scope reads.
+        // Rows are offered regardless of status so an option deactivated
+        // after being ticked still shows on edit instead of vanishing.
+        $categoryGroups = collect(TourCategory::FORM_GROUPS)
+            ->mapWithKeys(fn (string $label, string $type) => [
+                $type => TourCategory::where('type', $type)
+                    ->orderBy('order')->orderBy('name')->get(['id', 'name', 'status']),
+            ]);
+
         return [
             'managerList' => $managerList,
             'listType' => $managerList->content_type,
-            // Scoped to the legacy listing categories: manager lists build public
-            // /collections/{slug} pages from the same categories that power the
-            // /{slug} tour pages — group rows (country/region/…) belong to the
-            // tour-form dropdowns, not to collection scoping.
+            'categoryGroups' => $categoryGroups,
             'categories' => TourCategory::where('type', TourCategory::TYPE_CATEGORY)
                 ->orderBy('order')->orderBy('name')->get(['id', 'name']),
             'pages' => Page::where('status', 'published')->whereNotIn('slug', Page::siteInfoSlugs())->orderBy('title')->get(['id', 'title', 'slug']),

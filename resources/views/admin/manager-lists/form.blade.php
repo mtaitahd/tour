@@ -22,8 +22,19 @@
         <div class="row mb-3"><label class="col-md-2 col-form-label">Introduction</label><div class="col-md-10"><textarea class="form-control tinymce-editor" name="introduction" rows="8">{{ old('introduction', $managerList->introduction) }}</textarea><small class="text-muted">Write the descriptive content shown around the card listing.</small></div></div>
 
         @if($listType === 'tours')<div class="row mb-3"><label class="col-md-2 col-form-label">Tour categories *</label><div class="col-md-10">
-            <div class="border rounded p-3" style="max-height:240px;overflow:auto">@forelse($categories as $category)<label class="d-block mb-2"><input type="checkbox" name="category_ids[]" value="{{ $category->id }}" @checked(in_array((string) $category->id, $selectedCategories, true))> {{ $category->name }}</label>@empty<p class="text-muted mb-0">No tour categories exist yet.</p>@endforelse</div>
-            <small class="text-muted">The public list combines published tours assigned to any selected category.</small>
+            <div class="row g-3">
+                @foreach($categoryGroups as $type => $group)<div class="col-md-6 col-xl">
+                    <div class="border rounded p-3 h-100" style="max-height:240px;overflow:auto"><strong class="d-block mb-2">{{ \App\Models\TourCategory::typeLabel($type) }}</strong>
+                        @forelse($group as $category)<label class="d-block mb-1"><input type="checkbox" name="category_ids[]" value="{{ $category->id }}" @checked(in_array((string) $category->id, $selectedCategories, true))> {{ $category->name }}</label>@empty<p class="text-muted mb-0">No options in this group yet.</p>@endforelse
+                    </div>
+                </div>@endforeach
+                <div class="col-md-6 col-xl">
+                    <div class="border rounded p-3 h-100" style="max-height:240px;overflow:auto"><strong class="d-block mb-2">Listing Categories</strong>
+                        @forelse($categories as $category)<label class="d-block mb-1"><input type="checkbox" name="category_ids[]" value="{{ $category->id }}" @checked(in_array((string) $category->id, $selectedCategories, true))> {{ $category->name }}</label>@empty<p class="text-muted mb-0">No listing categories exist yet.</p>@endforelse
+                    </div>
+                </div>
+            </div>
+            <small class="text-muted">The public list shows published tours matching every selected group (e.g. Country + Tour Type) and any option ticked within one group (e.g. Tanzania + Kenya). At least one category is required.</small>
         </div></div>
         @else<div class="row mb-3"><label class="col-md-2 col-form-label">Pages to display *</label><div class="col-md-10">
             <div class="border rounded p-3" style="max-height:240px;overflow:auto">@forelse($pages as $page)<label class="d-block mb-2"><input type="checkbox" name="page_ids[]" value="{{ $page->id }}" @checked(in_array((string) $page->id, $selectedPages, true))> {{ $page->title }} <small class="text-muted">/{{ $page->slug }}</small></label>@empty<p class="text-muted mb-0">No published pages are available.</p>@endforelse</div>
