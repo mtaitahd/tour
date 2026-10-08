@@ -11,6 +11,7 @@ use App\Services\PricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class TourPackageController extends Controller
@@ -143,6 +144,14 @@ class TourPackageController extends Controller
             'destinations.*'                                => 'integer|exists:destinations,id',
             'categories'                                    => 'nullable|array',
             'categories.*'                                  => 'integer|exists:tour_categories,id',
+            // Grouped classification dropdowns. Each must point at a row of the
+            // matching type — a plain exists: check would happily accept a region
+            // id in the country select, silently attaching the tour to the wrong
+            // group. Group types are defined in TourCategory::FORM_GROUPS.
+            'country_id'                                    => ['nullable', 'integer', Rule::exists('tour_categories', 'id')->where('type', 'country')],
+            'region_id'                                     => ['nullable', 'integer', Rule::exists('tour_categories', 'id')->where('type', 'region')],
+            'tour_type_id'                                  => ['nullable', 'integer', Rule::exists('tour_categories', 'id')->where('type', 'tour_type')],
+            'duration_id'                                   => ['nullable', 'integer', Rule::exists('tour_categories', 'id')->where('type', 'duration')],
             'activities'                                    => 'nullable|array',
             'activities.*'                                  => 'integer|exists:activities,id',
             'mountain_id'                                   => 'nullable|integer|exists:mountains,id',
@@ -427,7 +436,7 @@ class TourPackageController extends Controller
         // selection instead of removing it. Both forms always render these fields,
         // so an absent key genuinely means "none".
         $tourPackage->destinations()->sync((array) $request->input('destinations', []));
-        $tourPackage->categories()->sync((array) $request->input('categories', []));
+        $tourPackage->categories()->sync($this->mergedCategoryIds($request));
         $tourPackage->activities()->sync((array) $request->input('activities', []));
 
         // ── Phase 2 Pricing ──────────────────────────────────────────────────
@@ -464,6 +473,11 @@ public function edit(TourPackage $tourPackage)
             'destinations.*'                                => 'integer|exists:destinations,id',
             'categories'                                    => 'nullable|array',
             'categories.*'                                  => 'integer|exists:tour_categories,id',
+            // Grouped classification dropdowns — type-checked exactly as in store().
+            'country_id'                                    => ['nullable', 'integer', Rule::exists('tour_categories', 'id')->where('type', 'country')],
+            'region_id'                                     => ['nullable', 'integer', Rule::exists('tour_categories', 'id')->where('type', 'region')],
+            'tour_type_id'                                  => ['nullable', 'integer', Rule::exists('tour_categories', 'id')->where('type', 'tour_type')],
+            'duration_id'                                   => ['nullable', 'integer', Rule::exists('tour_categories', 'id')->where('type', 'duration')],
             'activities'                                    => 'nullable|array',
             'activities.*'                                  => 'integer|exists:activities,id',
             'mountain_id'                                   => 'nullable|integer|exists:mountains,id',
@@ -772,7 +786,7 @@ public function edit(TourPackage $tourPackage)
         // when everything is deselected, so "clear all" left the old rows attached
         // and the admin could never unassign a category, activity or destination.
         $tourPackage->destinations()->sync((array) $request->input('destinations', []));
-        $tourPackage->categories()->sync((array) $request->input('categories', []));
+        $tourPackage->categories()->sync($this->mergedCategoryIds($request));
         $tourPackage->activities()->sync((array) $request->input('activities', []));
 
         // ── Group Departures ──────────────────────────────────────────────────
@@ -1129,5 +1143,30 @@ $tourPackage->groupDepartures()->delete();
         }
 
         return $float;
+    }
+
+    /**
+     * The single ID set written to tour_category_tour_package.
+     *
+     * The grouped classification selects (country_id, region_id, tour_type_id,
+     * duration_id) and the legacy "Listing Categories" checkboxes (categories[])
+     * are two UI views of the same pivot. Merging them here keeps both entry
+     * points working: older clients / draft payloads posting only categories[],
+     * and the new grouped selects. Each *_id posts at most one row (single
+     * select), and duplicates are dropped so sync() never sees a row twice.
+     */
+    private function mergedCategoryIds(Request $request): array
+    {
+        $ids = array_map('intval', (array) $request->input('categories', []));
+
+        foreach (array_keys(\App\Models\TourCategory::FORM_GROUPS) as $type) {
+            $value = $request->input($type . '_id');
+
+            if ($value !== null && $value !== '') {
+                $ids[] = (int) $value;
+            }
+        }
+
+        return array_values(array_unique($ids));
     }
 }

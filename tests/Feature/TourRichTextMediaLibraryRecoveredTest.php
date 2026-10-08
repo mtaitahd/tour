@@ -24,7 +24,7 @@ use Tests\TestCase;
  * editor the Overview gets, which tools its toolbar carries, and that the button
  * opens a picker that inserts the library image rather than a thumbnail.
  */
-class TourRichTextMediaLibraryTest extends TestCase
+class TourRichTextMediaLibraryRecoveredTest extends TestCase
 {
     use RefreshDatabase;
 

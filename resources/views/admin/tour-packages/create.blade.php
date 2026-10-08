@@ -157,16 +157,26 @@
 </div>
 </div>
 
-<!-- Tour Categories -->
+<!-- Classification: grouped dropdowns (Country / Region / Tour Type / Duration)
+     plus the fixed Physical Rating & Tour Level lists, each with inline "+ Add"
+     for the dynamic groups. Options load from tour_categories by type. -->
+@include('admin.tour-packages.partials.classification-picker', ['tourPackage' => null])
+
+<!-- Listing Categories — the public /{slug} tour pages (legacy flat taxonomy,
+     kept exactly as before for backward compatibility). -->
 @include('admin.tour-packages.partials.checkbox-picker', [
-    'pickerLabel'   => 'Categories',
+    'pickerLabel'   => 'Listing Categories',
     'fieldName'     => 'categories',
-    'pickerOptions' => \App\Models\TourCategory::orderBy('order')->orderBy('name')->get()
+    'pickerOptions' => \App\Models\TourCategory::where('type', \App\Models\TourCategory::TYPE_CATEGORY)
+                          ->orderBy('order')->orderBy('name')->get()
                           ->map(fn ($category) => ['value' => $category->id, 'label' => $category->name])
                           ->all(),
-    'pickerHelp'    => 'Select every category this tour should appear under. Manage them under Tours & Packages &rarr; Categories.',
+    'pickerHelp'    => 'Select every public listing page this tour should appear under (e.g. Tanzania Tours). Manage them under Tours & Packages &rarr; Categories.',
     'idPrefix'      => 'tour-create',
 ])
+
+<!-- Available Months — 12 checkboxes + a Select all toggle -->
+@include('admin.tour-packages.partials.available-months', ['tourPackage' => null, 'idPrefix' => 'tour-create'])
 
 <!-- Activities -->
 @include('admin.tour-packages.partials.checkbox-picker', [
@@ -210,32 +220,8 @@
 <h5 class="card-title">Pricing &amp; Trip Setup</h5>
 @include('admin.tour-packages.partials.pricing.selector', ['tourPackage' => null])
 
-<!-- Level & Rating -->
-<div class="row mb-3">
-<label class="col-sm-2 col-form-label">Physical Rating</label>
-<div class="col-sm-10">
-<select name="physical_rating" class="form-select">
-<option value="relaxing">Relaxing</option>
-<option value="easy">Easy</option>
-<option value="moderate" selected>Moderate</option>
-<option value="complex">Complex</option>
-<option value="super_complex">Super Complex</option>
-</select>
-</div>
-</div>
-<div class="row mb-3">
-<label class="col-sm-2 col-form-label">Tour Level</label>
-<div class="col-sm-10">
-<select name="tour_level" class="form-select">
-<option value="budget_camping">Camping</option>
-<option value="budget_lodge">Budget</option>
-<option value="mid_range" selected>Mid-Range</option>
-<option value="luxury">Luxury</option>
-</select>
-</div>
-</div>
-<!-- Available Months — 12 checkboxes + a Select all toggle -->
-@include('admin.tour-packages.partials.available-months', ['tourPackage' => null, 'idPrefix' => 'tour-create'])
+{{-- Physical Rating, Tour Level and Available Months moved to Step 1's
+     Classification block so every classification control lives together. --}}
 <div class="row mb-3">
   <label class="col-sm-2 col-form-label fw-bold">Hero Image (main cover)</label>
   <div class="col-sm-10"><x-media-picker name="hero_image_id" :selected="old('hero_image_id')" label="Select from Media Library" /><small class="text-muted d-block mt-1">Choose an existing image from the library.</small></div>

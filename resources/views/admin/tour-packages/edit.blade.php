@@ -173,20 +173,34 @@
                   'rowClass' => 'mb-4 mt-5',
               ])
 
-              <!-- Categories and Activities power the public category listing pages
-                   (e.g. /tanzania-tours) and the tour detail page; a tour can belong
-                   to more than one of each. Both are the same partial the create
-                   form uses, so the two forms cannot drift apart. -->
+              <!-- Classification: grouped dropdowns (Country / Region / Tour
+                   Type / Duration) pre-selected from this tour's pivot rows,
+                   plus the fixed Physical Rating / Tour Level lists. Each dynamic
+                   group has an inline "+ Add" for missing options. -->
+              @include('admin.tour-packages.partials.classification-picker', ['tourPackage' => $tourPackage])
+
+              <!-- Listing Categories power the public category listing pages
+                   (e.g. /tanzania-tours) and the tour detail page; a tour can
+                   belong to more than one. Same partial as the create form, scoped
+                   to the legacy listing-category type so group rows never appear
+                   as checkboxes here. -->
               @include('admin.tour-packages.partials.checkbox-picker', [
-                  'pickerLabel'   => 'Categories',
+                  'pickerLabel'   => 'Listing Categories',
                   'fieldName'     => 'categories',
-                  'pickerOptions' => \App\Models\TourCategory::orderBy('order')->orderBy('name')->get()
+                  'pickerOptions' => \App\Models\TourCategory::where('type', \App\Models\TourCategory::TYPE_CATEGORY)
+                                        ->orderBy('order')->orderBy('name')->get()
                                         ->map(fn ($category) => ['value' => $category->id, 'label' => $category->name])
                                         ->all(),
-                  'pickerHelp'    => 'Select every category this tour should appear under (e.g. Tanzania Tours, Kilimanjaro Climbing Package). Manage them under Tours &amp; Packages &rarr; Categories.',
-                  'selected'      => $tourPackage->categories->pluck('id')->toArray(),
+                  'pickerHelp'    => 'Select every public listing page this tour should appear under (e.g. Tanzania Tours, Kilimanjaro Climbing Package). Manage them under Tours &amp; Packages &rarr; Categories.',
+                  'selected'      => $tourPackage->categories
+                                        ->filter(fn ($category) => $category->type === \App\Models\TourCategory::TYPE_CATEGORY)
+                                        ->pluck('id')->toArray(),
                   'idPrefix'      => 'tour-edit',
               ])
+
+              <!-- Available Months — 12 checkboxes + a Select all toggle -->
+              @include('admin.tour-packages.partials.available-months', ['tourPackage' => $tourPackage, 'idPrefix' => 'tour-edit'])
+
 
               @include('admin.tour-packages.partials.checkbox-picker', [
                   'pickerLabel'   => 'Activities',
@@ -254,35 +268,10 @@
                   'existingCalculationPayload' => $existingCalculationPayload,
               ])
 
-              <!-- Physical Rating -->
-              <div class="row mb-3">
-                <label class="col-sm-2 col-form-label">Physical Rating</label>
-                <div class="col-sm-10">
-                  <select name="physical_rating" class="form-select">
-                    <option value="relaxing"     {{ old('physical_rating', $tourPackage->physical_rating) == 'relaxing'     ? 'selected' : '' }}>Relaxing</option>
-                    <option value="easy"         {{ old('physical_rating', $tourPackage->physical_rating) == 'easy'         ? 'selected' : '' }}>Easy</option>
-                    <option value="moderate"     {{ old('physical_rating', $tourPackage->physical_rating) == 'moderate'     ? 'selected' : '' }}>Moderate</option>
-                    <option value="complex"      {{ old('physical_rating', $tourPackage->physical_rating) == 'complex'      ? 'selected' : '' }}>Complex</option>
-                    <option value="super_complex"{{ old('physical_rating', $tourPackage->physical_rating) == 'super_complex'? 'selected' : '' }}>Super Complex</option>
-                  </select>
-                </div>
-              </div>
+              {{-- Physical Rating, Tour Level and Available Months moved to Step 1's
+                   Classification block so every classification control lives
+                   together (same layout as the create form). --}}
 
-              <!-- Tour Level -->
-              <div class="row mb-3">
-                <label class="col-sm-2 col-form-label">Tour Level</label>
-                <div class="col-sm-10">
-                  <select name="tour_level" class="form-select">
-                    <option value="budget_camping"{{ old('tour_level', $tourPackage->tour_level) == 'budget_camping'? 'selected' : '' }}>Camping</option>
-                    <option value="budget_lodge"  {{ old('tour_level', $tourPackage->tour_level) == 'budget_lodge'  ? 'selected' : '' }}>Budget</option>
-                    <option value="mid_range"     {{ old('tour_level', $tourPackage->tour_level) == 'mid_range'     ? 'selected' : '' }}>Mid-Range</option>
-                    <option value="luxury"        {{ old('tour_level', $tourPackage->tour_level) == 'luxury'        ? 'selected' : '' }}>Luxury</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- Available Months — 12 checkboxes + a Select all toggle -->
-              @include('admin.tour-packages.partials.available-months', ['tourPackage' => $tourPackage, 'idPrefix' => 'tour-edit'])
 
 
               <div class="row mb-3">

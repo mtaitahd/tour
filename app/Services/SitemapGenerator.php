@@ -191,7 +191,12 @@ class SitemapGenerator
             ];
         }
 
-        foreach (TourCategory::where('no_robots', false)
+        // Only the public listing categories produce /{slug} URLs. Grouped
+        // taxonomy rows (country/region/tour_type/duration) are tour-form
+        // dropdown options and must not add low-value landing pages
+        // (/private, /1-day, …) to the sitemap.
+        foreach (TourCategory::where('type', TourCategory::TYPE_CATEGORY)
+                     ->where('no_robots', false)
                      ->whereHas('tourPackages', fn ($q) => $q->where('status', 'published'))
                      ->get() as $category) {
             $entries[] = [

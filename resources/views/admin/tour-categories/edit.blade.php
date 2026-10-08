@@ -42,6 +42,31 @@
               </div>
 
               <div class="row mb-3">
+                <label class="col-sm-3 col-form-label">Group *</label>
+                <div class="col-sm-9">
+                  <select name="type" class="form-select">
+                    @foreach (\App\Models\TourCategory::TYPES as $typeOption)
+                      <option value="{{ $typeOption }}" @selected(old('type', $tourCategory->type) === $typeOption)>
+                        {{ \App\Models\TourCategory::typeLabel($typeOption) }}
+                      </option>
+                    @endforeach
+                  </select>
+                  <small class="text-muted">Moving a row to another group changes which tour-form dropdown it fills. Listing Categories power the public <code>/{slug}</code> pages.</small>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label class="col-sm-3 col-form-label">Status</label>
+                <div class="col-sm-9">
+                  <select name="status" class="form-select">
+                    <option value="active" @selected(old('status', $tourCategory->status) === 'active')>Active</option>
+                    <option value="inactive" @selected(old('status', $tourCategory->status) === 'inactive')>Inactive (hidden from pickers)</option>
+                  </select>
+                  <small class="text-muted">Deactivating hides the option from new selections but keeps existing tour assignments intact.</small>
+                </div>
+              </div>
+
+              <div class="row mb-3">
                 <label class="col-sm-3 col-form-label">Slug</label>
                 <div class="col-sm-9">
                   <input type="text" name="slug" class="form-control"

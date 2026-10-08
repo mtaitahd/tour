@@ -25,7 +25,7 @@ use Tests\TestCase;
  *     the admin unticks every box (an empty multi-select is absent from the POST).
  *     "Clear all" therefore silently kept the old rows.
  */
-class TourPackageTaxonomyTest extends TestCase
+class TourPackageTaxonomyRecoveredTest extends TestCase
 {
     use RefreshDatabase;
 

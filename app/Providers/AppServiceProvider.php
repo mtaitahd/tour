@@ -93,8 +93,11 @@ class AppServiceProvider extends ServiceProvider
             // neither menu ever links to an empty listing page. Data-driven rather
             // than hardcoded, so adding a category in the admin automatically makes
             // it appear in both places. Same query shared under both variable names
-            // rather than run twice for what's the same data.
+            // rather than run twice for what's the same data. Scoped to the
+            // public listing categories — group rows (country/region/…) are
+            // tour-form dropdown options, not menu links.
             $tourCategoriesForNav = TourCategory::withPublishedTours()
+                ->where('type', TourCategory::TYPE_CATEGORY)
                 ->orderBy('order')
                 ->orderBy('name')
                 ->get();

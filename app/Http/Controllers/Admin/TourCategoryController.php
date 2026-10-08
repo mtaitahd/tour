@@ -11,16 +11,25 @@ use Str;
 class TourCategoryController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource, grouped by taxonomy type so the admin
+     * sees each classification group (Countries, Regions, Tour Types, Durations,
+     * Listing Categories) as its own block with its own "+ Add" action.
      */
     public function index()
     {
-        $categories = TourCategory::withCount('tourPackages')
+        $all = TourCategory::withCount('tourPackages')
             ->orderBy('order')
             ->orderBy('name')
-            ->paginate(20);
+            ->get();
 
-        return view('admin.tour-categories.index', compact('categories'));
+        // type => collection (only groups that actually have rows are shown,
+        // plus 'category' is always shown so the legacy SEO pages stay visible
+        // even if the admin empties that group).
+        $groups = $all->groupBy('type');
+
+        $categories = $all; // kept for any view/script still expecting the flat list
+
+        return view('admin.tour-categories.index', compact('categories', 'groups', 'all'));
     }
 
     public function create()
@@ -32,6 +41,8 @@ class TourCategoryController extends Controller
     {
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
+            'type'        => 'nullable|in:' . implode(',', TourCategory::TYPES),
+            'status'      => 'nullable|in:' . implode(',', [TourCategory::STATUS_ACTIVE, TourCategory::STATUS_INACTIVE]),
             'slug'        => 'nullable|unique:tour_categories,slug',
             'description' => 'nullable|string',
             'order'       => 'nullable|integer|min:0',
@@ -42,9 +53,13 @@ class TourCategoryController extends Controller
         ]);
 
         if (empty($validated['slug'])) {
-            $validated['slug'] = Str::slug($validated['name']);
+            // Collision-safe: "Tanzania" taken twice yields tanzania-2 instead of
+            // an uncaught DB unique-index violation (500).
+            $validated['slug'] = TourCategory::uniqueSlug(Str::slug($validated['name']) ?: 'category');
         }
 
+        $validated['type']   = $validated['type'] ?? TourCategory::TYPE_CATEGORY;
+        $validated['status'] = $validated['status'] ?? TourCategory::STATUS_ACTIVE;
         $validated['no_robots'] = $request->has('no_robots') ? 1 : 0;
 
         TourCategory::create($validated);
@@ -53,6 +68,36 @@ class TourCategoryController extends Controller
 
         return redirect()->route('admin.tour-categories.index')
                          ->with('success', 'Category created successfully');
+    }
+
+    /**
+     * AJAX endpoint used by the "+ Add Country / + Add Region / …" buttons
+     * inside the Add/Edit Tour Package forms: creates one option in the given
+     * group and returns it as JSON so the form can inject and pre-select a new
+     * <option> without a page reload or leaving the tour workflow.
+     */
+    public function quickStore(Request $request)
+    {
+        $validated = $request->validate([
+            'name'   => 'required|string|max:255',
+            'type'   => 'required|in:' . implode(',', array_keys(TourCategory::FORM_GROUPS)),
+        ]);
+
+        $category = TourCategory::create([
+            'name'   => $validated['name'],
+            'slug'   => TourCategory::uniqueSlug(Str::slug($validated['name']) ?: 'category'),
+            'type'   => $validated['type'],
+            'status' => TourCategory::STATUS_ACTIVE,
+            'order'  => ((int) TourCategory::where('type', $validated['type'])->max('order')) + 1,
+        ]);
+
+        return response()->json([
+            'id'     => $category->id,
+            'name'   => $category->name,
+            'slug'   => $category->slug,
+            'type'   => $category->type,
+            'status' => $category->status,
+        ], 201);
     }
 
     public function edit(TourCategory $tourCategory)
@@ -64,6 +109,8 @@ class TourCategoryController extends Controller
     {
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
+            'type'        => 'nullable|in:' . implode(',', TourCategory::TYPES),
+            'status'      => 'nullable|in:' . implode(',', [TourCategory::STATUS_ACTIVE, TourCategory::STATUS_INACTIVE]),
             'slug'        => 'required|unique:tour_categories,slug,' . $tourCategory->id,
             'description' => 'nullable|string',
             'order'       => 'nullable|integer|min:0',
@@ -86,6 +133,8 @@ class TourCategoryController extends Controller
 
         $tourCategory->update([
             'name'             => $validated['name'],
+            'type'             => $validated['type'] ?? $tourCategory->type,
+            'status'           => $validated['status'] ?? $tourCategory->status,
             'slug'             => $validated['slug'],
             'description'      => $validated['description'] ?? null,
             'order'            => $validated['order'] ?? 999,
@@ -163,6 +212,13 @@ class TourCategoryController extends Controller
      */
     public function destroy(TourCategory $tourCategory)
     {
+        // Section images are tracked in media_usages (no FK on model_id), so the
+        // usage rows must be forgotten explicitly — otherwise deleting a category
+        // with content sections leaves orphaned "in use" records that block the
+        // images from ever being removed from the Media Library. Mirrors
+        // TourPackageController::destroy() and ActivityController::destroy().
+        app(MediaLibraryService::class)->forgetAllUsagesFor($tourCategory);
+
         $tourCategory->delete();
 
         \App\Services\SitemapGenerator::generate();

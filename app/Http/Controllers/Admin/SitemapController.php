@@ -20,7 +20,8 @@ class SitemapController extends Controller
 
         $counts = [
             'tours'        => TourPackage::where('status', 'published')->where('no_robots', false)->count(),
-            'categories'   => TourCategory::where('no_robots', false)
+            'categories'   => TourCategory::where('type', TourCategory::TYPE_CATEGORY)
+                                 ->where('no_robots', false)
                                  ->whereHas('tourPackages', fn ($q) => $q->where('status', 'published'))
                                  ->count(),
             'destinations' => Destination::whereNotNull('slug')->where('slug', '!=', '')->count(),

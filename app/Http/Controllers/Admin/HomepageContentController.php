@@ -153,7 +153,9 @@ class HomepageContentController extends Controller
 
         if (! Setting::get('footer_links_type')) {
             $typeDefaults = collect();
-            foreach (TourCategory::orderBy('name')->get() as $category) {
+            // Only the public listing categories — group rows (country/region/…)
+            // are form dropdown options, not footer tour-type links.
+            foreach (TourCategory::where('type', TourCategory::TYPE_CATEGORY)->orderBy('name')->get() as $category) {
                 $typeDefaults->push(['label' => $category->name, 'url' => '/' . $category->slug]);
             }
             if ($typeDefaults->isEmpty()) {
@@ -218,12 +220,12 @@ class HomepageContentController extends Controller
                          ->with('success', 'Footer settings updated successfully!');
     }
 
-    /* ── 7: Tour starting points ───────────────────────────────────────── */
+    /* ── 7: Tour starting & ending points ──────────────────────────────── */
 
-    public function startingPoints()
+    public function startEndPoints()
     {
-        // Fall back to the distinct starting points currently used by published
-        // tours so the editor is never empty on first visit.
+        // Fall back to the distinct points currently used by published tours
+        // so the editors are never empty on first visit.
         if (! Setting::get('starting_points')) {
             $existing = TourPackage::whereNotNull('starting_point')
                 ->where('starting_point', '!=', '')
@@ -236,26 +238,48 @@ class HomepageContentController extends Controller
             Setting::set('starting_points', json_encode(array_values(array_filter($existing))));
         }
 
-        return view('admin.settings.starting-points');
+        if (! Setting::get('ending_points')) {
+            $existing = TourPackage::whereNotNull('ending_point')
+                ->where('ending_point', '!=', '')
+                ->distinct()
+                ->orderBy('ending_point')
+                ->pluck('ending_point')
+                ->values()
+                ->all();
+
+            Setting::set('ending_points', json_encode(array_values(array_filter($existing))));
+        }
+
+        return view('admin.settings.start-end-points');
     }
 
-    public function updateStartingPoints(Request $request)
+    public function updateStartEndPoints(Request $request)
     {
         $request->validate([
             'starting_points'   => 'nullable|array',
             'starting_points.*' => 'nullable|string|max:255',
+            'ending_points'     => 'nullable|array',
+            'ending_points.*'   => 'nullable|string|max:255',
         ]);
 
-        $points = collect($request->input('starting_points', []))
+        $startPoints = collect($request->input('starting_points', []))
             ->map(fn ($p) => trim((string) $p))
             ->filter()
             ->unique()
             ->values()
             ->all();
 
-        Setting::set('starting_points', json_encode($points));
+        $endPoints = collect($request->input('ending_points', []))
+            ->map(fn ($p) => trim((string) $p))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
 
-        return redirect()->route('admin.starting-points')
-                         ->with('success', 'Starting points updated successfully!');
+        Setting::set('starting_points', json_encode($startPoints));
+        Setting::set('ending_points', json_encode($endPoints));
+
+        return redirect()->route('admin.start-end-points')
+                         ->with('success', 'Start and end points updated successfully!');
     }
 }

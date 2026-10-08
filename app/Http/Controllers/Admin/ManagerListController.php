@@ -133,7 +133,12 @@ class ManagerListController extends Controller
         return [
             'managerList' => $managerList,
             'listType' => $managerList->content_type,
-            'categories' => TourCategory::orderBy('order')->orderBy('name')->get(['id', 'name']),
+            // Scoped to the legacy listing categories: manager lists build public
+            // /collections/{slug} pages from the same categories that power the
+            // /{slug} tour pages — group rows (country/region/…) belong to the
+            // tour-form dropdowns, not to collection scoping.
+            'categories' => TourCategory::where('type', TourCategory::TYPE_CATEGORY)
+                ->orderBy('order')->orderBy('name')->get(['id', 'name']),
             'pages' => Page::where('status', 'published')->whereNotIn('slug', Page::siteInfoSlugs())->orderBy('title')->get(['id', 'title', 'slug']),
         ];
     }

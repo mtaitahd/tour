@@ -41,6 +41,30 @@
               </div>
 
               <div class="row mb-3">
+                <label class="col-sm-3 col-form-label">Group *</label>
+                <div class="col-sm-9">
+                  <select name="type" class="form-select">
+                    @foreach (\App\Models\TourCategory::TYPES as $typeOption)
+                      <option value="{{ $typeOption }}" @selected(old('type', \App\Models\TourCategory::TYPE_CATEGORY) === $typeOption)>
+                        {{ \App\Models\TourCategory::typeLabel($typeOption) }}
+                      </option>
+                    @endforeach
+                  </select>
+                  <small class="text-muted">Which dropdown this belongs to on the tour form (Listing Categories are the public /{slug} pages).</small>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label class="col-sm-3 col-form-label">Status</label>
+                <div class="col-sm-9">
+                  <select name="status" class="form-select">
+                    <option value="active" @selected(old('status') === 'active' || old('status') === null)>Active</option>
+                    <option value="inactive" @selected(old('status') === 'inactive')>Inactive (hidden from pickers)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row mb-3">
                 <label class="col-sm-3 col-form-label">Slug</label>
                 <div class="col-sm-9">
                   <input type="text" name="slug" class="form-control" value="{{ old('slug') }}">

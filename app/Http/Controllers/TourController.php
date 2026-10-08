@@ -263,9 +263,13 @@ class TourController extends Controller
         }
 
         // All categories with at least one published tour, for the filter
-        // sidebar/nav â€” and the currently-active one, if any, so the view can
-        // highlight it and adjust the page heading.
-        $categories = TourCategory::withPublishedTours()->orderBy('order')->orderBy('name')->get();
+        // sidebar/nav — and the currently-active one, if any, so the view can
+        // highlight it and adjust the page heading. Scoped to the public listing
+        // category type: the grouped rows (country/region/tour_type/duration)
+        // feed the admin tour-form dropdowns, not this "Tour Type" facet.
+        $categories = TourCategory::withPublishedTours()
+            ->where('type', TourCategory::TYPE_CATEGORY)
+            ->orderBy('order')->orderBy('name')->get();
 
         // â”€â”€ SafariBookings-style listing context â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

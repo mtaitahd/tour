@@ -134,6 +134,11 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
             ->name('tour-price-calculator.preview')
             ->middleware('throttle:30,1');
         Route::resource('tour-categories', \App\Http\Controllers\Admin\TourCategoryController::class);
+        // AJAX "Add New" used by the grouped dropdowns (+ Add Country, …) on the
+        // Add/Edit Tour Package forms. Declared before the resource so it is not
+        // shadowed by tour-categories/{tour_category}.
+        Route::post('tour-categories/quick-add', [\App\Http\Controllers\Admin\TourCategoryController::class, 'quickStore'])
+            ->name('tour-categories.quick-add');
 
         // The Activity model, pivot and full CRUD controller (with views) have all
         // existed since 2026_02_11, but no route was ever registered, so the whole
@@ -234,7 +239,7 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
         Route::post('/sitemap/generate', [\App\Http\Controllers\Admin\SitemapController::class, 'generate'])->name('sitemap.generate');
 
         // ── Website Content editors (homepage buttons/captions, Traveller
-        //    Stories, YouTube subscribe, footer links, starting points) ──
+        //    Stories, YouTube subscribe, footer links, start/end points) ──
         Route::get('/homepage-content', [\App\Http\Controllers\Admin\HomepageContentController::class, 'home'])->name('homepage-content');
         Route::post('/homepage-content', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateHome']);
 
@@ -247,8 +252,8 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
         Route::get('/footer', [\App\Http\Controllers\Admin\HomepageContentController::class, 'footer'])->name('footer-settings');
         Route::post('/footer', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateFooter']);
 
-        Route::get('/starting-points', [\App\Http\Controllers\Admin\HomepageContentController::class, 'startingPoints'])->name('starting-points');
-        Route::post('/starting-points', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateStartingPoints']);
+        Route::get('/start-end-points', [\App\Http\Controllers\Admin\HomepageContentController::class, 'startEndPoints'])->name('start-end-points');
+        Route::post('/start-end-points', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateStartEndPoints']);
 
         // ── Listing page titles (the H1 on /pages and /tours) ──
         Route::get('/listing-titles', [\App\Http\Controllers\Admin\ListingTitleController::class, 'index'])->name('listing-titles.index');

@@ -288,7 +288,7 @@
             </a>
         </li>
     @endif
-    @php $websiteContentPages = ['homepage-content', 'traveller-stories', 'subscribe', 'footer', 'starting-points', 'listing-titles', 'our-story']; @endphp
+    @php $websiteContentPages = ['homepage-content', 'traveller-stories', 'subscribe', 'footer', 'start-end-points', 'listing-titles', 'our-story']; @endphp
     @if($can('settings') || $can('pages'))
         <li class="nav-item {{ in_array($currentPage, $websiteContentPages) ? 'active' : '' }}">
             <a class="nav-link {{ in_array($currentPage, $websiteContentPages) ? '' : 'collapsed' }}"
@@ -315,9 +315,9 @@
                     <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
                     <span>Footer</span>
                 </a>
-                <a class="nav-link" href="{{ route('admin.starting-points') }}">
+                <a class="nav-link" href="{{ route('admin.start-end-points') }}">
                     <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
-                    <span>Starting Points</span>
+                    <span>Start &amp; End Points</span>
                 </a>
                 {{-- The H1s on /pages and /tours. Lives with the other website
                      copy screens rather than under Pages → All Pages, because
