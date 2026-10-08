@@ -77,18 +77,29 @@ class ManagerListCategoryGroupsTest extends TestCase
 
     /* ── The admin form ───────────────────────────────────────────────── */
 
-    public function test_form_offers_a_checkbox_column_for_every_group(): void
+    public function test_form_offers_a_multi_select_dropdown_for_every_group(): void
     {
         $html = $this->actingAs($this->admin)
             ->get(route('admin.manager-lists.create', ['type' => 'tours']))
             ->assertOk()
             ->getContent();
 
-        foreach (['Country', 'Region / Continent', 'Tour Type', 'Duration', 'Listing Categories'] as $heading) {
+        foreach (['Country', 'Region / Continent', 'Tour Type', 'Duration'] as $heading) {
             $this->assertStringContainsString($heading, $html);
         }
-        foreach ($this->categories as $category) {
-            $this->assertStringContainsString('name="category_ids[]" value="' . $category->id . '"', $html);
+
+        // One multi-select per group, all submitting into category_ids[] — the
+        // old checkbox blocks (including the legacy Listing Categories block)
+        // are gone.
+        $this->assertSame(4, substr_count($html, 'name="category_ids[]" multiple'));
+        $this->assertStringNotContainsString('Listing Categories', $html);
+
+        foreach ($this->categories as $type => $category) {
+            if ($type === 'tanzania_tours' || $type === 'kilimanjaro') {
+                $this->assertStringNotContainsString('value="' . $category->id . '"', $html);
+                continue;
+            }
+            $this->assertStringContainsString('value="' . $category->id . '"', $html);
         }
     }
 
@@ -124,9 +135,9 @@ class ManagerListCategoryGroupsTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('value="' . $this->categories['tanzania']->id . '" checked', $html);
-        $this->assertStringContainsString('value="' . $this->categories['private']->id . '" checked', $html);
-        $this->assertStringNotContainsString('value="' . $this->categories['kenya']->id . '" checked', $html);
+        $this->assertStringContainsString('value="' . $this->categories['tanzania']->id . '" selected', $html);
+        $this->assertStringContainsString('value="' . $this->categories['private']->id . '" selected', $html);
+        $this->assertStringNotContainsString('value="' . $this->categories['kenya']->id . '" selected', $html);
     }
 
     /* ── The public collection page ───────────────────────────────────── */

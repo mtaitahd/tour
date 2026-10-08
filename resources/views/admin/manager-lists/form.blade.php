@@ -24,17 +24,13 @@
         @if($listType === 'tours')<div class="row mb-3"><label class="col-md-2 col-form-label">Tour categories *</label><div class="col-md-10">
             <div class="row g-3">
                 @foreach($categoryGroups as $type => $group)<div class="col-md-6 col-xl">
-                    <div class="border rounded p-3 h-100" style="max-height:240px;overflow:auto"><strong class="d-block mb-2">{{ \App\Models\TourCategory::typeLabel($type) }}</strong>
-                        @forelse($group as $category)<label class="d-block mb-1"><input type="checkbox" name="category_ids[]" value="{{ $category->id }}" @checked(in_array((string) $category->id, $selectedCategories, true))> {{ $category->name }}</label>@empty<p class="text-muted mb-0">No options in this group yet.</p>@endforelse
-                    </div>
+                    <label class="form-label fw-semibold">{{ \App\Models\TourCategory::typeLabel($type) }}</label>
+                    <select name="category_ids[]" multiple class="form-select" size="{{ min(max($group->count(), 2), 8) }}">
+                        @forelse($group as $category)<option value="{{ $category->id }}" @selected(in_array((string) $category->id, $selectedCategories, true))>{{ $category->name }}</option>@empty<option disabled>No options yet — add them under Tours &amp; Packages &rarr; Categories.</option>@endforelse
+                    </select>
                 </div>@endforeach
-                <div class="col-md-6 col-xl">
-                    <div class="border rounded p-3 h-100" style="max-height:240px;overflow:auto"><strong class="d-block mb-2">Listing Categories</strong>
-                        @forelse($categories as $category)<label class="d-block mb-1"><input type="checkbox" name="category_ids[]" value="{{ $category->id }}" @checked(in_array((string) $category->id, $selectedCategories, true))> {{ $category->name }}</label>@empty<p class="text-muted mb-0">No listing categories exist yet.</p>@endforelse
-                    </div>
-                </div>
             </div>
-            <small class="text-muted">The public list shows published tours matching every selected group (e.g. Country + Tour Type) and any option ticked within one group (e.g. Tanzania + Kenya). At least one category is required.</small>
+            <small class="text-muted">Hold Ctrl (Cmd on Mac) to pick several options in one list. The public list shows tours matching every group you use — e.g. Country: Tanzania + Tour Type: Private — and any option inside a single group. At least one selection is required.</small>
         </div></div>
         @else<div class="row mb-3"><label class="col-md-2 col-form-label">Pages to display *</label><div class="col-md-10">
             <div class="border rounded p-3" style="max-height:240px;overflow:auto">@forelse($pages as $page)<label class="d-block mb-2"><input type="checkbox" name="page_ids[]" value="{{ $page->id }}" @checked(in_array((string) $page->id, $selectedPages, true))> {{ $page->title }} <small class="text-muted">/{{ $page->slug }}</small></label>@empty<p class="text-muted mb-0">No published pages are available.</p>@endforelse</div>

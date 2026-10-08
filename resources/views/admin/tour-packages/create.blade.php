@@ -157,23 +157,10 @@
 </div>
 </div>
 
-<!-- Classification: grouped dropdowns (Country / Region / Tour Type / Duration)
+<!-- Tour Categories: grouped dropdowns (Country / Region / Tour Type / Duration)
      plus the fixed Physical Rating & Tour Level lists, each with inline "+ Add"
      for the dynamic groups. Options load from tour_categories by type. -->
 @include('admin.tour-packages.partials.classification-picker', ['tourPackage' => null])
-
-<!-- Listing Categories — the public /{slug} tour pages (legacy flat taxonomy,
-     kept exactly as before for backward compatibility). -->
-@include('admin.tour-packages.partials.checkbox-picker', [
-    'pickerLabel'   => 'Listing Categories',
-    'fieldName'     => 'categories',
-    'pickerOptions' => \App\Models\TourCategory::where('type', \App\Models\TourCategory::TYPE_CATEGORY)
-                          ->orderBy('order')->orderBy('name')->get()
-                          ->map(fn ($category) => ['value' => $category->id, 'label' => $category->name])
-                          ->all(),
-    'pickerHelp'    => 'Select every public listing page this tour should appear under (e.g. Tanzania Tours). Manage them under Tours & Packages &rarr; Categories.',
-    'idPrefix'      => 'tour-create',
-])
 
 <!-- Available Months — 12 checkboxes + a Select all toggle -->
 @include('admin.tour-packages.partials.available-months', ['tourPackage' => null, 'idPrefix' => 'tour-create'])
@@ -221,7 +208,7 @@
 @include('admin.tour-packages.partials.pricing.selector', ['tourPackage' => null])
 
 {{-- Physical Rating, Tour Level and Available Months moved to Step 1's
-     Classification block so every classification control lives together. --}}
+     Tour Categories block so every classification control lives together. --}}
 <div class="row mb-3">
   <label class="col-sm-2 col-form-label fw-bold">Hero Image (main cover)</label>
   <div class="col-sm-10"><x-media-picker name="hero_image_id" :selected="old('hero_image_id')" label="Select from Media Library" /><small class="text-muted d-block mt-1">Choose an existing image from the library.</small></div>

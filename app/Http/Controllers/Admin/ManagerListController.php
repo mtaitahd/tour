@@ -99,6 +99,9 @@ class ManagerListController extends Controller
             'status' => ['required', Rule::in(['draft', 'published'])],
             'order' => ['nullable', 'integer', 'min:0'],
             'no_robots' => ['nullable', 'boolean'],
+        ], [
+            'category_ids.required_if' => 'Select at least one tour category.',
+            'category_ids.min' => 'Select at least one tour category.',
         ]);
 
         return $data + ['no_robots' => false, 'order' => 0];
@@ -130,12 +133,13 @@ class ManagerListController extends Controller
 
     private function formData(ManagerList $managerList): array
     {
-        // Every option — the grouped taxonomy rows (country, region, tour
-        // type, duration) and the legacy listing categories — lives in
-        // tour_categories, so the form ticks them all into the same
-        // category_ids column the public /collections/{slug} scope reads.
-        // Rows are offered regardless of status so an option deactivated
-        // after being ticked still shows on edit instead of vanishing.
+        // The four grouped taxonomy rows (country, region, tour type, duration)
+        // live in tour_categories, so the form's multi-select dropdowns tick
+        // them into the same category_ids column the public /collections/{slug}
+        // scope reads. Legacy listing categories are no longer offered here —
+        // the tour form does not assign them anymore either. Rows are offered
+        // regardless of status so an option deactivated after being ticked
+        // still shows on edit instead of vanishing.
         $categoryGroups = collect(TourCategory::FORM_GROUPS)
             ->mapWithKeys(fn (string $label, string $type) => [
                 $type => TourCategory::where('type', $type)
@@ -146,8 +150,6 @@ class ManagerListController extends Controller
             'managerList' => $managerList,
             'listType' => $managerList->content_type,
             'categoryGroups' => $categoryGroups,
-            'categories' => TourCategory::where('type', TourCategory::TYPE_CATEGORY)
-                ->orderBy('order')->orderBy('name')->get(['id', 'name']),
             'pages' => Page::where('status', 'published')->whereNotIn('slug', Page::siteInfoSlugs())->orderBy('title')->get(['id', 'title', 'slug']),
         ];
     }

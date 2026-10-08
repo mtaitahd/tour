@@ -73,7 +73,7 @@
 @endphp
 
 <div class="row mb-3 tour-classification-field" data-classification-field>
-    <label class="col-sm-2 col-form-label">Classification</label>
+    <label class="col-sm-2 col-form-label">Tour Categories</label>
     <div class="col-sm-10">
         <div class="row g-3">
             @foreach ($gridOrder as $key => $field)

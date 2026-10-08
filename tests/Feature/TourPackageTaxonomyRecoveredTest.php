@@ -24,6 +24,12 @@ use Tests\TestCase;
  *  3. Both store() and update() synced behind ->has(), which is always false when
  *     the admin unticks every box (an empty multi-select is absent from the POST).
  *     "Clear all" therefore silently kept the old rows.
+ *
+ * Since the grouped Tour Categories dropdowns landed, the legacy "Listing
+ * Categories" checkbox column no longer renders on either form — categorising
+ * happens through the Country / Region / Tour Type / Duration selects. The
+ * controller still accepts a categories[] payload (older clients, imports,
+ * these tests), it is just not offered by the UI anymore.
  */
 class TourPackageTaxonomyRecoveredTest extends TestCase
 {
@@ -59,7 +65,7 @@ class TourPackageTaxonomyRecoveredTest extends TestCase
 
     /* ── The create form ───────────────────────────────────────────────── */
 
-    public function test_create_form_offers_category_and_activity_pickers(): void
+    public function test_create_form_offers_an_activity_picker_but_no_listing_categories(): void
     {
         $category = $this->category('Tanzania Tours');
         $activity = $this->activity('Big Five');
@@ -69,10 +75,14 @@ class TourPackageTaxonomyRecoveredTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('name="categories[]"', $html);
         $this->assertStringContainsString('name="activities[]"', $html);
-        $this->assertStringContainsString($category->name, $html);
         $this->assertStringContainsString($activity->name, $html);
+
+        // The Listing Categories column is gone: no checkboxes for it, and
+        // legacy category rows are not rendered anywhere on the form.
+        $this->assertStringNotContainsString('name="categories[]"', $html);
+        $this->assertStringNotContainsString('Listing Categories', $html);
+        $this->assertStringNotContainsString($category->name, $html);
     }
 
     public function test_create_form_explains_when_there_is_nothing_to_pick(): void
@@ -85,11 +95,23 @@ class TourPackageTaxonomyRecoveredTest extends TestCase
         $this->assertStringContainsString('add some from the admin menu first', $html);
     }
 
+    public function test_the_grouped_column_is_labelled_tour_categories(): void
+    {
+        $html = $this->actingAs($this->admin)
+            ->get(route('admin.tour-packages.create'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('>Tour Categories</label>', $html);
+        $this->assertStringNotContainsString('>Classification</label>', $html);
+    }
+
     /* ── Both forms offer the same pickers ─────────────────────────────── */
 
     /**
-     * Asserts the three taxonomy fields are checkbox groups and that the given
-     * ids come back pre-ticked. Returns the parsed document for further checks.
+     * Asserts the remaining taxonomy fields are checkbox groups and that the
+     * given ids come back pre-ticked. Returns the parsed document for further
+     * checks. The legacy categories[] picker must not render at all anymore.
      */
     private function assertCheckboxPickers(string $html, array $ticked = []): DOMXPath
     {
@@ -98,7 +120,9 @@ class TourPackageTaxonomyRecoveredTest extends TestCase
 
         $xpath = new DOMXPath($document);
 
-        foreach (['destinations', 'categories', 'activities'] as $field) {
+        $this->assertSame(0, $xpath->query("//input[@name='categories[]']")->length, 'Listing Categories checkboxes should be gone');
+
+        foreach (['destinations', 'activities'] as $field) {
             $boxes = $xpath->query("//input[@name='{$field}[]']");
 
             $this->assertGreaterThan(0, $boxes->length, "no {$field}[] checkboxes were rendered");
@@ -151,7 +175,6 @@ class TourPackageTaxonomyRecoveredTest extends TestCase
 
         $this->assertCheckboxPickers($editHtml, [
             ['destinations', $spot->id],
-            ['categories', $category->id],
             ['activities', $activity->id],
         ]);
     }

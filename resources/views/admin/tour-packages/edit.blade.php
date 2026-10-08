@@ -173,30 +173,11 @@
                   'rowClass' => 'mb-4 mt-5',
               ])
 
-              <!-- Classification: grouped dropdowns (Country / Region / Tour
+              <!-- Tour Categories: grouped dropdowns (Country / Region / Tour
                    Type / Duration) pre-selected from this tour's pivot rows,
                    plus the fixed Physical Rating / Tour Level lists. Each dynamic
                    group has an inline "+ Add" for missing options. -->
               @include('admin.tour-packages.partials.classification-picker', ['tourPackage' => $tourPackage])
-
-              <!-- Listing Categories power the public category listing pages
-                   (e.g. /tanzania-tours) and the tour detail page; a tour can
-                   belong to more than one. Same partial as the create form, scoped
-                   to the legacy listing-category type so group rows never appear
-                   as checkboxes here. -->
-              @include('admin.tour-packages.partials.checkbox-picker', [
-                  'pickerLabel'   => 'Listing Categories',
-                  'fieldName'     => 'categories',
-                  'pickerOptions' => \App\Models\TourCategory::where('type', \App\Models\TourCategory::TYPE_CATEGORY)
-                                        ->orderBy('order')->orderBy('name')->get()
-                                        ->map(fn ($category) => ['value' => $category->id, 'label' => $category->name])
-                                        ->all(),
-                  'pickerHelp'    => 'Select every public listing page this tour should appear under (e.g. Tanzania Tours, Kilimanjaro Climbing Package). Manage them under Tours &amp; Packages &rarr; Categories.',
-                  'selected'      => $tourPackage->categories
-                                        ->filter(fn ($category) => $category->type === \App\Models\TourCategory::TYPE_CATEGORY)
-                                        ->pluck('id')->toArray(),
-                  'idPrefix'      => 'tour-edit',
-              ])
 
               <!-- Available Months — 12 checkboxes + a Select all toggle -->
               @include('admin.tour-packages.partials.available-months', ['tourPackage' => $tourPackage, 'idPrefix' => 'tour-edit'])
@@ -269,7 +250,7 @@
               ])
 
               {{-- Physical Rating, Tour Level and Available Months moved to Step 1's
-                   Classification block so every classification control lives
+                   Tour Categories block so every classification control lives
                    together (same layout as the create form). --}}
 
 
