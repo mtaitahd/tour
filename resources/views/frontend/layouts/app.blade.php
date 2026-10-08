@@ -473,13 +473,14 @@
         @media (max-width: 768px) {
             .floating-buttons {
                 flex-direction: row !important;
-                bottom: 20px;
-                right: 20px;
-                gap: 15px;
+                bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+                right: 14px !important;
+                margin: 0 !important;
+                gap: 12px !important;
             }
             .floating-buttons a {
-                width: 50px !important;
-                height: 50px !important;
+                width: 48px !important;
+                height: 48px !important;
             }
         }
     </style>
