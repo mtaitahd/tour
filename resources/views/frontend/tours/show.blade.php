@@ -1060,7 +1060,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
         </section>
     </div>
 
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script data-cfasync="false" src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     {{-- ══ FAQ ══ --}}
     @include('frontend.partials.faq-section', ['faqSubject' => $faqSubject])

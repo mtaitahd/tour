@@ -519,7 +519,7 @@ $photoCardImage = $galleryImages->first()?->getUrl('medium-webp') ?: ($galleryIm
         </section>
     </div>
 
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script data-cfasync="false" src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     @if($relatedTours->isNotEmpty())
         <section class="td-related" aria-labelledby="td-related-title">

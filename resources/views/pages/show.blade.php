@@ -463,7 +463,7 @@ $countryList = ['Afghanistan','Albania','Algeria','Argentina','Australia','Austr
         </section>
     </div>
 
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script data-cfasync="false" src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     <div class="td-lightbox" id="tdLightbox" role="dialog" aria-modal="true" aria-label="Image gallery" hidden>
         <header class="td-lightbox__head">
