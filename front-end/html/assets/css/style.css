@@ -23824,7 +23824,7 @@ table.table.dataTable > thead > tr th {
   height: 28px;
   min-width: 28px;
   border-radius: 50%;
-  background: #B99455;
+  background: #084d2a;
 }
 
 .afro-about__check-label {
@@ -23840,7 +23840,7 @@ table.table.dataTable > thead > tr th {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: #B99455;
+  background: #084d2a;
   color: #FFFFFF;
   font-family: 'Montserrat', 'Inter', sans-serif;
   font-size: 16px;
@@ -23851,16 +23851,16 @@ table.table.dataTable > thead > tr th {
   border-radius: 11px;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(185, 148, 85, 0.3);
+  box-shadow: 0 4px 20px rgba(8, 77, 42, 0.3);
   transition: background 0.35s ease, transform 0.3s ease, box-shadow 0.35s ease;
   width: 240px;
   justify-content: center;
 }
 
 .afro-about__btn:hover {
-  background: #A07D3E;
+  background: #063d22;
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(185, 148, 85, 0.4);
+  box-shadow: 0 8px 28px rgba(8, 77, 42, 0.4);
   color: #FFFFFF;
   text-decoration: none;
 }
@@ -23870,7 +23870,7 @@ table.table.dataTable > thead > tr th {
 }
 
 .afro-about__btn:focus-visible {
-  outline: 3px solid rgba(185, 148, 85, 0.5);
+  outline: 3px solid rgba(8, 77, 42, 0.5);
   outline-offset: 3px;
 }
 
