@@ -149,36 +149,7 @@
               @error('name')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Slug</label>
-              <input type="text" name="slug" class="form-control @error('slug') is-invalid @enderror"
-                     value="{{ old('slug') }}" placeholder="Auto-generated from name if left empty">
-              <small class="text-muted" id="addModalSlugHelp">This becomes the public URL, e.g. "Tanzania Tours" &rarr; <code>/tanzania-tours</code>.</small>
-              @error('slug')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Status</label>
-              <select name="status" class="form-select">
-                <option value="active" @selected(old('status') === 'active' || old('status') === null)>Active</option>
-                <option value="inactive" @selected(old('status') === 'inactive')>Inactive (hidden from pickers)</option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Description</label>
-              <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
-              <small class="text-muted">Optional — not shown publicly yet.</small>
-            </div>
-
-            <div class="mb-1">
-              <label class="form-label">Order</label>
-              <input type="number" name="order" class="form-control w-25" value="{{ old('order', 999) }}" min="0">
-              <small class="text-muted">Lower numbers appear first in the dropdown.</small>
+              <small class="text-muted">Slug, status, description and order are filled in automatically.</small>
             </div>
           </div>
 
@@ -223,14 +194,6 @@ function syncAddModalTitle() {
   if (!select) return;
   var label = select.options[select.selectedIndex].text;
   document.getElementById('addModalTitle').textContent = 'Add ' + label.replace(/ \/ /g, ' / ');
-  var help = document.getElementById('addModalSlugHelp');
-  if (help) {
-    if (select.value === 'category') {
-      help.innerHTML = 'This becomes the public URL, e.g. "Tanzania Tours" &rarr; <code>/tanzania-tours</code>.';
-    } else {
-      help.textContent = 'Usually left empty — generated from the name.';
-    }
-  }
 }
 syncAddModalTitle();
 

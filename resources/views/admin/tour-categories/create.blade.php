@@ -55,36 +55,9 @@
               </div>
 
               <div class="row mb-3">
-                <label class="col-sm-3 col-form-label">Status</label>
+                <label class="col-sm-3 col-form-label"></label>
                 <div class="col-sm-9">
-                  <select name="status" class="form-select">
-                    <option value="active" @selected(old('status') === 'active' || old('status') === null)>Active</option>
-                    <option value="inactive" @selected(old('status') === 'inactive')>Inactive (hidden from pickers)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="row mb-3">
-                <label class="col-sm-3 col-form-label">Slug</label>
-                <div class="col-sm-9">
-                  <input type="text" name="slug" class="form-control" value="{{ old('slug') }}">
-                  <small class="text-muted">Auto-generated from name if left empty. This becomes the public URL — e.g. "Tanzania Tours" becomes <code>/tanzania-tours</code>.</small>
-                </div>
-              </div>
-
-              <div class="row mb-3">
-                <label class="col-sm-3 col-form-label">Description</label>
-                <div class="col-sm-9">
-                  <textarea name="description" class="form-control" rows="4">{{ old('description') }}</textarea>
-                  <small class="text-muted">Optional — not shown publicly yet, but available for a future category intro/heading.</small>
-                </div>
-              </div>
-
-              <div class="row mb-3">
-                <label class="col-sm-3 col-form-label">Order</label>
-                <div class="col-sm-9">
-                  <input type="number" name="order" class="form-control w-25" value="{{ old('order', 999) }}" min="0">
-                  <small class="text-muted">Lower numbers appear first in the footer's category list.</small>
+                  <small class="text-muted">Slug, status, description and order are filled in automatically (slug is generated from the name).</small>
                 </div>
               </div>
 
