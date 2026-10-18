@@ -203,7 +203,7 @@
                   'idPrefix'      => 'tour-edit',
               ])
               @include('admin.tour-packages.partials.mountain-routes', ['tourPackage' => $tourPackage])
-              @include('admin.tour-packages.partials.mountain-and-related', ['tourPackage' => $tourPackage])
+
 
               <div class="row mb-3">
                 <label class="col-sm-2 col-form-label">Duration (Days)</label>

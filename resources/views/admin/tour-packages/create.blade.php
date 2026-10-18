@@ -149,7 +149,6 @@
 </div>
 <!-- Destinations — multi-select checkbox dropdown -->
 @include('admin.tour-packages.partials.destination-picker')
-@include('admin.tour-packages.partials.mountain-and-related', ['tourPackage' => null])
 <div class="row mb-3">
 <label class="col-sm-2 col-form-label">Duration (Days)</label>
 <div class="col-sm-10">

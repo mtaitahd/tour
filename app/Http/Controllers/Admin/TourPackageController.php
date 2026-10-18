@@ -354,7 +354,7 @@ class TourPackageController extends Controller
             'package_duration_type' => $request->input('package_duration_type') ?: null,
             'tour_type'            => $request->input('tour_type') ? strtoupper($request->input('tour_type')) : null,
             'package_category'     => $request->input('package_category') ?: null,
-            'tour_format'          => $request->input('tour_format', 'private'),
+            'tour_format'          => $this->resolveTourFormat($request),
             'mountain_id'          => $request->input('mountain_id'),
             'mountain_route_ids'   => array_values(array_map('intval', $request->input('mountain_route_ids', []))),
             'related_tour_ids'     => array_values(array_map('intval', $request->input('related_tour_ids', []))),
@@ -689,7 +689,7 @@ public function edit(TourPackage $tourPackage)
             'package_duration_type' => $request->input('package_duration_type') ?: null,
             'tour_type'            => $request->input('tour_type') ? strtoupper($request->input('tour_type')) : null,
             'package_category'     => $request->input('package_category') ?: null,
-            'tour_format'          => $request->input('tour_format', 'private'),
+            'tour_format'          => $this->resolveTourFormat($request, $tourPackage),
             'mountain_id'          => $request->input('mountain_id'),
             'mountain_route_ids'   => array_values(array_map('intval', $request->input('mountain_route_ids', []))),
             'related_tour_ids'     => array_values(array_map('intval', $request->input('related_tour_ids', []))),
@@ -1143,6 +1143,34 @@ $tourPackage->groupDepartures()->delete();
         }
 
         return $float;
+    }
+
+    /**
+     * tour_format is no longer posted by the form — the Private/Group radio
+     * column was removed because the same choice lives in the Tour Categories
+     * "Tour Type" dropdown (tour_type_id). Derive the stored format from the
+     * selected tour_type category so the frontend badge and related-tour
+     * matching stay correct. Falls back to the existing value on update (so
+     * an untouched Group tour is never reset), then to 'private' on create.
+     */
+    private function resolveTourFormat(Request $request, ?TourPackage $tourPackage = null): string
+    {
+        $typeId = $request->input('tour_type_id');
+
+        if ($typeId !== null && $typeId !== '') {
+            $name = \App\Models\TourCategory::query()
+                ->where('type', \App\Models\TourCategory::TYPE_TOUR_TYPE)
+                ->where('id', (int) $typeId)
+                ->value('name');
+
+            $format = strtolower(trim((string) $name));
+
+            if (in_array($format, ['private', 'group'], true)) {
+                return $format;
+            }
+        }
+
+        return $tourPackage->tour_format ?: 'private';
     }
 
     /**
