@@ -228,6 +228,9 @@ class TourPackageController extends Controller
             'manual_prices.*.price_4p'                       => 'required|regex:/^\d{1,10}(\.\d{1,2})?$/|gt:0',
             'manual_prices.*.price_6p'                       => 'required|regex:/^\d{1,10}(\.\d{1,2})?$/|gt:0',
             'manual_currency'                                => 'required_if:pricing_source,manual|nullable|regex:/^[A-Za-z]{3}$/',
+            // "None" source = single total-price row (pricing/none partial).
+            'base_price'                                     => 'nullable|numeric|min:0|max:99999999.99',
+            'currency'                                       => 'nullable|string|regex:/^[A-Za-z]{3}$/',
         ]);
 
         return DB::transaction(function () use ($request) {
@@ -328,9 +331,13 @@ class TourPackageController extends Controller
             'duration_days'      => $request->duration_days,
             'video_url'          => $request->video_url,
             'embed_map'          => $request->embed_map,
-            'base_price'         => null,
+            // Only the "None" source carries the single total-price row; other
+            // sources hide the pane, but hidden inputs still submit — gate it.
+            'base_price'         => $request->input('pricing_source') === 'none'
+                ? ($request->filled('base_price') ? $request->input('base_price') : null)
+                : null,
+            'currency'           => $this->resolveCurrency($request),
             'season_pricing'     => !empty($seasonPricing) ? $seasonPricing : null,
-            'currency'           => $request->input('currency', 'USD'),
             'physical_rating'    => $request->input('physical_rating', 'moderate'),
             'tour_level'         => $request->input('tour_level', 'mid_range'),
             'is_group_departure' => $request->has('is_group_departure') ? 1 : 0,
@@ -554,6 +561,9 @@ public function edit(TourPackage $tourPackage)
             'manual_prices.*.price_4p'                       => 'required|regex:/^\d{1,10}(\.\d{1,2})?$/|gt:0',
             'manual_prices.*.price_6p'                       => 'required|regex:/^\d{1,10}(\.\d{1,2})?$/|gt:0',
             'manual_currency'                                => 'required_if:pricing_source,manual|nullable|regex:/^[A-Za-z]{3}$/',
+            // "None" source = single total-price row (pricing/none partial).
+            'base_price'                                     => 'nullable|numeric|min:0|max:99999999.99',
+            'currency'                                       => 'nullable|string|regex:/^[A-Za-z]{3}$/',
         ]);
 
         return DB::transaction(function () use ($request, $tourPackage) {
@@ -664,8 +674,12 @@ public function edit(TourPackage $tourPackage)
             'duration_days'      => $request->duration_days,
             'video_url'          => $request->input('video_url', $tourPackage->video_url),
             'embed_map'          => $request->has('embed_map') ? $request->embed_map : $tourPackage->embed_map,
+            // Same gating as store(): base_price belongs to the "None" pane only.
+            'base_price'         => $request->input('pricing_source') === 'none'
+                ? ($request->filled('base_price') ? $request->input('base_price') : null)
+                : null,
+            'currency'           => $this->resolveCurrency($request),
             'season_pricing'     => !empty($seasonPricing) ? $seasonPricing : null,
-            'currency'           => $request->input('currency', 'USD'),
             'physical_rating'    => $request->input('physical_rating', 'moderate'),
             'tour_level'         => $request->input('tour_level', 'mid_range'),
             'is_group_departure' => $request->has('is_group_departure') ? 1 : $tourPackage->is_group_departure,
@@ -981,7 +995,7 @@ $tourPackage->groupDepartures()->delete();
         }
 
         $user = $request->user();
-        $currency = strtoupper((string) $request->input('currency', 'USD'));
+        $currency = $this->resolveCurrency($request);
         $category = $duration === PackageDurationType::SINGLE_DAY
             ? null
             : $request->input('package_category');
@@ -1146,6 +1160,23 @@ $tourPackage->groupDepartures()->delete();
     }
 
     /**
+     * Currency for the saved tour / price rows. Every pricing pane stays in
+     * the DOM (toggled with display:none) so its inputs always submit — pick
+     * the field belonging to the selected source instead of trusting whichever
+     * one happens to be filled: manual shows `manual_currency`, the none pane
+     * shows `currency`, and calculator defines neither (keep the stored/USD
+     * default that the hidden none input carries).
+     */
+    private function resolveCurrency(Request $request): string
+    {
+        $raw = $request->input('pricing_source') === 'manual'
+            ? ($request->input('manual_currency') ?: $request->input('currency'))
+            : $request->input('currency');
+
+        return strtoupper((string) ($raw ?: 'USD'));
+    }
+
+    /**
      * tour_format is no longer posted by the form — the Private/Group radio
      * column was removed because the same choice lives in the Tour Categories
      * "Tour Type" dropdown (tour_type_id). Derive the stored format from the
@@ -1170,7 +1201,7 @@ $tourPackage->groupDepartures()->delete();
             }
         }
 
-        return $tourPackage->tour_format ?: 'private';
+        return $tourPackage?->tour_format ?: 'private';
     }
 
     /**

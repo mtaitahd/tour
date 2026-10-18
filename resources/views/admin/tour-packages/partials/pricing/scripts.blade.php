@@ -347,6 +347,7 @@ window.__pricing = {
         P.source = source;
         var none = source === 'none', manual = source === 'manual', calc = source === 'calculator';
         $('#pricing-config-row').toggle(!none);
+        $('#pricing-none-pane').toggle(none);
         $('#pricing-manual-pane').toggle(manual);
         $('#pricing-calculator-pane').toggle(calc);
         $('.pricing-calculator-only').toggle(calc);

@@ -120,6 +120,10 @@
         </div>
 
         {{-- Panes --}}
+        @include('admin.tour-packages.partials.pricing.none', [
+            'tourPackage' => $tourPackage,
+        ])
+
         @include('admin.tour-packages.partials.pricing.manual', [
             'manualRows' => $manualRows,
             'currentManualCurrency' => $currentManualCurrency,
