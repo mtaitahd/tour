@@ -1,4 +1,5 @@
 @extends('admin.layouts.app')
+@section('title', 'Accommodations')
 @section('content')
   <div class="pagetitle">
     <h1>Accommodations</h1>
@@ -76,7 +77,7 @@
           </tbody>
         </table>
 
-        {{ $accommodations->links() }}
+        {{ $accommodations->links('pagination::bootstrap-5') }}
       </div>
     </div>
   </section>
