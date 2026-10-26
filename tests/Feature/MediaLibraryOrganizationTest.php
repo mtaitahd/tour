@@ -121,6 +121,8 @@ class MediaLibraryOrganizationTest extends TestCase
         $this->assertStringContainsString('Image pages at top', $html);
         $this->assertStringContainsString('max-height: 420px', $html);
         $this->assertStringContainsString('Deep camp', $html);
-        $this->assertStringContainsString('media-library-upload.js', $html);
+        $this->assertStringContainsString('data-media-library-upload', $html);
+        $this->assertStringContainsString('function initializeMediaUpload()', $html);
+        $this->assertStringNotContainsString('src="http://localhost/js/media-library-upload.js"', $html);
     }
 }

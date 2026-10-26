@@ -1,6 +1,7 @@
-document.addEventListener('DOMContentLoaded', function () {
+function initializeMediaUpload() {
     const form = document.getElementById('media-upload-form');
-    if (!form) return;
+    if (!form || form.dataset.mediaUploadReady === 'true') return;
+    form.dataset.mediaUploadReady = 'true';
 
     const modal = document.getElementById('uploadModal');
     const dropzone = document.getElementById('upload-dropzone');
@@ -179,4 +180,10 @@ document.addEventListener('DOMContentLoaded', function () {
             renderPreview();
         }
     });
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeMediaUpload, { once: true });
+} else {
+    initializeMediaUpload();
+}

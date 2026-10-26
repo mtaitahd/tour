@@ -57,6 +57,8 @@
 
 @once
 @push('scripts')
-<script src="{{ asset('js/media-library-upload.js') }}" defer></script>
+<script data-media-library-upload>
+@include('admin.media.partials.upload-script')
+</script>
 @endpush
 @endonce

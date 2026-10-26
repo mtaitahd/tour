@@ -20,7 +20,9 @@ test('50 uploads use separate requests; failed images remain for retry in the ch
                   <div id="upload-results"></div><input id="upload-category-search">
                   <select id="upload-category"><option value="">No category</option>
                   <option value="2">Accommodations &gt; River Camp</option>
-                  <option value="5">National Park &gt; Mount Meru &gt; Summit &gt; Deep camp</option></select>
+                  <option value="5">National Park &gt; Mount Meru &gt; Summit &gt; Deep camp</option>
+                  <option value="6">Kilimanjaro National Park</option>
+                  <option value="7">Kilimanjaro National Park &gt; Mount Kilimanjaro &gt; Summit Camp</option></select>
                   <p id="upload-category-empty" hidden>No categories match.</p>
                   <button id="upload-submit-btn"><span id="upload-submit-spinner"></span><span id="upload-submit-label"></span></button>
                   </form></div></body></html>` });
@@ -40,7 +42,17 @@ test('50 uploads use separate requests; failed images remain for retry in the ch
             });
         });
         await page.goto('http://media-library.test/');
-        await page.addScriptTag({ path: path.resolve('public/js/media-library-upload.js') });
+        await page.addScriptTag({ path: path.resolve('resources/views/admin/media/partials/upload-script.blade.php') });
+        // Loading the script after DOMContentLoaded must initialize immediately.
+        await page.locator('#upload-category-search').fill('kilimanjaro');
+        assert.deepEqual(await page.locator('#upload-category option').allTextContents(), [
+            'No category', 'Kilimanjaro National Park', 'Kilimanjaro National Park > Mount Kilimanjaro > Summit Camp',
+        ]);
+        await page.locator('#upload-category-search').fill('missing-category');
+        assert.equal(await page.locator('#upload-category-empty').isVisible(), true);
+        await page.locator('#upload-category-search').fill('');
+        assert.equal(await page.locator('#upload-category option').count(), 5);
+        // Repeated ready events must not register duplicate upload handlers.
         await page.evaluate(() => document.dispatchEvent(new Event('DOMContentLoaded')));
         await page.locator('#upload-category-search').fill('deep camp');
         assert.equal(await page.locator('#upload-category option').count(), 2);
