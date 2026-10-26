@@ -180,14 +180,28 @@ class MediaLibraryController extends Controller
      * the original Admin\MediaController::destroy() JSON response shape, so the existing
      * front-end delete handler in admin/media/index.blade.php keeps working unmodified).
      */
-    public function destroyAjax(GalleryImage $media)
+    public function destroyAjax(Request $request, GalleryImage $media)
     {
         $this->authorize('delete', $media);
+        $request->validate(['force' => ['sometimes', 'boolean']]);
+
+        if ($request->boolean('force')) {
+            $this->authorize('forceDelete', $media);
+            $request->validate(['confirm_used' => ['required', 'accepted']]);
+            // Spatie removes the original and conversions; media foreign keys
+            // clear category/tag/usage records and nullable content image links.
+            if (! $this->imageProcessor->delete($media)) {
+                return response()->json(['success' => false, 'message' => 'Image could not be deleted.'], 422);
+            }
+
+            return response()->json(['success' => true, 'message' => 'Image permanently deleted, including its recorded usages.']);
+        }
 
         if (! $this->mediaLibrary->deleteIfUnused($media, $this->imageProcessor)) {
             return response()->json([
                 'success' => false,
                 'message' => 'This image is still in use and cannot be deleted.',
+                'can_force_delete' => $request->user()->can('forceDelete', $media),
                 'usages' => $this->mediaLibrary->usageLocations($media->id),
             ], 422);
         }

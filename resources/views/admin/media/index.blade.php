@@ -135,8 +135,9 @@
                        class="form-control" placeholder="Search by title, filename, or tag&hellip;">
               </div>
               <div class="col-md-2">
+                <label class="visually-hidden" for="uploaded-from">Uploaded from</label>
                 <input type="date" name="uploaded_from" value="{{ $filters['uploaded_from'] ?? '' }}"
-                       class="form-control" title="Uploaded from">
+                       id="uploaded-from" class="form-control" title="Uploaded from">
               </div>
               <div class="col-md-3">
                 <select name="sort" class="form-select">
@@ -158,13 +159,32 @@
               <div class="col-md-1">
                 <button type="submit" class="btn btn-outline-secondary w-100" aria-label="Apply image filters"><i class="bi bi-search"></i></button>
               </div>
+              <div class="col-md-4">
+                <label for="uploaded-to" class="form-label small">Uploaded on or before (find old images)</label>
+                <input type="date" name="uploaded_to" id="uploaded-to" value="{{ $filters['uploaded_to'] ?? '' }}" class="form-control">
+              </div>
             </form>
 
-            @if (($filters['search'] ?? null) || ($filters['category_id'] ?? null) || ($filters['tag_id'] ?? null))
+            @if (($filters['search'] ?? null) || ($filters['category_id'] ?? null) || ($filters['tag_id'] ?? null) || ($filters['uploaded_from'] ?? null) || ($filters['uploaded_to'] ?? null))
               <div class="mb-3">
                 <a href="{{ route('admin.media.index') }}" class="small text-decoration-none">
                   <i class="bi bi-x-circle"></i> Clear filters
                 </a>
+              </div>
+            @endif
+
+            @if ($media->isNotEmpty())
+              <div class="border rounded p-3 mb-3">
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                  <label class="form-check-label"><input type="checkbox" id="select-page-media" class="form-check-input me-1"> Select images on this page only</label>
+                  <span id="selected-media-count" class="small text-muted" aria-live="polite">0 selected</span>
+                  <button type="button" id="delete-selected-media" class="btn btn-outline-danger btn-sm" disabled>Delete selected</button>
+                </div>
+                @if (auth()->user()?->isSuperAdmin())
+                  <label class="form-check-label small mt-2"><input type="checkbox" id="include-used-media" class="form-check-input me-1"> Also delete selected images that are in use</label>
+                  <p class="small text-muted mt-1 mb-0">Permanent deletion removes the files. Blog posts, tours or pages using them may lose their images. Only selected images are deleted.</p>
+                @endif
+                <div id="bulk-delete-results" class="small mt-2" role="status" aria-live="polite"></div>
               </div>
             @endif
 
@@ -173,6 +193,9 @@
               @forelse ($media as $item)
                 <div class="col-xl-3 col-lg-4 col-md-6">
                   <div class="card media-item shadow-sm position-relative h-100">
+                    <label class="position-absolute bottom-0 end-0 m-2 bg-white rounded p-1" style="z-index: 2;">
+                      <input type="checkbox" class="form-check-input m-0 select-media" value="{{ $item->id }}" data-url="{{ route('admin.media.destroy.ajax', $item) }}" data-name="{{ $item->name }}" data-used="{{ $item->usage_count > 0 ? '1' : '0' }}" aria-label="Select {{ $item->name }}">
+                    </label>
                     <a href="{{ route('admin.media.show', $item) }}" class="text-decoration-none">
                       <img src="{{ $item->getUrl('thumb-webp') ?: $item->getUrl('thumb') ?: $item->getUrl() }}"
                            class="card-img-top" alt="{{ $item->meta?->alt_text ?: $item->name }}"
@@ -195,6 +218,7 @@
                       <p class="mb-0 mt-1 text-truncate text-muted" style="font-size: 0.7rem;" title="Uploaded by {{ $item->uploaded_by_name }}">
                         <i class="bi bi-person-up me-1"></i>{{ $item->uploaded_by_name }}
                       </p>
+                      <p class="mb-0 mt-1 text-muted" style="font-size: 0.7rem;">Uploaded {{ $item->created_at?->format('d M Y') ?? 'date unavailable' }}</p>
                       @if ($item->categories->isNotEmpty())
                         <p class="mb-0 mt-1 text-truncate" style="font-size: 0.7rem;">
                           @foreach ($item->categories as $category)
@@ -302,52 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 4000);
     }
 
-    // Handle delete actions from the grid through one listener.
-    const mediaGrid = document.querySelector('.media-grid');
-    if (mediaGrid) {
-        mediaGrid.addEventListener('click', function (e) {
-            const button = e.target.closest('.remove-media');
-            if (!button) return;
-
-            e.preventDefault();
-
-            if (!confirm('Delete this image permanently? This cannot be undone.')) {
-                return;
-            }
-
-            const url = button.getAttribute('data-url');
-            const item = button.closest('.media-item');
-
-            button.disabled = true;
-            button.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-
-            fetch(url, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json',
-                },
-            })
-                .then(response => response.json().then(data => ({ status: response.status, data })))
-                .then(({ status, data }) => {
-                    if (status === 200 && data.success) {
-                        item.closest('[class*="col-"]').style.transition = 'opacity 0.3s';
-                        item.closest('[class*="col-"]').style.opacity = '0';
-                        setTimeout(() => item.closest('[class*="col-"]').remove(), 300);
-                        showToast('Image deleted.', 'success');
-                    } else {
-                        showToast(data.message || 'This image could not be deleted.', 'danger');
-                        button.disabled = false;
-                        button.innerHTML = '<i class="bi bi-trash"></i>';
-                    }
-                })
-                .catch(() => {
-                    showToast('Request failed. Please try again.', 'danger');
-                    button.disabled = false;
-                    button.innerHTML = '<i class="bi bi-trash"></i>';
-                });
-        });
-    }
+    @include('admin.media.partials.delete-script')
 });
 </script>
 @endpush

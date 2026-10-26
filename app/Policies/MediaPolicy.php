@@ -51,4 +51,9 @@ class MediaPolicy
     {
         return true;
     }
+
+    public function forceDelete(User $user, GalleryImage $image): bool
+    {
+        return $user->isSuperAdmin();
+    }
 }

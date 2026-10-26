@@ -4,6 +4,54 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require('playwright');
 
+test('bulk deletion keeps unselected photos and requires explicit override for used images', async () => {
+    const browser = await chromium.launch({ channel: 'chrome', headless: true });
+    try {
+        const page = await browser.newPage();
+        const requests = [];
+        const confirmations = [];
+        page.on('dialog', async dialog => { confirmations.push(dialog.message()); await dialog.accept(); });
+        await page.route('http://media-library.test/**', async route => {
+            if (route.request().method() === 'GET') {
+                await route.fulfill({ contentType: 'text/html', body: `<!doctype html><html><head><meta name="csrf-token" content="test"></head><body>
+                  <input type="checkbox" id="select-page-media"><span id="selected-media-count"></span>
+                  <input type="checkbox" id="include-used-media"><button id="delete-selected-media" disabled>Delete selected</button>
+                  <div id="bulk-delete-results"></div><div class="media-grid">
+                  ${[17, 18, 19].map(id => `<div class="col-3"><div class="media-item"><input type="checkbox" class="select-media" value="${id}" data-url="http://media-library.test/media/${id}/ajax" data-name="Photo ${id}" data-used="${id === 17 ? '1' : '0'}"><button class="remove-media" data-url="http://media-library.test/media/${id}/ajax">Delete</button></div></div>`).join('')}
+                  </div></body></html>` });
+                return;
+            }
+            const force = route.request().postDataJSON();
+            const id = Number(route.request().url().match(/media\/(\d+)/)[1]);
+            requests.push({ id, ...force });
+            const blocked = id === 17 && !force.force;
+            await route.fulfill({ status: blocked ? 422 : 200, contentType: 'application/json', body: JSON.stringify(blocked
+                ? { success: false, can_force_delete: true, message: 'Still in use' }
+                : { success: true }) });
+        });
+        await page.goto('http://media-library.test/');
+        await page.addScriptTag({ path: path.resolve('resources/views/admin/media/partials/delete-script.blade.php') });
+        await page.locator('.select-media[value="17"]').check();
+        await page.locator('.select-media[value="18"]').check();
+        await page.locator('#delete-selected-media').click();
+        await page.waitForFunction(() => document.querySelector('#bulk-delete-results').textContent.includes('1 deleted. 1 kept or failed.'));
+        assert.deepEqual(requests, [{ id: 17 }, { id: 18 }]);
+        assert.equal(await page.locator('.select-media[value="19"]').count(), 1);
+        assert.equal(await page.locator('.select-media[value="17"]').count(), 1);
+        await page.locator('#include-used-media').check();
+        await page.locator('#delete-selected-media').click();
+        await page.waitForFunction(() => document.querySelector('#bulk-delete-results').textContent.includes('1 deleted. 0 kept or failed.'));
+        assert.deepEqual(requests.at(-1), { id: 17, force: true, confirm_used: true });
+        assert.equal(await page.locator('.select-media[value="19"]').count(), 1);
+        assert.equal(await page.locator('.select-media[value="17"]').count(), 0);
+        assert.match(confirmations[0], /2 selected image/);
+        assert.match(confirmations[1], /1 selected image\(s\) are in use/);
+        assert.equal(requests.some(request => request.id === 19), false);
+    } finally {
+        await browser.close();
+    }
+});
+
 test('50 uploads use separate requests; failed images remain for retry in the chosen subcategory', async () => {
     const browser = await chromium.launch({ channel: 'chrome', headless: true });
     try {
@@ -95,7 +143,9 @@ test('category search opens deep matches and restores collapsed folders when cle
             </ul></div></details></li>
           </ul>`);
         const source = fs.readFileSync('resources/views/admin/media/index.blade.php', 'utf8');
-        const script = source.split('<script>')[1].split('</script>')[0].replace(/\{\{[\s\S]*?\}\}/g, '3');
+        const script = source.split('<script>')[1].split('</script>')[0]
+            .replace("@include('admin.media.partials.delete-script')", fs.readFileSync('resources/views/admin/media/partials/delete-script.blade.php', 'utf8'))
+            .replace(/\{\{[\s\S]*?\}\}/g, '3');
         await page.addScriptTag({ content: script });
         await page.evaluate(() => document.dispatchEvent(new Event('DOMContentLoaded')));
         assert.equal(await page.locator('details[open]').count(), 2, 'active deep category expands its ancestors');
