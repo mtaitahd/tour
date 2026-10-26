@@ -71,6 +71,10 @@ class MediaLibraryController extends Controller
      */
     public function index(Request $request): View
     {
+        $perPage = (int) $request->query('per_page', MediaLibraryService::DEFAULT_PER_PAGE);
+        if (! in_array($perPage, [24, 48, 96], true)) {
+            $perPage = MediaLibraryService::DEFAULT_PER_PAGE;
+        }
         $media = $this->mediaLibrary->paginate([
             'search' => $request->query('search'),
             'category_id' => $request->query('category_id'),
@@ -78,7 +82,7 @@ class MediaLibraryController extends Controller
             'uploaded_from' => $request->query('uploaded_from'),
             'uploaded_to' => $request->query('uploaded_to'),
             'sort' => $request->query('sort', 'newest'),
-        ]);
+        ], $perPage);
 
         return view('admin.media.index', [
             'media' => $media,

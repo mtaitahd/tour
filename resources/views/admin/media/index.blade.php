@@ -63,15 +63,19 @@
             @if ($categories->isEmpty())
               <p class="small text-muted mb-0">No categories yet.</p>
             @else
-              <ul class="list-unstyled mb-0">
+              <label for="category-search" class="visually-hidden">Find a category</label>
+              <input type="search" id="category-search" class="form-control form-control-sm mb-2" placeholder="Find a category or camp…">
+              <p class="small text-muted mb-2">Open a folder to see its subcategories.</p>
+              <ul class="list-unstyled mb-0" id="media-category-tree" style="max-height: 420px; overflow-y: auto;">
                 <li class="mb-1">
-                  <a href="{{ route('admin.media.index', array_merge(request()->query(), ['category_id' => null])) }}"
+                  <a href="{{ route('admin.media.index', array_merge(request()->query(), ['category_id' => null, 'page' => null])) }}"
                      class="d-block px-2 py-1 rounded small text-decoration-none {{ empty($filters['category_id']) ? 'bg-primary text-white' : 'text-body' }}">
                     All images
                   </a>
                 </li>
                 @include('admin.media.partials.category-tree', ['categories' => $categories, 'activeCategoryId' => $filters['category_id'] ?? null])
               </ul>
+              <p id="category-search-empty" class="small text-muted mt-2" hidden>No categories match.</p>
             @endif
           </div>
         </div>
@@ -88,7 +92,7 @@
             @else
               <div class="d-flex flex-wrap gap-1">
                 @foreach ($tags as $tag)
-                  <a href="{{ route('admin.media.index', array_merge(request()->query(), ['tag_id' => $tag->id])) }}"
+                  <a href="{{ route('admin.media.index', array_merge(request()->query(), ['tag_id' => $tag->id, 'page' => null])) }}"
                      class="badge text-decoration-none {{ (int) ($filters['tag_id'] ?? null) === $tag->id ? 'bg-primary' : 'bg-light text-dark' }}">
                     {{ $tag->name }} <span class="opacity-75">{{ $tag->media_count }}</span>
                   </a>
@@ -110,6 +114,13 @@
               </button>
             </div>
 
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+              <p class="small text-muted mb-0">Showing {{ $media->firstItem() ?? 0 }}–{{ $media->lastItem() ?? 0 }} of {{ $media->total() }} images. Parent categories include their subcategories.</p>
+              @if ($media->hasPages())
+                <nav aria-label="Image pages at top">{{ $media->onEachSide(1)->links('pagination::bootstrap-5') }}</nav>
+              @endif
+            </div>
+
             {{-- Search + sort --}}
             <form method="GET" action="{{ route('admin.media.index') }}" class="row g-2 mb-4">
               @if (!empty($filters['category_id']))
@@ -119,11 +130,11 @@
                 <input type="hidden" name="tag_id" value="{{ $filters['tag_id'] }}">
               @endif
 
-              <div class="col-md-5">
+              <div class="col-md-4">
                 <input type="text" name="search" value="{{ $filters['search'] ?? '' }}"
                        class="form-control" placeholder="Search by title, filename, or tag&hellip;">
               </div>
-              <div class="col-md-3">
+              <div class="col-md-2">
                 <input type="date" name="uploaded_from" value="{{ $filters['uploaded_from'] ?? '' }}"
                        class="form-control" title="Uploaded from">
               </div>
@@ -136,8 +147,16 @@
                   <option value="least_used" {{ ($filters['sort'] ?? '') === 'least_used' ? 'selected' : '' }}>Least used</option>
                 </select>
               </div>
+              <div class="col-md-2">
+                <label for="media-per-page" class="visually-hidden">Images per page</label>
+                <select name="per_page" id="media-per-page" class="form-select">
+                  @foreach ([24, 48, 96] as $pageSize)
+                    <option value="{{ $pageSize }}" @selected($media->perPage() === $pageSize)>{{ $pageSize }} / page</option>
+                  @endforeach
+                </select>
+              </div>
               <div class="col-md-1">
-                <button type="submit" class="btn btn-outline-secondary w-100"><i class="bi bi-search"></i></button>
+                <button type="submit" class="btn btn-outline-secondary w-100" aria-label="Apply image filters"><i class="bi bi-search"></i></button>
               </div>
             </form>
 
@@ -229,6 +248,39 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const categoryTree = document.getElementById('media-category-tree');
+    const categorySearch = document.getElementById('category-search');
+    if (categoryTree && categorySearch) {
+        const activeLink = categoryTree.querySelector('[data-category-link="{{ (int) ($filters['category_id'] ?? 0) }}"]');
+        let ancestor = activeLink?.parentElement;
+        while (ancestor && ancestor !== categoryTree) {
+            if (ancestor.tagName === 'DETAILS') ancestor.open = true;
+            ancestor = ancestor.parentElement;
+        }
+        let savedOpen = [];
+        categorySearch.addEventListener('input', function () {
+            const term = this.value.trim().toLocaleLowerCase();
+            if (term && !savedOpen.length) {
+                savedOpen = Array.from(categoryTree.querySelectorAll('details')).map(el => [el, el.open]);
+            }
+            const filterNode = (node, parentMatches = false) => {
+                const matches = node.dataset.categoryName.toLocaleLowerCase().includes(term);
+                const children = Array.from(node.querySelectorAll(':scope > details > div > ul > [data-category-node]'));
+                const childMatches = children.map(child => filterNode(child, parentMatches || matches)).some(Boolean);
+                const visible = !term || parentMatches || matches || childMatches;
+                node.hidden = !visible;
+                const branch = node.querySelector(':scope > details');
+                if (branch && term) branch.open = visible;
+                return visible;
+            };
+            const visible = Array.from(categoryTree.querySelectorAll(':scope > [data-category-node]')).map(node => filterNode(node)).some(Boolean);
+            document.getElementById('category-search-empty').hidden = visible;
+            if (!term) {
+                savedOpen.forEach(([el, open]) => { el.open = open; });
+                savedOpen = [];
+            }
+        });
+    }
     function showToast(message, type = 'success') {
         const toastContainer = document.createElement('div');
         toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
@@ -250,10 +302,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 4000);
     }
 
-    // Event delegation on the grid container, rather than binding each .remove-media
-    // button individually, so cards injected live by the upload modal (see
-    // partials/upload-modal.blade.php's prependToGrid()) are automatically covered
-    // with zero extra wiring — there's nothing to re-bind after an upload.
+    // Handle delete actions from the grid through one listener.
     const mediaGrid = document.querySelector('.media-grid');
     if (mediaGrid) {
         mediaGrid.addEventListener('click', function (e) {

@@ -98,10 +98,10 @@
 
               <div class="mb-3">
                 <label class="form-label fw-semibold">Images to compress</label>
-                <select name="collection" id="collectionSelect" class="form-select">
+                <select name="category_id" id="categorySelect" class="form-select">
                   <option value="all">All categories</option>
                   @foreach ($categories as $category)
-                    <option value="{{ $category['collection'] }}">{{ str_replace('_', ' ', ucwords($category['collection'])) }}
+                    <option value="{{ $category['id'] }}">{{ $category['name'] }}
                       ({{ $category['models']->sum('count') }})</option>
                   @endforeach
                 </select>
@@ -125,7 +125,8 @@
             </div>
             <p class="text-muted small mb-0">
               Compression is applied to the WebP variants on disk. Category rows below show how many
-              images live in each collection.
+              images are assigned to each Media Library category. Images in multiple categories are counted
+              in each category; All categories compresses each image once.
             </p>
           </div>
         </div>
@@ -137,8 +138,8 @@
           <div class="card-body">
             <h5 class="card-title">Images by category</h5>
             <p class="text-muted small mb-3">
-              Images are arranged by their collection — <strong>gallery</strong> stays in gallery,
-              <strong>hero / safari_car / itinerary</strong> belong to tours &amp; destinations, etc.
+              These are the categories created in Media Library, including categories with no images.
+              Images without a category appear under <strong>Uncategorized</strong>.
             </p>
 
             @if ($categories->isEmpty())
@@ -148,7 +149,7 @@
                 <table class="table table-hover align-middle">
                   <thead>
                     <tr class="text-uppercase small text-muted">
-                      <th style="min-width:200px">Collection</th>
+                      <th style="min-width:200px">Category</th>
                       <th>Used by</th>
                       <th class="text-end">Images</th>
                       <th class="text-end">Admin uploaded</th>
@@ -169,8 +170,7 @@
                               <i class="bi bi-folder2-open"></i>
                             </span>
                             <div>
-                              <div class="fw-medium">{{ str_replace('_', ' ', ucwords($category['collection'])) }}</div>
-                              <small class="text-muted">{{ $category['collection'] }}</small>
+                              <div class="fw-medium">{{ $category['name'] }}</div>
                             </div>
                           </div>
                         </td>
@@ -260,13 +260,14 @@ function toggleMode() {
     document.getElementById('filesize').required = isFilesize;
 }
 document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('compressSubmitBtn').addEventListener('click', function () {
+    document.getElementById('compressSubmitBtn').form.addEventListener('submit', function () {
         const isFilesize = document.getElementById('modeFilesize').checked;
         document.getElementById('compressionValue').value = isFilesize
             ? document.getElementById('filesize').value
             : document.getElementById('quality').value;
-        this.disabled = true;
-        this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Compressing…';
+        const button = document.getElementById('compressSubmitBtn');
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Compressing…';
     });
 });
 </script>

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\GalleryImage;
+use App\Models\MediaCategory;
 use Illuminate\Support\Collection;
 use RuntimeException;
 
@@ -32,12 +33,12 @@ class MediaCompressionService
     public const MAX_QUALITY = 95;
 
     /**
-     * Build a category summary of every media item, grouped by its collection name
-     * (gallery, hero, safari_car_images, featured_image, ...) and its owning model.
-     * This is what the compression page uses to "arrange based on categories".
+     * Summarize images by their assigned Media Library categories and owning model.
+     * Include empty categories and a separate group for unassigned images.
      *
      * @return Collection<int, array{
-     *   collection: string,
+     *   id: string,
+     *   name: string,
      *   models: Collection<int, array{label: string, count: int, size_bytes: int}>
      * }>
      */
@@ -45,7 +46,7 @@ class MediaCompressionService
     {
         $media = GalleryImage::query()
             ->whereIn('mime_type', ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'])
-            ->with('uploader')
+            ->with('categories')
             ->orderBy('collection_name')
             ->get([
                 'id', 'name', 'collection_name', 'model_type', 'model_id', 'size', 'mime_type', 'uploaded_by',
@@ -60,9 +61,20 @@ class MediaCompressionService
             'App\\Models\\GlobalMedia' => 'Media Library',
         ];
 
-        return $media
-            ->groupBy('collection_name')
-            ->map(function (Collection $items, string $collection) use ($modelLabels) {
+        $categories = MediaCategory::query()->orderBy('order')->orderBy('name')->get();
+        $groups = $categories->map(fn (MediaCategory $category) => [
+            'id' => (string) $category->id,
+            'name' => $category->name,
+            'items' => $media->filter(fn ($image) => $image->categories->contains('id', $category->id)),
+        ]);
+        $uncategorized = $media->filter(fn ($image) => $image->categories->isEmpty());
+        if ($uncategorized->isNotEmpty()) {
+            $groups->push(['id' => 'uncategorized', 'name' => 'Uncategorized', 'items' => $uncategorized]);
+        }
+
+        return $groups
+            ->map(function (array $group) use ($modelLabels) {
+                $items = $group['items'];
                 $byModel = $items->groupBy('model_type')->map(function (Collection $rows, string $modelType) use ($modelLabels) {
                     $attributed = $rows->filter(fn ($m) => $m->uploaded_by)->count();
 
@@ -76,7 +88,8 @@ class MediaCompressionService
                 })->values();
 
                 return [
-                    'collection' => $collection,
+                    'id' => $group['id'],
+                    'name' => $group['name'],
                     'models' => $byModel,
                     'total' => $items->count(),
                     'admin_uploaded' => $items->filter(fn ($m) => $m->uploaded_by)->count(),

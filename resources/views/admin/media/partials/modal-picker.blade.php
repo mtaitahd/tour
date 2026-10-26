@@ -28,12 +28,7 @@
           <div class="col-md-4">
             <select class="form-select picker-category-filter">
               <option value="">All categories</option>
-              @foreach ($categories ?? [] as $category)
-                <option value="{{ $category->id }}">{{ $category->full_path }}</option>
-                @foreach ($category->children as $child)
-                  <option value="{{ $child->id }}">&nbsp;&nbsp;{{ $child->full_path }}</option>
-                @endforeach
-              @endforeach
+              @include('admin.media.partials.category-options', ['categories' => $categories ?? collect()])
             </select>
           </div>
           <div class="col-md-3">

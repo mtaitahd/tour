@@ -66,6 +66,9 @@ class MediaCategory extends Model
     // Helper: full breadcrumb path, e.g. "Destinations > Kilimanjaro"
     public function getFullPathAttribute(): string
     {
+        if (isset($this->attributes['full_path'])) {
+            return $this->attributes['full_path'];
+        }
         $path = collect([$this->name]);
         $node = $this;
 
@@ -80,6 +83,8 @@ class MediaCategory extends Model
     // Helper: how many media items are directly in this category
     public function getMediaCountAttribute(): int
     {
-        return $this->media()->count();
+        return isset($this->attributes['media_count'])
+            ? (int) $this->attributes['media_count']
+            : $this->media()->count();
     }
 }

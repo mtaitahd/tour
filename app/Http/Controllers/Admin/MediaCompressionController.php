@@ -14,8 +14,7 @@ use Illuminate\View\View;
  * exactly as uploaded. Instead it re-compresses the WebP conversion variants Spatie
  * Media Library already generates (thumb-webp, medium-webp, large-webp) so the images
  * served to visitors are smaller. The admin chooses either a fixed quality or a target
- * file size (KB), and the page groups the library by collection (gallery / hero /
- * tours ...) so images can be compressed per category.
+ * file size (KB), and the page groups images by user-created Media Library categories.
  */
 class MediaCompressionController extends Controller
 {
@@ -50,7 +49,12 @@ class MediaCompressionController extends Controller
         $request->validate([
             'mode' => ['required', 'in:quality,filesize'],
             'value' => ['nullable', 'integer', 'min:1'],
-            'collection' => ['nullable', 'string'],
+            'category_id' => ['nullable', function ($attribute, $value, $fail) {
+                if (! in_array($value, ['all', 'uncategorized'], true)
+                    && (! ctype_digit((string) $value) || ! \App\Models\MediaCategory::whereKey($value)->exists())) {
+                    $fail('Please select a valid media category.');
+                }
+            }],
         ]);
 
         $mode = $request->input('mode');
@@ -100,27 +104,31 @@ class MediaCompressionController extends Controller
 
     /**
      * Resolve the media items to compress: an explicit id list, or every image within
-     * the chosen collection(s), or all images when the admin picks "all".
+     * the chosen Media Library category, or all images when the admin picks "all".
      *
      * @return \Illuminate\Support\Collection<int, \App\Models\GalleryImage>
      */
     protected function resolveImages(Request $request): \Illuminate\Support\Collection
     {
+        $query = \App\Models\GalleryImage::query()
+            ->whereIn('mime_type', ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']);
+
         if ($request->filled('media_ids')) {
             $ids = collect((array) $request->input('media_ids'))
                 ->filter(fn ($id) => is_numeric($id))
                 ->map(fn ($id) => (int) $id);
 
-            return \App\Models\GalleryImage::query()->whereIn('id', $ids)->get();
+            return $query->whereIn('id', $ids)->get();
         }
 
-        if ($request->input('collection') && $request->input('collection') !== 'all') {
-            return \App\Models\GalleryImage::query()
-                ->where('collection_name', $request->input('collection'))
-                ->get();
+        if ($request->input('category_id') === 'uncategorized') {
+            $query->whereDoesntHave('categories');
+        } elseif ($request->filled('category_id') && $request->input('category_id') !== 'all') {
+            $query->whereHas('categories', fn ($categories) =>
+                $categories->where('media_categories.id', $request->input('category_id')));
         }
 
-        return \App\Models\GalleryImage::query()->get();
+        return $query->get();
     }
 
     protected function human(int $bytes): string

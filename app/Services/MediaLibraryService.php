@@ -57,10 +57,10 @@ class MediaLibraryService
         }
 
         if (! empty($filters['category_id'])) {
-            $categoryId = (int) $filters['category_id'];
+            $categoryIds = $this->categoryIdsWithDescendants((int) $filters['category_id']);
 
-            $query->whereHas('categories', function (Builder $q) use ($categoryId) {
-                $q->where('media_categories.id', $categoryId);
+            $query->whereHas('categories', function (Builder $q) use ($categoryIds) {
+                $q->whereIn('media_categories.id', $categoryIds);
             });
         }
 
@@ -81,6 +81,7 @@ class MediaLibraryService
         }
 
         $this->applySort($query, $filters['sort'] ?? 'newest');
+        $query->orderBy('media.id', 'desc');
 
         return $query;
     }
@@ -277,17 +278,50 @@ class MediaLibraryService
     }
 
     /**
-     * Category tree, root-down, with each node's direct children eager loaded one level
-     * at a time — used to render the nested category picker/filter in the admin UI
-     * without an N+1 query per level.
+     * Build all category levels from one fetch, with counts and breadcrumb labels.
      */
     public function categoryTree(): Collection
     {
-        return MediaCategory::root()
-            ->with('children.children.children') // supports up to 3 levels of nesting out of the box
+        $categories = MediaCategory::query()->withCount('media')
             ->orderBy('order')
             ->orderBy('name')
             ->get();
+        $byParent = $categories->groupBy('parent_id');
+        $byId = $categories->keyBy('id');
+        foreach ($categories as $category) {
+            $category->setRelation('children', $byParent->get($category->id, new \Illuminate\Database\Eloquent\Collection()));
+            $path = [$category->name];
+            $seen = [$category->id => true];
+            $parent = $byId->get($category->parent_id);
+            while ($parent && ! isset($seen[$parent->id])) {
+                $seen[$parent->id] = true;
+                array_unshift($path, $parent->name);
+                $parent = $byId->get($parent->parent_id);
+            }
+            $category->setAttribute('full_path', implode(' > ', $path));
+        }
+
+        return $categories->whereNull('parent_id')->values();
+    }
+
+    /** Include nested categories when browsing a parent, without duplicating images. */
+    public function categoryIdsWithDescendants(int $categoryId): array
+    {
+        $byParent = MediaCategory::query()->get(['id', 'parent_id'])->groupBy('parent_id');
+        $ids = [];
+        $pending = [$categoryId];
+        while ($pending) {
+            $id = array_pop($pending);
+            if (isset($ids[$id])) {
+                continue;
+            }
+            $ids[$id] = $id;
+            foreach ($byParent->get($id, collect()) as $child) {
+                $pending[] = $child->id;
+            }
+        }
+
+        return array_values($ids);
     }
 
     /**
