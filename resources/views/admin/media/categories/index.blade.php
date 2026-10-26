@@ -35,9 +35,18 @@
             @if ($categories->isEmpty())
               <p class="text-muted mb-0">No categories yet. Create one to start organizing your media — for example "Destinations" with sub-categories like "Kilimanjaro" and "Serengeti".</p>
             @else
-              <ul class="list-unstyled mb-0">
+              <div class="mb-3">
+                <label for="media-category-search" class="form-label">Search categories</label>
+                <div class="input-group">
+                  <input type="search" id="media-category-search" class="form-control" placeholder="Search a category, subcategory or camp…" aria-controls="media-category-list">
+                  <button type="button" id="clear-category-search" class="btn btn-outline-secondary" disabled>Clear</button>
+                </div>
+                <p id="category-search-count" class="small text-muted mt-2 mb-0" role="status" aria-live="polite"></p>
+              </div>
+              <ul class="list-unstyled mb-0" id="media-category-list">
                 @include('admin.media.categories.partials.tree-row', ['categories' => $categories, 'depth' => 0])
               </ul>
+              <p id="no-category-results" class="text-muted py-3 mb-0" hidden>No categories match your search.</p>
             @endif
           </div>
         </div>
@@ -63,3 +72,43 @@
     </div>
   </section>
 @endsection
+
+@push('scripts')
+<script data-media-category-search>
+document.addEventListener('DOMContentLoaded', function () {
+    const search = document.getElementById('media-category-search');
+    if (!search) return;
+    const rows = Array.from(document.querySelectorAll('#media-category-list [data-category-id]'));
+    const byId = new Map(rows.map(row => [row.dataset.categoryId, row]));
+    const clear = document.getElementById('clear-category-search');
+
+    function filterCategories() {
+        const terms = search.value.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+        const visible = new Set();
+        rows.forEach(row => {
+            const path = row.dataset.categoryPath.toLocaleLowerCase();
+            if (!terms.every(term => path.includes(term))) return;
+            let current = row;
+            while (current && !visible.has(current.dataset.categoryId)) {
+                visible.add(current.dataset.categoryId);
+                current = byId.get(current.dataset.parentId);
+            }
+        });
+        rows.forEach(row => row.classList.toggle('d-none', !visible.has(row.dataset.categoryId)));
+        document.getElementById('no-category-results').hidden = visible.size > 0;
+        document.getElementById('category-search-count').textContent = terms.length
+            ? `Showing ${visible.size} of ${rows.length} categories, including parent categories.`
+            : `${rows.length} categories. Search includes all subcategories.`;
+        clear.disabled = search.value.length === 0;
+    }
+
+    search.addEventListener('input', filterCategories);
+    clear.addEventListener('click', function () {
+        search.value = '';
+        filterCategories();
+        search.focus();
+    });
+    filterCategories();
+});
+</script>
+@endpush

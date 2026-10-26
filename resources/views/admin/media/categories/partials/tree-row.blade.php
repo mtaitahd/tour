@@ -3,7 +3,8 @@
     indentation so nesting is visually obvious without needing a JS tree widget.
 --}}
 @foreach ($categories as $category)
-    <li class="d-flex justify-content-between align-items-center py-2 border-bottom" style="padding-left: {{ $depth * 24 }}px;">
+    <li class="d-flex justify-content-between align-items-center py-2 border-bottom" style="padding-left: {{ $depth * 24 }}px;"
+        data-category-id="{{ $category->id }}" data-parent-id="{{ $category->parent_id }}" data-category-path="{{ $category->full_path }}">
         <div>
             @if ($depth > 0)
                 <i class="bi bi-arrow-return-right text-muted me-1"></i>
