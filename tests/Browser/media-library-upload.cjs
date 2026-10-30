@@ -57,6 +57,7 @@ test('50 uploads use separate requests; failed images remain for retry in the ch
     try {
         const page = await browser.newPage();
         const attempts = [];
+        let serverError = false;
         await page.route('http://media-library.test/**', async route => {
             if (route.request().method() === 'GET') {
                 await route.fulfill({ contentType: 'text/html', body: `<!doctype html><html><body>
@@ -81,6 +82,11 @@ test('50 uploads use separate requests; failed images remain for retry in the ch
             assert.equal((body.match(/filename=/g) || []).length, 1, 'each request contains one file');
             assert.match(body, /name="category_id"\r\n\r\n5\r\n/, 'all requests retain the selected subcategory');
             attempts.push(name);
+            assert.equal(route.request().headers()['x-requested-with'], 'XMLHttpRequest');
+            if (serverError) {
+                await route.fulfill({ status: 500, contentType: 'text/html', body: '<html>Server error</html>' });
+                return;
+            }
             await route.fulfill({
                 status: name === 'image-21.png' && attempts.filter(item => item === name).length === 1 ? 422 : 200,
                 contentType: 'application/json',
@@ -122,6 +128,17 @@ test('50 uploads use separate requests; failed images remain for retry in the ch
         assert.equal(attempts.length, 51);
         assert.equal(attempts.at(-1), 'image-21.png');
         assert.equal(await page.locator('#upload-submit-btn').isDisabled(), true);
+        serverError = true;
+        await page.locator('#upload-file-input').setInputFiles(files.slice(0, 3));
+        await page.locator('#upload-submit-btn').click();
+        await page.waitForFunction(() => document.querySelector('#upload-progress-text').textContent === '0 of 3 images uploaded. 3 failed.');
+        assert.equal(attempts.length, 52, 'a server failure pauses subsequent requests');
+        assert.match(await page.locator('#upload-results').textContent(), /HTTP 500/);
+        assert.match(await page.locator('#upload-selection-count').textContent(), /^3 images selected/);
+        serverError = false;
+        await page.locator('#upload-submit-btn').click();
+        await page.waitForFunction(() => document.querySelector('#upload-progress-text').textContent === '3 of 3 images uploaded. 0 failed.');
+        assert.equal(attempts.length, 55, 'the paused files can be retried');
     } finally {
         await browser.close();
     }

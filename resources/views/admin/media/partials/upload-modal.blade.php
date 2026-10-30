@@ -12,7 +12,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form id="media-upload-form" action="{{ route('admin.media.upload') }}" method="POST" enctype="multipart/form-data">
+        <form id="media-upload-form" action="{{ route('admin.media.upload', [], false) }}" method="POST" enctype="multipart/form-data">
           @csrf
 
           <div id="upload-dropzone" class="border-2 border-dashed rounded p-4 text-center bg-light mb-3" style="border-style: dashed; cursor: pointer;">

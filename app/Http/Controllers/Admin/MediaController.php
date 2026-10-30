@@ -4,9 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Illuminate\Http\Request;
-use App\Models\GlobalMedia;
 use App\Models\MediaUsage;
+use App\Http\Requests\Media\StoreMediaRequest;
 
 class MediaController extends Controller
 {
@@ -18,28 +17,11 @@ class MediaController extends Controller
 
         return view('admin.media.index', compact('media'));
     }
-    public function upload(Request $request)
+    public function upload(StoreMediaRequest $request)
     {
-        $request->validate([
-            'files.*'    => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'collection' => 'nullable|string|in:general,hero,gallery',
-        ]);
-
-        // Get or create singleton without mass-assigning id
-        $globalMedia = GlobalMedia::first();
-        if (!$globalMedia) {
-            $globalMedia = new GlobalMedia();
-            $globalMedia->id = 1;          // Set manually
-            $globalMedia->save();
-        }
-
-        foreach ($request->file('files') as $file) {
-            $globalMedia->addMedia($file)
-                        ->toMediaCollection($request->input('collection', 'general'));
-        }
-
-        return redirect()->route('admin.media.index')
-                         ->with('success', count($request->file('files')) . ' file(s) uploaded!');
+        // Old cached routes may still point here after a deployment. Keep the
+        // upload response and category assignment identical to the current route.
+        return app(MediaUploadController::class)->store($request);
     }
     public function destroy(Media $media)
     {

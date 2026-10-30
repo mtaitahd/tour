@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasStandardMediaConversions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;  
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * GlobalMedia is a pre-existing singleton (a single row with no real columns) used purely
@@ -26,7 +26,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class GlobalMedia extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, HasStandardMediaConversions {
+        HasStandardMediaConversions::registerMediaConversions insteadof InteractsWithMedia;
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -37,42 +39,6 @@ class GlobalMedia extends Model implements HasMedia
         'id',           // Allow setting id for firstOrCreate singleton
         // Add any other fields you might use in future (e.g. name, description)
     ];
-
-    // Optional: if you never want mass assignment on other fields
-    // protected $guarded = [];
-     // Optional: define conversions (thumbnails)
-    public function registerMediaConversions(?Media $media = null): void
-    {
-        // Original quality conversions (you can keep these)
-        $this->addMediaConversion('thumb')
-             ->width(368)
-             ->height(232)
-             ->sharpen(10);
-
-        $this->addMediaConversion('medium')
-             ->width(800)
-             ->height(600);
-
-        // NEW: WebP versions of all conversions
-        $this->addMediaConversion('thumb-webp')
-             ->width(368)
-             ->height(232)
-             ->sharpen(10)
-             ->format('webp')
-             ->quality(80);  // 70–85 is usually perfect balance
-
-        $this->addMediaConversion('medium-webp')
-             ->width(800)
-             ->height(600)
-             ->format('webp')
-             ->quality(80);
-
-        // Optional: full-size WebP (for hero/large images)
-        $this->addMediaConversion('large-webp')
-             ->width(1200)
-             ->format('webp')
-             ->quality(82);
-    }
 
     public function registerMediaCollections(): void
     {

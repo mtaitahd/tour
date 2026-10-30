@@ -18,16 +18,22 @@ trait HasStandardMediaConversions
 {
     public function registerMediaConversions(?Media $media = null): void
     {
+        // Glide auto-orients every conversion by reading EXIF. Shared hosts may
+        // not provide that PHP extension; keep the encoded orientation there.
+        $orientation = function_exists('exif_read_data') ? 'auto' : '0';
         $this->addMediaConversion('thumb')
+             ->orientation($orientation)
              ->width(368)
              ->height(232)
              ->sharpen(10);
 
         $this->addMediaConversion('medium')
+             ->orientation($orientation)
              ->width(800)
              ->height(600);
 
         $this->addMediaConversion('thumb-webp')
+             ->orientation($orientation)
              ->width(368)
              ->height(232)
              ->sharpen(10)
@@ -35,12 +41,14 @@ trait HasStandardMediaConversions
              ->quality(80);
 
         $this->addMediaConversion('medium-webp')
+             ->orientation($orientation)
              ->width(800)
              ->height(600)
              ->format('webp')
              ->quality(80);
 
         $this->addMediaConversion('large-webp')
+             ->orientation($orientation)
              ->width(1200)
              ->format('webp')
              ->quality(82);

@@ -101,18 +101,36 @@ function initializeMediaUpload() {
             xhr.open('POST', form.action);
             xhr.timeout = 180000;
             xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.upload.addEventListener('progress', event => {
                 if (event.lengthComputable) onProgress(event.loaded / event.total);
             });
             xhr.onload = () => {
                 let response;
                 try { response = JSON.parse(xhr.responseText); }
-                catch { reject(new Error('Unexpected server response.')); return; }
+                catch {
+                    let message;
+                    if ([401, 419].includes(xhr.status) || /\/(login|password)(\/|\?|$)/.test(xhr.responseURL)) {
+                        message = 'Your session has expired. Refresh the page and log in again.';
+                    } else if (xhr.status === 413) {
+                        message = 'The server rejected the file size. Check the hosting upload limit (images may be up to 5MB).';
+                    } else if (xhr.status === 403) {
+                        message = 'The server blocked this upload (HTTP 403). Check your account permission or hosting security rules.';
+                    } else if (xhr.status >= 500) {
+                        message = `The server could not process this image (HTTP ${xhr.status}). Check the server error log. Refresh the library before retrying.`;
+                    } else {
+                        message = `Upload returned a page instead of an upload result (HTTP ${xhr.status}). Refresh the library before retrying to avoid duplicates.`;
+                    }
+                    reject(Object.assign(new Error(message), { stopQueue: true }));
+                    return;
+                }
                 if (xhr.status >= 200 && xhr.status < 300 && response.uploaded?.length === 1) {
                     resolve(response.uploaded[0]);
                 } else {
                     const errors = Object.values(response.errors || {}).flat().join(' ');
-                    reject(new Error(errors || response.message || `Upload failed (${xhr.status}).`));
+                    reject(Object.assign(new Error(errors || response.message || `Upload failed (${xhr.status}).`), {
+                        stopQueue: [401, 419].includes(xhr.status) || xhr.status >= 500,
+                    }));
                 }
             };
             xhr.onerror = () => reject(new Error('Connection failed. Please check whether this image arrived before retrying.'));
@@ -155,6 +173,11 @@ function initializeMediaUpload() {
                 } catch (error) {
                     failed.push(file);
                     message(`${file.name}: ${error.message}`, 'danger');
+                    if (error.stopQueue) {
+                        failed.push(...queue.slice(index + 1));
+                        message('Upload paused. Remaining images have been kept for retry after the problem is resolved.', 'warning');
+                        break;
+                    }
                 }
                 bar.style.width = `${Math.round((index + 1) / queue.length * 100)}%`;
             }
