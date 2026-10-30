@@ -77,4 +77,23 @@ class MediaCompressionCategoriesTest extends TestCase
         GalleryImage::find(1)->categories()->attach(2);
         $this->assertSame([1, 2], $controller->selected(['category_id' => 'all']));
     }
+
+    public function test_missing_conversion_files_are_skipped_without_a_type_error(): void
+    {
+        $image = \Mockery::mock(GalleryImage::class)->makePartial();
+        $image->shouldReceive('getPath')->times(3)->andReturn(__DIR__ . '/missing-conversion.webp');
+        $this->assertNull(app(MediaCompressionService::class)->compressMedia($image, 'quality', 70));
+    }
+
+    public function test_skipped_images_do_not_appear_in_compression_results(): void
+    {
+        $service = new class extends MediaCompressionService {
+            public function compressMedia(GalleryImage $media, string $mode, int $value): ?array
+            {
+                return $media->id === 1 ? null : ['media_id' => $media->id, 'orig' => 100, 'new' => 70];
+            }
+        };
+        $this->assertSame([['media_id' => 2, 'orig' => 100, 'new' => 70]], $service->compress([1, 2], 'quality', 70));
+        $this->assertSame([], $service->compress([1], 'quality', 70));
+    }
 }

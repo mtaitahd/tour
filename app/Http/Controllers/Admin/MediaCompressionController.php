@@ -82,6 +82,9 @@ class MediaCompressionController extends Controller
         }
 
         $results = $this->service->compress($images->pluck('id')->all(), $mode, $value);
+        if (empty($results)) {
+            return back()->with('error', 'No WebP image versions were available to compress. Generate the image thumbnails and try again.');
+        }
 
         $origTotal = array_sum(array_column($results, 'orig'));
         $newTotal = array_sum(array_column($results, 'new'));

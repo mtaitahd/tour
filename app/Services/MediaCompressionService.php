@@ -128,7 +128,10 @@ class MediaCompressionService
                 continue;
             }
 
-            $results[] = $this->compressMedia($media, $mode, $value);
+            $result = $this->compressMedia($media, $mode, $value);
+            if ($result !== null) {
+                $results[] = $result;
+            }
         }
 
         return $results;
@@ -145,7 +148,7 @@ class MediaCompressionService
      *   files: array<int, array{conversion: string, orig: int, new: int, optimal: bool, quality: int}>
      * }|null
      */
-    public function compressMedia(GalleryImage $media, string $mode, int $value): array
+    public function compressMedia(GalleryImage $media, string $mode, int $value): ?array
     {
         $origTotal = 0;
         $newTotal = 0;
