@@ -34252,3 +34252,31 @@ body.td-lock {
   .sfb-faq-item__question { overflow-wrap: anywhere; }
   .td-page--tour .td-offered__actions { display: flex; flex-wrap: wrap; gap: 8px; }
 }
+/* Give long package FAQ headings room to wrap on phones. */
+@media (max-width: 767.98px) {
+  .sfb-faq__content > h2 {
+    box-sizing: border-box;
+    width: 100%;
+    padding-inline: 16px;
+    margin: 0 0 16px;
+    font-size: clamp(20px, 5.4vw, 24px);
+    line-height: 1.35;
+    overflow-wrap: normal;
+    word-break: normal;
+    text-wrap: balance;
+  }
+  .sfb-faq-answered {
+    box-sizing: border-box;
+    width: 100%;
+    padding-inline: 16px;
+    display: grid;
+    grid-template-columns: auto 30px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .sfb-faq-answered img { width: 30px; height: 30px; }
+  .sfb-faq-answered strong { min-width: 0; font-size: 12px; overflow-wrap: anywhere; }
+}
