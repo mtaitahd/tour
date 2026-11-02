@@ -141,10 +141,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                 @if($tour->tour_format)<span class="td-tour-format-badge">{{ ucfirst($tour->tour_format) }} Tour</span>@endif
                 @if($tour->mountain)<span class="td-tour-format-badge">{{ $tour->mountain->name }}@if($tour->mountain_route_ids)<span class="ms-2">{{ \App\Models\MountainRoute::whereIn('id', $tour->mountain_route_ids)->pluck('name')->implode(', ') }}</span>@endif</span>@endif
                 <p class="td-hero__offered">Offered By: {{ $operator['name'] }}</p>
-                @php $googleReviewsUrl = \App\Models\Setting::get('google_reviews_url'); @endphp
-                @if($googleReviewsUrl && in_array(parse_url($googleReviewsUrl, PHP_URL_SCHEME), ['http', 'https'], true))
-                    <a href="{{ $googleReviewsUrl }}" class="td-hero__reviews" target="_blank" rel="noopener noreferrer">Leave a Review</a>
-                @endif
+                @include('frontend.partials.google-review-link', ['reviewLinkClass' => 'td-hero__reviews'])
             </div>
         </div>
     </section>
