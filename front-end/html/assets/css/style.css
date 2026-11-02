@@ -34220,3 +34220,22 @@ body.td-lock {
   .td-page--tour .td-hero__offered { overflow-wrap: anywhere; }
   .td-page--tour .td-hero__rating { flex-wrap: wrap; }
 }
+/* Keep tour highlights consistent with the day-by-day route summary. */
+.td-page--tour .td-highlights ul,
+.td-page--tour .td-highlights li { font-family: 'Montserrat', 'Inter', sans-serif; font-size: 15px; line-height: 1.5; font-weight: 400; }
+.td-page--tour .td-acc-thumbs { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); width: 100%; min-width: 0; gap: 8px; }
+.td-page--tour .td-acc-thumbs .td-thumb { width: 100%; height: auto; aspect-ratio: 4 / 3; }
+.td-page--tour .td-day__thumbs { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); width: 100%; }
+.td-page--tour .td-day__thumbs .td-thumb { width: 100%; height: auto; aspect-ratio: 4 / 3; }
+.td-page--tour .td-acc-tier { flex-wrap: wrap; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 767.98px) {
+  .td-page--tour .td-acc-table { overflow: hidden; width: 100%; }
+  .td-page--tour .td-acc-row { min-width: 0; grid-template-columns: minmax(0, 1fr); padding: 16px; }
+  .td-page--tour .td-acc-row--head { display: none; }
+  .td-page--tour .td-acc-row > * { min-width: 0; }
+}
+.td-page--tour .td-transport-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.td-page--tour .td-transport-photos .td-thumb { width: 100%; height: auto; aspect-ratio: 4 / 3; }
+@media (min-width: 768px) {
+  .td-page--tour .td-acc-row { grid-template-columns: 64px minmax(0, 1.5fr) minmax(0, 1fr) minmax(100px, 1fr); }
+}

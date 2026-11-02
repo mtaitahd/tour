@@ -64,8 +64,8 @@ if (Str::contains($videoUrl, 'youtu.be')) {
       image the user clicked. ── */
 $tdGallery = [];
 
-foreach ($galleryImages as $media) {
-    $tdGallery['tour'][] = [
+foreach ($safariCarImages as $media) {
+    $tdGallery['transport'][] = [
         'u' => $media->getUrl(),
         'c' => $tour->cardTitle(),
     ];
@@ -141,15 +141,10 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                 @if($tour->tour_format)<span class="td-tour-format-badge">{{ ucfirst($tour->tour_format) }} Tour</span>@endif
                 @if($tour->mountain)<span class="td-tour-format-badge">{{ $tour->mountain->name }}@if($tour->mountain_route_ids)<span class="ms-2">{{ \App\Models\MountainRoute::whereIn('id', $tour->mountain_route_ids)->pluck('name')->implode(', ') }}</span>@endif</span>@endif
                 <p class="td-hero__offered">Offered By: {{ $operator['name'] }}</p>
-                <div class="td-hero__rating">
-                    {!! $renderStars($displayRating) !!}
-                    @if($displayRating)
-                        <span class="td-hero__score">{{ number_format((float) $displayRating, 1) }}</span>
-                    @endif
-                    @if($displayReviews)
-                        <a href="#td-reviews-card" class="td-hero__reviews td-js-scroll" data-target="td-reviews-card">{{ $displayReviews }} review{{ $displayReviews === 1 ? '' : 's' }}</a>
-                    @endif
-                </div>
+                @php $googleReviewsUrl = \App\Models\Setting::get('google_reviews_url'); @endphp
+                @if($googleReviewsUrl && in_array(parse_url($googleReviewsUrl, PHP_URL_SCHEME), ['http', 'https'], true))
+                    <a href="{{ $googleReviewsUrl }}" class="td-hero__reviews" target="_blank" rel="noopener noreferrer">Read our Google Reviews</a>
+                @endif
             </div>
         </div>
     </section>
@@ -288,7 +283,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
             @endif
 
             {{-- 8. ACTIVITIES & TRANSPORTATION --}}
-            @if(count($transportRows) || $safariCarImages->isNotEmpty())
+            @if(count($transportRows) || $safariCarImages->isNotEmpty() || $tour->transport_type)
                 <section class="td-section td-white-card">
                     <h2 class="td-heading">Activities &amp; Transportation<span class="td-heading__line" aria-hidden="true"></span></h2>
                     <ul class="td-transport">
@@ -298,10 +293,10 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                                 <span>{{ $row['label'] }} <strong>{{ $row['value'] }}</strong></span>
                             </li>
                         @endforeach
-                        @if($safariCarImages->isNotEmpty())
+                        @if($safariCarImages->isNotEmpty() || $tour->transport_type)
                             <li>
                                 <span class="td-transport__icon">{!! $iconSvg('vehicle') !!}</span>
-                                <span>Game-drive vehicle <em>with pop-up roof for optimal wildlife viewing</em></span>
+                                <span>{{ \App\Models\TourPackage::TRANSPORT_TYPES[$tour->transport_type] ?? 'Transport' }}</span>
                             </li>
                         @endif
                     </ul>
@@ -359,20 +354,14 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                                 <span class="td-acc-thumbs" role="cell">
                                     @php $photos = $accommodationPhotoData[$row['day']] ?? []; @endphp
                                     @if(count($photos))
-                                        @foreach(array_slice($photos, 0, 3) as $pi => $photo)
+                                        @foreach($photos as $pi => $photo)
                                             <button type="button" class="td-thumb td-js-lightbox"
                                                     data-group="acc-day-{{ $row['day'] }}" data-index="{{ $pi }}"
                                                     aria-label="Open photo: {{ $photo['c'] }}">
                                                 <img src="{{ $photo['u'] }}" alt="{{ $photo['c'] }}" loading="lazy">
                                             </button>
                                         @endforeach
-                                        @if(count($photos) > 3)
-                                            <button type="button" class="td-thumb td-thumb--more td-js-lightbox"
-                                                    data-group="acc-day-{{ $row['day'] }}" data-index="3"
-                                                    aria-label="Open all {{ count($photos) }} photos">
-                                                +{{ count($photos) - 3 }}<span>Photos</span>
-                                            </button>
-                                        @endif
+
                                     @else
                                         <span class="td-acc-nophotos">—</span>
                                     @endif
@@ -548,17 +537,17 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                 </div>
             @endif
 
-            {{-- 15. PHOTO CARD --}}
-            @if($galleryImages->isNotEmpty() || $tour->hasHeroImage())
-                @php $photoCardImage = $galleryImages->first()?->getUrl('medium-webp') ?: ($galleryImages->first()?->getUrl() ?: $heroUrl); @endphp
+            @if($safariCarImages->isNotEmpty())
                 <div class="td-side-card td-photo-card">
-                    <button type="button" class="td-photo-card__imgbtn td-js-lightbox" data-group="tour" data-index="0"
-                            aria-label="Open tour photo gallery">
-                        <img src="{{ $photoCardImage }}" alt="{{ $tour->cardTitle() }} photo" loading="lazy">
-                    </button>
-                    <button type="button" class="td-morelink td-js-lightbox" data-group="tour" data-index="0">
-                        Open Photos ({{ $galleryImages->count() ?: 1 }})
-                    </button>
+                    <h3 class="td-side-title">{{ \App\Models\TourPackage::TRANSPORT_TYPES[$tour->transport_type] ?? 'Transport' }} Photos</h3>
+                    <div class="td-transport-photos">
+                        @foreach($safariCarImages as $transportPhoto)
+                            <button type="button" class="td-thumb td-js-lightbox" data-group="transport" data-index="{{ $loop->index }}" aria-label="Open transport photo {{ $loop->iteration }}">
+                                <img src="{{ $transportPhoto->hasGeneratedConversion('thumb-webp') ? $transportPhoto->getUrl('thumb-webp') : $transportPhoto->getUrl() }}" alt="{{ $transportPhoto->name }}" loading="lazy">
+                            </button>
+                        @endforeach
+                    </div>
+                    <button type="button" class="td-morelink td-js-lightbox" data-group="transport" data-index="0">Open Photos ({{ $safariCarImages->count() }})</button>
                 </div>
             @endif
 
@@ -610,7 +599,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
 
                                     @if(count($dayPhotos))
                                         <div class="td-day__thumbs">
-                                            @foreach(array_slice($dayPhotos, 0, 4) as $pi => $photo)
+                                            @foreach($dayPhotos as $pi => $photo)
                                                 <button type="button" class="td-thumb td-js-lightbox"
                                                         data-group="day-{{ $index + 1 }}" data-index="{{ $pi }}"
                                                         aria-label="Open photo: {{ $photo['c'] }}">
@@ -833,7 +822,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                         @foreach($transportRows as $row)
                             <li><strong>{{ rtrim($row['label'], ':') }}</strong><span>{{ $row['value'] }}</span></li>
                         @endforeach
-                        @if($safariCarImages->isNotEmpty())
+                        @if($safariCarImages->isNotEmpty() || $tour->transport_type)
                             <li><strong>Transportation</strong><span>Game-drive vehicle</span></li>
                         @endif
                     </ul>
@@ -1300,6 +1289,22 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
         document.querySelectorAll('[data-td-day].is-open [data-td-day-body]').forEach(function (body) {
             body.style.maxHeight = body.scrollHeight + 'px';
         });
+
+        // Lazy images can increase the content height after an accordion opens.
+        function resizeOpenDays() {
+            document.querySelectorAll('[data-td-day].is-open [data-td-day-body]').forEach(function (body) {
+                body.style.maxHeight = body.scrollHeight + 'px';
+            });
+        }
+        document.querySelectorAll('.td-day__body img').forEach(function (image) {
+            image.addEventListener('load', resizeOpenDays);
+            image.addEventListener('error', resizeOpenDays);
+        });
+        window.addEventListener('resize', resizeOpenDays);
+        if (window.ResizeObserver) {
+            const dayResizeObserver = new ResizeObserver(resizeOpenDays);
+            document.querySelectorAll('.td-day__grid, .td-day__facts').forEach(element => dayResizeObserver.observe(element));
+        }
 
         /* ── Reviews carousel ────────────────────────────────────── */
         var reviewViewport = document.querySelector('[data-td-review-viewport]');

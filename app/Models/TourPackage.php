@@ -20,7 +20,10 @@ class TourPackage extends Model implements HasMedia
         HasStandardMediaConversions::registerMediaConversions insteadof InteractsWithMedia;
     }
 
+    public const TRANSPORT_TYPES = ['car' => 'Car', 'safari_vehicle' => 'Safari vehicle', 'minivan' => 'Minivan', 'bus' => 'Bus', 'bike' => 'Bicycle', 'motorcycle' => 'Motorcycle', 'boat' => 'Boat', 'flight' => 'Flight', 'walking' => 'Walking', 'other' => 'Other'];
+
     protected $fillable = [
+        'transport_type',
         // Core
         'slug',
         'title',

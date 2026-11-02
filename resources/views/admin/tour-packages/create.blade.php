@@ -181,14 +181,15 @@
      available to existing public tour pages and are preserved when other fields
      are edited. --}}
 
+@include('admin.tour-packages.partials.transport-type')
 <div class="row mb-3">
-  <label class="col-sm-2 col-form-label">Transfer Cars Images</label>
+  <label class="col-sm-2 col-form-label">Transport Images</label>
   <div class="col-sm-10">
     <x-media-picker
         name="safari_car_image_ids"
         multiple
         :selected="old('safari_car_image_ids')"
-        label="Select Transfer Cars Images"
+        label="Select Transport Images"
     />
     <small class="text-muted d-block mt-1">Choose one or more images from the library. Drag to reorder.</small>
   </div>

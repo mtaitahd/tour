@@ -646,7 +646,8 @@ class TourController extends Controller
 
         /* ── Accommodation & meals table rows (one row per itinerary day) ───── */
         $accommodationRows = $itinerary->map(function (array $day, int $index) use ($tour) {
-            $tiers = collect($day['accommodations'] ?? [])->map(function (array $tier) {
+            $tiers = collect($day['accommodations'] ?? [])->map(function (array $tier) use ($tour) {
+                $stay = !empty($tier['accommodation_id']) ? \App\Models\Accommodation::find($tier['accommodation_id']) : null;
                 $image    = ! empty($tier['image_id']) ? GalleryImage::find($tier['image_id']) : null;
                 $thumbUrl = null;
                 $fullUrls = [];
@@ -656,15 +657,26 @@ class TourController extends Controller
                     $fullUrls[] = $image->getUrl();
                 }
 
+                if (!$image && $stay?->hero_image_id) {
+                    $hero = GalleryImage::find($stay->hero_image_id);
+                    if ($hero) $fullUrls[] = $hero->getUrl();
+                }
+                if ($stay) foreach ($stay->galleryImages() as $photo) $fullUrls[] = $photo->getUrl();
+                $group = $tour->tour_level === 'luxury' ? 'luxury' : (str_starts_with((string) $tour->tour_level, 'budget') ? 'budget' : 'mid_range');
+                $labels = ['luxury' => ['silver'=>'High Luxury', 'gold'=>'High Exclusive', 'platinum'=>'High Elite'], 'budget'=>['silver'=>'Essential', 'gold'=>'Value', 'platinum'=>'Plus'], 'mid_range'=>['silver'=>'High Classic', 'gold'=>'Comfort', 'platinum'=>'Premium']];
+                $key = strtolower($tier['tier_key'] ?? $tier['type'] ?? $tier['level'] ?? '');
+                $type = $tier['type'] ?? $tier['level'] ?? '';
+                if (in_array(strtolower($type), ['silver', 'gold', 'platinum'], true) || $type === '') $type = $labels[$group][$key] ?? '';
+
                 return [
-                    'type'     => strtoupper($tier['type'] ?? $tier['level'] ?? 'SILVER'),
+                    'type'     => $type,
                     'tier_key' => strtolower($tier['tier_key'] ?? $tier['type'] ?? $tier['level'] ?? 'silver'),
                     'name'     => $tier['name'] ?? '',
                     'description' => $tier['description'] ?? '',
                     'amenities' => $tier['amenities'] ?? [],
                     'url'      => $tier['url'] ?? '',
                     'thumb'    => $thumbUrl,
-                    'photos'   => $fullUrls,
+                    'photos'   => array_values(array_unique($fullUrls)),
                 ];
             })->values();
 

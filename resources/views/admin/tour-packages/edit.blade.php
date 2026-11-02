@@ -213,9 +213,10 @@
                 </div>
               </div>
 
-              <!-- Transfer Cars Images -->
-              <div class="row mb-3">
-                <label class="col-sm-2 col-form-label">Transfer Cars Images</label>
+              <!-- Transport Images -->
+              @include('admin.tour-packages.partials.transport-type')
+<div class="row mb-3">
+                <label class="col-sm-2 col-form-label">Transport Images</label>
                 <div class="col-sm-10">
                   {{--
                       Picker-only, per decision: direct upload removed entirely.
@@ -227,7 +228,7 @@
                       name="safari_car_image_ids"
                       multiple
                       :selected="old('safari_car_image_ids', app(\App\Services\MediaLibraryService::class)->orderedImagesFor($tourPackage, 'safari_car_images')->pluck('id')->all())"
-                      label="Select Transfer Cars Images"
+                      label="Select Transport Images"
                   />
                   <small class="text-muted d-block mt-1">Choose one or more images from the library. Drag to reorder.</small>
                 </div>
