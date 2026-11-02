@@ -30559,6 +30559,7 @@ body.td-lock { overflow: hidden; }
 
 /* Mobile drawer — full-width panel that drops down directly below the header */
 .av-drawer {
+    display: none;
     position: absolute;
     top: 100%;
     left: 0;
@@ -30568,7 +30569,10 @@ body.td-lock { overflow: hidden; }
     pointer-events: none;
     transition: none;
 }
-.av-drawer.is-open { visibility: visible; pointer-events: auto; }
+.av-drawer[hidden] { display: none !important; }
+@media (max-width: 991.98px) {
+    .av-drawer.is-open:not([hidden]) { display: block; visibility: visible; pointer-events: auto; }
+}
 
 .av-drawer__panel {
     background: #ffffff;

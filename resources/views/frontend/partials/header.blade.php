@@ -166,7 +166,7 @@
     </div>
 
 <!-- Mobile drawer (drops down directly below the header, above the content) -->
-<div class="av-drawer" id="avDrawer" aria-hidden="true">
+<div class="av-drawer" id="avDrawer" aria-hidden="true" hidden inert>
     <nav class="av-drawer__panel" role="dialog" aria-modal="true" aria-label="Mobile navigation">
         @include('frontend.partials.mobile-navigation')
 
@@ -328,6 +328,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function openDrawer() {
         if (!drawer) return;
+        drawer.hidden = false;
+        drawer.inert = false;
         drawer.classList.add('is-open');
         drawer.setAttribute('aria-hidden', 'false');
         if (burger) {
@@ -339,7 +341,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function closeDrawer() {
         if (!drawer) return;
+        if (drawer.contains(document.activeElement) && burger) burger.focus({ preventScroll: true });
         drawer.classList.remove('is-open');
+        drawer.hidden = true;
+        drawer.inert = true;
         drawer.setAttribute('aria-hidden', 'true');
         if (burger) {
             burger.setAttribute('aria-expanded', 'false');
@@ -347,6 +352,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         document.body.classList.remove('av-no-scroll');
     }
+
+    closeDrawer();
+    window.addEventListener('resize', function () {
+        if (window.innerWidth >= 992) closeDrawer();
+    });
 
     if (burger) {
         burger.addEventListener('click', function () {
