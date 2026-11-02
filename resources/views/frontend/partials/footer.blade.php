@@ -24,7 +24,7 @@
     if ($footerAboutText) {
         $aboutText = $footerAboutText;
     } else {
-        $aboutText = $siteName . ' designs tailor-made African safaris across East Africa. Travel with trusted local partners and verified experts.';
+        $aboutText = $siteName . ' designs tailor-made African safaris across East Africa. Travel with trusted local partners and verified local specialists.';
     }
 
     // ---- Footer link groups (managed under Website Content → Footer) ----

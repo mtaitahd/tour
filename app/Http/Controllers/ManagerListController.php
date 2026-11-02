@@ -226,11 +226,11 @@ class ManagerListController extends Controller
         }
 
         $faqs = collect($managerList->faqs ?? [])->filter(fn ($faq) => trim((string) ($faq['question'] ?? '')) !== '' && trim((string) ($faq['answer'] ?? '')) !== '')->values();
-        $faqExpertName = Setting::get('faq_expert_name', 'Afro-Vertex Safari Experts');
+        $faqExpertName = Setting::get('faq_expert_name', 'Afro-Vertex Local Specialists');
         $faqExpert = [
             'name' => $faqExpertName,
             'image' => Setting::imageUrl('faq_expert_image_id') ?: Setting::logoUrlOrDefault(),
-            'bio' => Setting::get('faq_expert_bio', 'Our local travel experts share practical answers based on years of planning journeys across East Africa.'),
+            'bio' => Setting::get('faq_expert_bio', 'Our local specialists share practical answers based on years of planning journeys across East Africa.'),
             'link' => Setting::get('faq_expert_link', route('home')),
         ];
         $meta = [

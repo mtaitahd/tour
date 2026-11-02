@@ -371,13 +371,13 @@ class TourController extends Controller
             ]);
         }
 
-        $faqExpertName = Setting::get('faq_expert_name', 'Afro-Vertex Safari Experts');
+        $faqExpertName = Setting::get('faq_expert_name', 'Afro-Vertex Local Specialists');
         $faqExpert = [
             'name'  => $faqExpertName,
             'image' => Setting::imageUrl('faq_expert_image_id')
                 ?: (Setting::logoUrlOrDefault()),
             'bio'   => Setting::get('faq_expert_bio',
-                'Born and raised in northern Tanzania, our safari experts have planned hundreds of trips across the Serengeti, Ngorongoro and Kilimanjaro regions. Every answer below reflects years of first-hand guiding experience.'),
+                'Born and raised in northern Tanzania, our local specialists have planned hundreds of trips across the Serengeti, Ngorongoro and Kilimanjaro regions. Every answer below reflects years of first-hand guiding experience.'),
             'link'  => Setting::get('faq_expert_link', route('home')),
         ];
 
@@ -899,13 +899,13 @@ class TourController extends Controller
             ])
             ->values();
         $faqSubject = $primaryCode === 'KE' ? 'Kenyan' : 'Tanzanian';
-        $faqExpertName = Setting::get('faq_expert_name', 'Afro-Vertex Safari Experts');
+        $faqExpertName = Setting::get('faq_expert_name', 'Afro-Vertex Local Specialists');
         $faqExpert = [
             'name'  => $faqExpertName,
             'image' => Setting::imageUrl('faq_expert_image_id')
                 ?: (Setting::logoUrlOrDefault()),
             'bio'   => Setting::get('faq_expert_bio',
-                'Born and raised in northern Tanzania, our safari experts have planned hundreds of trips across the Serengeti, Ngorongoro and Kilimanjaro regions. Every answer below reflects years of first-hand guiding experience.'),
+                'Born and raised in northern Tanzania, our local specialists have planned hundreds of trips across the Serengeti, Ngorongoro and Kilimanjaro regions. Every answer below reflects years of first-hand guiding experience.'),
             'link'  => Setting::get('faq_expert_link', route('home')),
         ];
 

@@ -52,7 +52,7 @@
                             {{ $page->extra_heading ?? 'Discover the Heart of East Africa with Afro-Vertex Tours' }}
                         </h1>
                         <p class="lead text-gray-700 mb-4">
-                            {!! $page->extra_subheading ?? 'We are passionate local experts dedicated to creating authentic, responsible, and unforgettable travel experiences across Tanzania, Kenya, Uganda, and Rwanda.' !!}
+                            {!! $page->extra_subheading ?? 'We are passionate local specialists dedicated to creating authentic, responsible, and unforgettable travel experiences across Tanzania, Kenya, Uganda, and Rwanda.' !!}
                         </p>
                     </div>
                 </div>

@@ -19,7 +19,11 @@ class Setting extends Model
     public static function get($key, $default = null)
     {
         $setting = self::where('key', $key)->first();
-        return $setting ? $setting->value : $default;
+        $value = $setting ? $setting->value : $default;
+        if (is_string($value) && in_array($key, ['faq_expert_name', 'faq_expert_bio', 'hero_subtitle', 'cta_subtitle', 'footer_about_text'], true)) {
+            return \App\Support\LocalSpecialistCopy::replace($value);
+        }
+        return $value;
     }
 
     // Helper to set value

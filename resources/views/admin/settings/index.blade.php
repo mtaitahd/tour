@@ -86,7 +86,7 @@
                           <label class="col-sm-3 col-form-label">Highlight Strip Items</label>
                           <div class="col-sm-9">
                               <input type="text" name="settings[support_points]" class="form-control" value="{{ Setting::get('support_points') }}">
-                              <small class="text-muted">Comma-separated — the scrolling green strip (e.g. "Personalized Itineraries,Expert Guides,24/7 Support").</small>
+                              <small class="text-muted">Comma-separated — the scrolling green strip (e.g. "Personalized Itineraries,Local Specialist Guides,24/7 Support").</small>
                           </div>
                       </div>
 

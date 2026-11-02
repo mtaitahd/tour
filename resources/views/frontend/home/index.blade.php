@@ -27,7 +27,7 @@
             <div class="container">
                 <div class="afro-hero__text wow fadeInUp" data-wow-delay="0.2s">
                     <h1 class="afro-hero__title">{{ Setting::get('hero_title', 'Discover the Wild Beauty of East Africa') }}</h1>
-                    <p class="afro-hero__subtitle">{{ Setting::get('hero_subtitle', 'Handcrafted safaris, mountain climbs, and beach escapes — curated by local experts who know Africa best.') }}</p>
+                    <p class="afro-hero__subtitle">{{ Setting::get('hero_subtitle', 'Handcrafted safaris, mountain climbs, and beach escapes — curated by local specialists who know Africa best.') }}</p>
                 </div>
 
                 <div class="afro-search wow fadeInUp" data-wow-delay="0.4s">
@@ -1085,7 +1085,7 @@
                 <div class="wow fadeInUp" data-wow-delay="0.2s">
                     <div class="section-header-six section-header-six--left">
                         <span class="badge badge-soft-primary rounded-pill mb-2">Why Choose Us</span>
-                        <h2>The Africa Experts You Can Trust<span class="text-primary">.</span></h2>
+                        <h2>The Local Specialists You Can Trust<span class="text-primary">.</span></h2>
                         <p class="section-header-six__desc">Over a decade of on-the-ground experience, trusted partnerships, and a genuine love for the places we call home.</p>
                     </div>
                 </div>
@@ -1856,7 +1856,7 @@
     {{-- Plan Your Tour — premium split safari CTA --}}
     @php
         $ctaTitle = Setting::get('cta_title', 'Your Tour in Africa, Our Passion!');
-        $ctaSubtitle = Setting::get('cta_subtitle', 'Planning an Africa tour can be exciting, but we know you might have questions. Whether you are curious about the best time to visit, what to pack, or which safari suits your style, our expert team is ready to guide you.');
+        $ctaSubtitle = Setting::get('cta_subtitle', 'Planning an Africa tour can be exciting, but we know you might have questions. Whether you are curious about the best time to visit, what to pack, or which safari suits your style, our local specialist team is ready to guide you.');
         $primaryLink = Setting::get('cta_button_link', '/contact');
         $primaryText = Setting::get('cta_button_text', 'Plan My Safari');
         $wa = Setting::get('whatsapp_number');
@@ -1903,7 +1903,7 @@
             </div>
 
             <div class="plan-cta__content">
-                <span class="plan-cta__label">Plan With Local Experts</span>
+                <span class="plan-cta__label">Plan With Local Specialists</span>
                 <span class="plan-cta__label-line" aria-hidden="true"></span>
                 <h2 class="plan-cta__title" id="planCtaHeading">{{ $ctaTitle }}</h2>
                 <p class="plan-cta__desc">{{ $ctaSubtitle }}</p>
@@ -1914,7 +1914,7 @@
                     </a>
                 </div>
                 <div class="plan-cta__trust">
-                    <span class="plan-cta__trust-item">Local experts</span>
+                    <span class="plan-cta__trust-item">Local specialists</span>
                     <span class="plan-cta__trust-sep" aria-hidden="true"></span>
                     <span class="plan-cta__trust-item">Tailor-made trips</span>
                     <span class="plan-cta__trust-sep" aria-hidden="true"></span>
