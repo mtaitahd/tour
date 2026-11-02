@@ -12,13 +12,12 @@
         <div class="position-relative media-picker-thumb" data-id="{{ $image->id }}" data-name="{{ $image->display_title }}" data-thumb-url="{{ $image->getUrl('thumb-webp') ?: $image->getUrl() }}" style="cursor: grab;">
           <img src="{{ $image->getUrl('thumb-webp') ?: $image->getUrl() }}" class="img-thumbnail" style="width: 90px; height: 90px; object-fit: cover;">
           <input type="hidden" name="{{ $name }}[]" value="{{ $image->id }}">
+          <span class="media-picker-order badge bg-success position-absolute bottom-0 start-0 m-1">{{ $loop->iteration }}</span>
           <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 media-picker-remove" style="padding: 0 4px;">&times;</button>
         </div>
       @endforeach
     </div>
-    @if ($selectedImages)
-      <small class="text-muted d-block mb-2"><i class="bi bi-arrows-move"></i> Drag images to reorder.</small>
-    @endif
+    <small class="text-muted d-block mb-2"><i class="bi bi-arrows-move"></i> Images keep the order you select them: 1, 2, 3… Drag to change that order.</small>
   @else
     <div class="media-picker-preview mb-2">
       @if ($selectedImage)
@@ -90,7 +89,35 @@ document.addEventListener('media-picker:selected', function (e) {
         const input = widget.querySelector('.media-picker-input');
         if (input) input.value = image.id;
     }
+    refreshPickerOrder(preview);
+    initializePickerSorting(preview);
+    widget.dispatchEvent(new Event('input', { bubbles: true }));
 });
+
+function refreshPickerOrder(preview) {
+    if (!preview?.classList.contains('media-picker-sortable')) return;
+    preview.querySelectorAll('.media-picker-thumb').forEach((thumb, index) => {
+        let badge = thumb.querySelector('.media-picker-order');
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'media-picker-order badge bg-success position-absolute bottom-0 start-0 m-1';
+            thumb.appendChild(badge);
+        }
+        badge.textContent = String(index + 1);
+        badge.setAttribute('aria-label', `Image position ${index + 1}`);
+    });
+}
+
+function initializePickerSorting(preview) {
+    if (!preview?.classList.contains('media-picker-sortable') || typeof Sortable === 'undefined' || Sortable.get(preview)) return;
+    new Sortable(preview, {
+        animation: 150, ghostClass: 'bg-light',
+        onEnd: function () {
+            refreshPickerOrder(preview);
+            preview.dispatchEvent(new Event('input', { bubbles: true }));
+        },
+    });
+}
 
 // Delegated remove-button handler for every picker on the page.
 document.addEventListener('click', function (e) {
@@ -102,11 +129,13 @@ document.addEventListener('click', function (e) {
 
     if (widget.dataset.multiple === '1') {
         thumb.remove();
+        refreshPickerOrder(widget.querySelector('.media-picker-preview'));
     } else {
         thumb.remove();
         const input = widget.querySelector('.media-picker-input');
         if (input) input.value = '';
     }
+    widget.dispatchEvent(new Event('input', { bubbles: true }));
 });
 
 /**
@@ -119,11 +148,7 @@ document.addEventListener('click', function (e) {
  */
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.media-picker-sortable').forEach(function (container) {
-        if (typeof Sortable === 'undefined') return;
-        new Sortable(container, {
-            animation: 150,
-            ghostClass: 'bg-light',
-        });
+        initializePickerSorting(container);
     });
 });
 

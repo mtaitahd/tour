@@ -104,8 +104,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const mark = document.createElement('span');
             mark.className = 'picker-selected-check';
             mark.setAttribute('role', 'img');
-            mark.setAttribute('aria-label', 'Selected');
-            mark.textContent = '✓';
+            const position = Array.from(selected.keys()).indexOf(Number(cardEl.dataset.mediaId)) + 1;
+            mark.setAttribute('aria-label', multiple ? `Selection ${position}` : 'Selected');
+            mark.textContent = multiple ? String(position) : '✓';
             Object.assign(mark.style, {
                 position: 'absolute', top: '6px', right: '6px', zIndex: '2',
                 width: '28px', height: '28px', borderRadius: '50%',
@@ -131,6 +132,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             updateFooter();
+            resultsEl.querySelectorAll('.picker-item').forEach(card => {
+                setCardSelected(card, selected.has(Number(card.dataset.mediaId)));
+            });
         }
 
         function renderResults(data) {
@@ -147,6 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const card = document.createElement('div');
                 card.className = 'card picker-item border';
+                card.dataset.mediaId = image.id;
                 card.style.cursor = 'pointer';
                 card.style.position = 'relative';
 

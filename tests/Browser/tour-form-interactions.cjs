@@ -9,7 +9,7 @@ test('new itinerary picker loads selectable photos after initial page load', asy
     try {
         const page = await browser.newPage();
         await page.route('http://picker.test/**', route => route.request().url().includes('/search')
-            ? route.fulfill({ contentType: 'application/json', body: JSON.stringify({ images: [{ id: 5, name: 'Camp', display_title: 'Camp', thumb_url: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==' }], pagination: { current_page: 1, last_page: 1, total: 1 } }) })
+            ? route.fulfill({ contentType: 'application/json', body: JSON.stringify({ images: [5, 3, 8].map(id => ({ id, name: id === 5 ? 'Camp' : 'Photo ' + id, display_title: 'Photo ' + id, thumb_url: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==' })), pagination: { current_page: 1, last_page: 1, total: 1 } }) })
             : route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><body></body></html>' }));
         await page.goto('http://picker.test/');
         const template = fs.readFileSync('resources/views/admin/media/partials/modal-picker.blade.php', 'utf8');
@@ -21,10 +21,38 @@ test('new itinerary picker loads selectable photos after initial page load', asy
         });
         await page.waitForTimeout(50);
         await page.evaluate(() => document.querySelector('.media-picker-modal').dispatchEvent(new Event('show.bs.modal')));
-        await page.locator('.picker-item').waitFor();
-        await page.locator('.picker-item').click();
+        await page.locator('.picker-item').first().waitFor();
+        await page.locator('.picker-item').first().click();
         assert.equal(await page.locator('.picker-confirm-btn').isDisabled(), false);
         assert.equal(await page.locator('.picker-selected-summary').textContent(), 'Camp');
+        await page.locator('.picker-item[data-media-id="8"]').click();
+        await page.locator('.picker-item[data-media-id="3"]').click();
+        assert.equal(await page.locator('.picker-item[data-media-id="8"] .picker-selected-check').textContent(), '2');
+        const component = fs.readFileSync('resources/views/components/media-picker.blade.php', 'utf8');
+        await page.addScriptTag({ content: component.split('<script>')[1].split('</script>')[0] });
+        await page.evaluate(() => {
+            window.bootstrap = { Modal: { getInstance: () => ({ hide() {} }) } };
+            const widget = document.createElement('div');
+            widget.className = 'media-picker';
+            widget.dataset.pickerId = 'new-day';
+            widget.dataset.inputName = 'itinerary_days[0][existing_image_ids]';
+            widget.dataset.multiple = '1';
+            widget.innerHTML = '<div class="media-picker-preview media-picker-sortable"></div>';
+            document.body.appendChild(widget);
+        });
+        await page.locator('.picker-confirm-btn').click();
+        assert.deepEqual(await page.locator('.media-picker input[type="hidden"]').evaluateAll(items => items.map(item => item.value)), ['5', '8', '3']);
+        assert.deepEqual(await page.locator('.media-picker-order').allTextContents(), ['1', '2', '3']);
+        await page.evaluate(() => document.querySelector('.media-picker-modal').dispatchEvent(new Event('show.bs.modal')));
+        await page.waitForFunction(() => document.querySelectorAll('.picker-selected-check').length === 3);
+        assert.equal(await page.locator('.picker-item[data-media-id="8"] .picker-selected-check').textContent(), '2');
+        await page.locator('.picker-item[data-media-id="8"]').click();
+        await page.locator('.picker-item[data-media-id="8"]').click();
+        await page.locator('.picker-confirm-btn').click();
+        assert.deepEqual(await page.locator('.media-picker input[type="hidden"]').evaluateAll(items => items.map(item => item.value)), ['5', '3', '8']);
+        await page.locator('.media-picker-thumb[data-id="5"] .media-picker-remove').click();
+        assert.deepEqual(await page.locator('.media-picker-order').allTextContents(), ['1', '2']);
+
     } finally { await browser.close(); }
 });
 
