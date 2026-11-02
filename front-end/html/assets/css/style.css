@@ -34301,3 +34301,28 @@ body.td-lock {
 .td-page--tour .td-acc-photo-group__type { margin: 0 0 8px; font-size: 12px; color: #68757c; }
 .td-page--tour .td-acc-photo-group .td-acc-thumbs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .td-page--tour .td-acc-photo-group .td-morelink { margin-top: 8px; font-size: 12px; }
+/* Desktop accommodation galleries use the full day row instead of a narrow column. */
+@media (min-width: 768px) {
+  .td-page--tour .td-acc-row { grid-template-columns: 64px minmax(0, 1.4fr) minmax(0, 1fr); align-items: start; }
+  .td-page--tour .td-acc-row--head > :last-child { display: none; }
+  .td-page--tour .td-acc-photo-groups {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    align-items: start;
+    gap: 16px;
+    width: 100%;
+    max-width: 100%;
+    margin: 4px auto 0;
+  }
+  .td-page--tour .td-acc-photo-group,
+  .td-page--tour .td-acc-photo-group + .td-acc-photo-group {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid #dfe5eb;
+    border-radius: 8px;
+    background: #fff;
+    text-align: center;
+  }
+  .td-page--tour .td-acc-photo-group__title { min-height: 2.8em; }
+  .td-page--tour .td-acc-photo-group .td-acc-thumbs { max-width: 420px; margin-inline: auto; }
+}
