@@ -143,7 +143,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                 <p class="td-hero__offered">Offered By: {{ $operator['name'] }}</p>
                 @php $googleReviewsUrl = \App\Models\Setting::get('google_reviews_url'); @endphp
                 @if($googleReviewsUrl && in_array(parse_url($googleReviewsUrl, PHP_URL_SCHEME), ['http', 'https'], true))
-                    <a href="{{ $googleReviewsUrl }}" class="td-hero__reviews" target="_blank" rel="noopener noreferrer">Read our Google Reviews</a>
+                    <a href="{{ $googleReviewsUrl }}" class="td-hero__reviews" target="_blank" rel="noopener noreferrer">Leave a Review</a>
                 @endif
             </div>
         </div>
@@ -453,13 +453,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                 </div>
                 <p class="td-operator__kicker">Offered By</p>
                 <h3 class="td-operator__name"><a href="{{ $operator['link'] }}">{{ $operator['name'] }}</a></h3>
-                <div class="td-operator__rating">
-                    {!! $renderStars($siteRatingAvg) !!}
-                    @if($siteRatingAvg)
-                        <span class="td-hero__score">{{ number_format((float) $siteRatingAvg, 1) }}</span>
-                    @endif
-                    <span class="td-muted">({{ $siteReviewCount }} review{{ $siteReviewCount === 1 ? '' : 's' }})</span>
-                </div>
+                @include('frontend.partials.google-review-link')
                 <ul class="td-operator__meta">
                     @if($countryFlag)
                         <li><span class="td-flag" aria-hidden="true">{{ $countryFlag }}</span> {{ $countryName }}</li>
@@ -475,54 +469,6 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                     @endif
                 </ul>
                 <a class="td-morelink" href="{{ $operator['link'] }}">More About This Operator ›</a>
-            </div>
-
-            {{-- 13. CUSTOMER REVIEWS CARD --}}
-            <div class="td-side-card td-reviews" id="td-reviews-card">
-                <h3 class="td-side-title">Customer Reviews</h3>
-
-                @if($reviews->isNotEmpty())
-                    <div class="td-reviews__viewport" data-td-review-viewport>
-                        @foreach($reviews as $review)
-                            <article class="td-review{{ $loop->first ? ' is-active' : '' }}" data-td-review>
-                                <header class="td-review__head">
-                                    @if($review['avatar'])
-                                        <img class="td-review__avatar" src="{{ $review['avatar'] }}" alt="Photo of {{ $review['name'] }}" loading="lazy">
-                                    @else
-                                        <span class="td-review__avatar td-review__avatar--initial" aria-hidden="true">{{ $review['initial'] }}</span>
-                                    @endif
-                                    <div>
-                                        <strong>{{ $review['name'] }}</strong>
-                                        <span class="td-review__loc">
-                                            @if($review['flag'])<span class="td-flag" aria-hidden="true">{{ $review['flag'] }}</span>@endif
-                                            {{ $review['location'] }}
-                                        </span>
-                                    </div>
-                                </header>
-                                <div class="td-review__stars">
-                                    {!! $renderStars((float) $review['rating']) !!}
-                                    <span class="td-hero__score">{{ $review['rating'] }}.0</span>
-                                </div>
-                                <p class="td-review__preview" data-td-preview>{{ Str::limit($review['content'], 160) }}</p>
-                                <p class="td-review__full" data-td-full hidden>{{ $review['content'] }}</p>
-                                <button type="button" class="td-review__toggle" data-td-toggle
-                                        aria-expanded="false">Full Review</button>
-                            </article>
-                        @endforeach
-                    </div>
-
-                    <div class="td-reviews__nav">
-                        <button type="button" class="td-arrow" data-td-review-prev aria-label="Previous review">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                        </button>
-                        <span class="td-reviews__counter"><b data-td-review-current>1</b> of {{ $reviews->count() }}</span>
-                        <button type="button" class="td-arrow" data-td-review-next aria-label="Next review">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                        </button>
-                    </div>
-                @else
-                    <p class="td-muted">No reviews yet for this tour.</p>
-                @endif
             </div>
 
             {{-- 14. RELATED LINKS --}}
@@ -847,13 +793,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                     <img class="td-offered__logo" src="{{ $operator['logo'] }}" alt="{{ $operator['name'] }} logo" loading="lazy">
                     <div>
                         <h3>{{ $operator['name'] }}</h3>
-                        <div class="td-operator__rating">
-                            {!! $renderStars($siteRatingAvg) !!}
-                            @if($siteRatingAvg)
-                                <span class="td-hero__score">{{ number_format((float) $siteRatingAvg, 1) }}</span>
-                            @endif
-                            <span class="td-muted">({{ $siteReviewCount }} review{{ $siteReviewCount === 1 ? '' : 's' }})</span>
-                        </div>
+                        @include('frontend.partials.google-review-link')
                         <ul class="td-operator__meta">
                             @if($countryFlag)
                                 <li><span class="td-flag" aria-hidden="true">{{ $countryFlag }}</span> {{ $countryName }}</li>
