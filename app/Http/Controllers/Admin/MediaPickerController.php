@@ -51,8 +51,6 @@ class MediaPickerController extends Controller
                 'last_page' => $media->lastPage(),
                 'total' => $media->total(),
             ],
-            'categories' => $this->mediaLibrary->categoryTree(),
-            'tags' => $this->mediaLibrary->allTagsWithCounts(),
         ]);
     }
 

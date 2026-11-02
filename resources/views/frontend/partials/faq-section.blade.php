@@ -6,7 +6,7 @@
                     <div class="sfb-faq-expert">
                         <img class="sfb-faq-expert__photo" src="{{ $faqExpert['image'] }}" alt="{{ $faqExpert['name'] }}" loading="lazy">
                         <span class="sfb-faq-expert__badge">Expert</span>
-                        <strong class="sfb-faq-expert__name">{{ $faqExpert['name'] }}</strong>
+                        <strong class="sfb-faq-expert__name">{{ $faqExpertHeading ?? $faqExpert['name'] }}</strong>
                         <p>{{ $faqExpert['bio'] }}</p>
                         <a href="{{ $faqExpert['link'] }}">More about {{ Str::before($faqExpert['name'], ' ') }}</a>
                     </div>
@@ -27,7 +27,7 @@
             </aside>
 
             <div class="sfb-faq__content">
-                <h2 id="sfb-faq-title">{{ count($faqs) }} Questions About {{ $faqSubject ?? 'African' }} Safari Tours</h2>
+                <h2 id="sfb-faq-title">{{ $faqHeading ?? (count($faqs) . ' Questions About ' . ($faqSubject ?? 'African') . ' Safari Tours') }}</h2>
                 <p class="sfb-faq-answered">
                     Answered by
                     <img src="{{ $faqExpert['image'] }}" alt="" loading="lazy">

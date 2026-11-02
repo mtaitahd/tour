@@ -80,4 +80,26 @@ class TourTransportPresentationTest extends TestCase
         }
         $this->assertSame([2, 1], $tour->safariCarImages()->pluck('id')->all());
     }
+
+    public function test_bulk_inclusions_and_exclusions_split_commas_and_lines_and_keep_existing_rows(): void
+    {
+        $controller = (new \ReflectionClass(\App\Http\Controllers\Admin\TourPackageController::class))->newInstanceWithoutConstructor();
+        $method = new \ReflectionMethod($controller, 'parsePastedList');
+        $this->assertSame(['Meals', 'Park fees', 'Transfers', 'Guide'], $method->invoke($controller, ['Meals'], "Park fees, Transfers\nGuide, Meals"));
+        $this->assertNull($method->invoke($controller, [], " , \n"));
+        $this->assertSame(['0'], $method->invoke($controller, ['0'], null));
+    }
+
+    public function test_faq_headings_use_the_package_title_and_local_specialist_label(): void
+    {
+        $html = view('frontend.partials.faq-section', [
+            'faqs' => [['question' => 'Which route?', 'answer' => 'Machame']],
+            'faqHeading' => '1 Questions About 7-Day Machame Climb',
+            'faqExpertHeading' => '7-Day Machame Climb — Local Specialist',
+            'faqExpert' => ['name' => 'Afro-Vertex', 'image' => '/logo.png', 'bio' => 'Local team', 'link' => '/about-us'],
+        ])->render();
+        $this->assertStringContainsString('1 Questions About 7-Day Machame Climb', $html);
+        $this->assertStringContainsString('7-Day Machame Climb — Local Specialist', $html);
+        $this->assertStringNotContainsString('Tanzanian Safari Tours', $html);
+    }
 }

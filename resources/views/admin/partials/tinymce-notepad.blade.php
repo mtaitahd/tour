@@ -16,9 +16,26 @@
     deliberately left out: they are per-instance, not part of the shared notepad.
 --}}
 {
+    readonly: false,
+    paste_preprocess: function (plugin, args) {
+        const pasted = new DOMParser().parseFromString(args.content, 'text/html');
+        pasted.body.querySelectorAll('[contenteditable], [data-mce-contenteditable], .mceNonEditable').forEach(function (node) {
+            node.removeAttribute('contenteditable');
+            node.removeAttribute('data-mce-contenteditable');
+            node.classList.remove('mceNonEditable');
+        });
+        args.content = pasted.body.innerHTML;
+    },
+    init_instance_callback: function (editor) {
+        editor.getBody().querySelectorAll('[contenteditable="false"], [data-mce-contenteditable], .mceNonEditable').forEach(function (node) {
+            node.removeAttribute('contenteditable');
+            node.removeAttribute('data-mce-contenteditable');
+            node.classList.remove('mceNonEditable');
+        });
+    },
     height: 360,
     menubar: 'file edit view insert format tools table help',
-    plugins: 'advlist autolink lists link image charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste code help wordcount quickbars',
+    plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount quickbars',
     toolbar:
         'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough forecolor backcolor | ' +
         'alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | ' +

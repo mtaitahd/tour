@@ -410,7 +410,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                     <a href="#td-inclusions" class="td-quote-incl td-js-scroll" data-target="td-inclusions">What is included in this tour</a>
                 @endif
 
-                <h2 class="td-quote-title">Request a Quote</h2>
+                <h2 class="td-quote-title">Request a Quote for {{ $tour->cardTitle() }}</h2>
 
                 <div class="td-quote-fields">
                     <button type="button" class="td-safari-field" data-safpop="date"
@@ -862,9 +862,10 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                             @if($operator['employees'])<li>{{ $operator['employees'] }} employees</li>@endif
                         </ul>
                         <div class="td-offered__actions">
-                            <button type="button" class="td-btn td-btn--quote td-js-quote-jump">Get a Free Quote ›</button>
                             @if($operator['phone'])
-                                <a class="td-btn td-btn--ghost" href="tel:{{ preg_replace('/\s+/', '', $operator['phone']) }}">Call {{ $operator['phone'] }}</a>
+                                <a class="td-btn td-btn--quote" href="https://wa.me/{{ preg_replace('/\D+/', '', $operator['phone']) }}?text={{ rawurlencode('Hello, I would like a quote for ' . $tour->cardTitle()) }}" target="_blank" rel="noopener noreferrer">Get a Free Quote on WhatsApp</a>
+                            @else
+                                <button type="button" class="td-btn td-btn--quote td-js-quote-jump">Get a Free Quote</button>
                             @endif
                             @if($operator['email'])
                                 <a class="td-btn td-btn--ghost" href="mailto:{{ $operator['email'] }}">Email</a>
@@ -895,7 +896,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
     {{-- ══ QUOTE FORM (existing booking process preserved) ══════════ --}}
     <div class="td-container">
         <section class="td-section td-white-card" id="td-quote">
-            <h2 class="td-heading">Request a Free Quote<span class="td-heading__line" aria-hidden="true"></span></h2>
+            <h2 class="td-heading">Request a Free Quote for {{ $tour->cardTitle() }}<span class="td-heading__line" aria-hidden="true"></span></h2>
 
             @if(session('success'))
                 <div class="alert alert-success" role="status">{{ session('success') }}</div>
@@ -1052,7 +1053,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
     <script data-cfasync="false" src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     {{-- ══ FAQ ══ --}}
-    @include('frontend.partials.faq-section', ['faqSubject' => $faqSubject])
+    @include('frontend.partials.faq-section', ['faqSubject' => $faqSubject, 'faqHeading' => count($faqs) . ' Questions About ' . $tour->cardTitle(), 'faqExpertHeading' => $tour->cardTitle() . ' — Local Specialist'])
 
     {{-- ══ 18. RELATED TOURS ════════════════════════════════════════ --}}
     @if($relatedTours->isNotEmpty())

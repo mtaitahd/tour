@@ -34239,3 +34239,16 @@ body.td-lock {
 @media (min-width: 768px) {
   .td-page--tour .td-acc-row { grid-template-columns: 64px minmax(0, 1.5fr) minmax(0, 1fr) minmax(100px, 1fr); }
 }
+/* FAQ cards must fit narrow screens and use the site green for active numbers. */
+.sfb-faq-item.is-active .sfb-faq-item__num,
+.sfb-faq-item.is-open .sfb-faq-item__num { background: #198754 !important; border-color: #198754 !important; color: #fff !important; }
+.sfb-faq__layout > *, .sfb-faq__content, .sfb-faq-item__head { min-width: 0; }
+.sfb-faq__content h2, .sfb-faq-expert__name, .td-page--tour .td-quote-title { overflow-wrap: anywhere; }
+@media (max-width: 767.98px) {
+  .sfb-faq__layout { display: flex; flex-direction: column; width: 100%; gap: 24px; }
+  .sfb-faq__panel, .sfb-faq__content { width: 100%; max-width: 100%; flex: 0 1 auto; }
+  .sfb-faq__panel-inner { position: static; padding: 18px; }
+  .sfb-faq-item__head { padding-right: 8px; }
+  .sfb-faq-item__question { overflow-wrap: anywhere; }
+  .td-page--tour .td-offered__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+}

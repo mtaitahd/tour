@@ -205,7 +205,11 @@ class TourPackageController extends Controller
             'itinerary_days.*.lat'                          => ['nullable', 'numeric', 'between:-90,90'],
             'itinerary_days.*.lng'                          => ['nullable', 'numeric', 'between:-180,180'],
             'inclusions_items'                              => 'nullable|array',
+            'inclusions_items.*' => 'nullable|string|max:2000',
+            'inclusions_bulk' => 'nullable|string|max:20000',
             'exclusions_items'                              => 'nullable|array',
+            'exclusions_items.*' => 'nullable|string|max:2000',
+            'exclusions_bulk' => 'nullable|string|max:20000',
             'extra_sections'                                => 'nullable|array',
             'extra_sections.*.title'                        => 'nullable|string|max:255',
             'extra_sections.*.content'                      => 'nullable|string',
@@ -265,12 +269,12 @@ class TourPackageController extends Controller
 
         // ── Inclusions & Exclusions ───────────────────────────────────────────
         $inclusions = $request->filled('inclusions_items')
-            ? array_values(array_filter(array_map('trim', $request->inclusions_items)))
-            : null;
+            ? $this->parsePastedList($request->inclusions_items, $request->input('inclusions_bulk'))
+            : $this->parsePastedList([], $request->input('inclusions_bulk'));
 
         $exclusions = $request->filled('exclusions_items')
-            ? array_values(array_filter(array_map('trim', $request->exclusions_items)))
-            : null;
+            ? $this->parsePastedList($request->exclusions_items, $request->input('exclusions_bulk'))
+            : $this->parsePastedList([], $request->input('exclusions_bulk'));
 
         // ── FAQs ──────────────────────────────────────────────────────────────
         $faqs = [];
@@ -540,7 +544,11 @@ public function edit(TourPackage $tourPackage)
             'itinerary_days.*.lat'                          => ['nullable', 'numeric', 'between:-90,90'],
             'itinerary_days.*.lng'                          => ['nullable', 'numeric', 'between:-180,180'],
             'inclusions_items'                              => 'nullable|array',
+            'inclusions_items.*' => 'nullable|string|max:2000',
+            'inclusions_bulk' => 'nullable|string|max:20000',
             'exclusions_items'                              => 'nullable|array',
+            'exclusions_items.*' => 'nullable|string|max:2000',
+            'exclusions_bulk' => 'nullable|string|max:20000',
             'extra_sections'                                => 'nullable|array',
             'extra_sections.*.title'                        => 'nullable|string|max:255',
             'extra_sections.*.content'                      => 'nullable|string',
@@ -607,12 +615,12 @@ public function edit(TourPackage $tourPackage)
 
         // ── Inclusions & Exclusions ───────────────────────────────────────────
         $inclusions = $request->filled('inclusions_items')
-            ? array_values(array_filter(array_map('trim', $request->inclusions_items)))
-            : null;
+            ? $this->parsePastedList($request->inclusions_items, $request->input('inclusions_bulk'))
+            : $this->parsePastedList([], $request->input('inclusions_bulk'));
 
         $exclusions = $request->filled('exclusions_items')
-            ? array_values(array_filter(array_map('trim', $request->exclusions_items)))
-            : null;
+            ? $this->parsePastedList($request->exclusions_items, $request->input('exclusions_bulk'))
+            : $this->parsePastedList([], $request->input('exclusions_bulk'));
 
         // ── FAQs ──────────────────────────────────────────────────────────────
         $faqs = [];
@@ -864,6 +872,18 @@ public function edit(TourPackage $tourPackage)
             ->all();
 
         return $normalized ?: null;
+    }
+
+    private function parsePastedList(array $items, ?string $bulk): ?array
+    {
+        $values = [];
+        foreach (array_merge($items, [$bulk]) as $item) {
+            foreach (preg_split('/[,\r\n]+/', (string) $item) as $value) {
+                $value = trim($value);
+                if ($value !== '' && !in_array($value, $values, true)) $values[] = $value;
+            }
+        }
+        return $values ?: null;
     }
 
     private function normalizeAccommodationTiers(array $dayData): array

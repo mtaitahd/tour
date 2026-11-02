@@ -526,7 +526,9 @@
                   <div class="row">
                     <div class="col-md-6">
                       <label class="form-label fw-bold">What's Included</label>
-                      <div id="inclusions-repeater">
+                      <label class="form-label small" for="inclusions-bulk">Paste multiple items, separated by commas or new lines</label>
+<textarea id="inclusions-bulk" name="inclusions_bulk" class="form-control mb-2" rows="3" placeholder="Airport transfers, Park fees, Meals">{{ old('inclusions_bulk') }}</textarea>
+<div id="inclusions-repeater">
                         @if(old('inclusions_items', $tourPackage->inclusions ?? []))
                           @foreach(old('inclusions_items', $tourPackage->inclusions ?? []) as $index => $item)
                             <div class="input-group mb-2 inclusion-item">
@@ -545,7 +547,9 @@
                     </div>
                     <div class="col-md-6">
                       <label class="form-label fw-bold">What's Excluded</label>
-                      <div id="exclusions-repeater">
+                      <label class="form-label small" for="exclusions-bulk">Paste multiple items, separated by commas or new lines</label>
+<textarea id="exclusions-bulk" name="exclusions_bulk" class="form-control mb-2" rows="3" placeholder="Airport transfers, Park fees, Meals">{{ old('exclusions_bulk') }}</textarea>
+<div id="exclusions-repeater">
                         @if(old('exclusions_items', $tourPackage->exclusions ?? []))
                           @foreach(old('exclusions_items', $tourPackage->exclusions ?? []) as $index => $item)
                             <div class="input-group mb-2 exclusion-item">
@@ -1024,7 +1028,7 @@
         </div>`;
       const $newDay = $(newDayHtml);
       $('#itinerary-repeater').append($newDay);
-      if (window.tinymce) tinymce.init({ selector: '#itinerary-description-' + dayIndex });
+      if (window.tinymce) tinymce.init(Object.assign({ selector: '#itinerary-description-' + dayIndex }, @include('admin.partials.tinymce-notepad')));
         $newDay.find('input[name*="accommodation_name_"]').each(function () {
           var input=this, select=document.createElement('select');
           select.name=input.name; select.className='form-select accommodation-choice'; select.setAttribute('data-accommodation-choice','');

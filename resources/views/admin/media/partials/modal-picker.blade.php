@@ -68,7 +68,10 @@
  * binding separately per instance, so adding more pickers to a page never needs new JS.
  */
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.media-picker-modal').forEach(function (modalEl) {
+    const initializedPickers = new WeakSet();
+    function initializePicker(modalEl) {
+        if (initializedPickers.has(modalEl)) return;
+        initializedPickers.add(modalEl);
         const multiple = modalEl.dataset.multiple === '1';
         const resultsEl = modalEl.querySelector('.picker-results');
         const paginationEl = modalEl.querySelector('.picker-pagination');
@@ -80,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let selected = new Map(); // id -> {id, name, thumb_url}
         let searchTimeout = null;
+        let activeRequest = null;
 
         function updateFooter() {
             confirmBtn.disabled = !multiple && selected.size === 0;
@@ -186,17 +190,37 @@ document.addEventListener('DOMContentLoaded', function () {
                 page: page,
             });
 
-            fetch(`{{ route('admin.media.picker.search') }}?${params.toString()}`, {
-                headers: { 'Accept': 'application/json' },
+            if (activeRequest) activeRequest.abort();
+            const controller = new AbortController();
+            activeRequest = controller;
+            const timeout = setTimeout(() => controller.abort(), 25000);
+            fetch(`{{ route('admin.media.picker.search', [], false) }}?${params.toString()}`, {
+                credentials: 'same-origin', signal: controller.signal,
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             })
-                .then(r => r.json())
+                .then(async response => {
+                    if (!response.ok) throw new Error([401,419].includes(response.status) ? 'Session expired. Refresh and sign in again.' : `Images could not load (HTTP ${response.status}).`);
+                    const data = await response.json();
+                    if (!Array.isArray(data.images) || !data.pagination) throw new Error('Invalid image response. Refresh the page.');
+                    return data;
+                })
                 .then(data => {
+                    if (activeRequest !== controller) return;
                     renderResults(data);
                     renderPagination(data.pagination);
                 })
-                .catch(() => {
-                    resultsEl.innerHTML = '<div class="col-12 text-center py-5 text-danger">Could not load images. Please try again.</div>';
-                });
+                .catch(error => {
+                    if (activeRequest !== controller) return;
+                    resultsEl.replaceChildren();
+                    const message = document.createElement('p');
+                    message.className = 'col-12 text-center text-danger py-4';
+                    message.textContent = error.name === 'AbortError' ? 'Image loading timed out. Please retry.' : error.message;
+                    const retry = document.createElement('button');
+                    retry.type = 'button'; retry.className = 'btn btn-outline-primary'; retry.textContent = 'Retry';
+                    retry.addEventListener('click', () => search(page));
+                    resultsEl.append(message, retry);
+                })
+                .finally(() => clearTimeout(timeout));
         }
 
         searchInput.addEventListener('input', function () {
@@ -230,7 +254,15 @@ document.addEventListener('DOMContentLoaded', function () {
             document.dispatchEvent(event);
             bootstrap.Modal.getInstance(modalEl).hide();
         });
-    });
+    }
+    document.querySelectorAll('.media-picker-modal').forEach(initializePicker);
+    new MutationObserver(function (mutations) {
+        mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
+            if (node.nodeType !== 1) return;
+            if (node.matches('.media-picker-modal')) initializePicker(node);
+            node.querySelectorAll('.media-picker-modal').forEach(initializePicker);
+        }));
+    }).observe(document.body, {childList: true, subtree: true});
 });
 </script>
 @endpush

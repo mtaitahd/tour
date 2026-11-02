@@ -375,6 +375,8 @@ value="{{ old("itinerary_days.$index.meals") }}">
 <div class="row">
 <div class="col-md-6">
 <label class="form-label fw-bold">What's Included</label>
+<label class="form-label small" for="inclusions-bulk">Paste multiple items, separated by commas or new lines</label>
+<textarea id="inclusions-bulk" name="inclusions_bulk" class="form-control mb-2" rows="3" placeholder="Airport transfers, Park fees, Meals">{{ old('inclusions_bulk') }}</textarea>
 <div id="inclusions-repeater">
 @if(old('inclusions_items', []))
 @foreach(old('inclusions_items', []) as $index => $item)
@@ -394,6 +396,8 @@ value="{{ old("inclusions_items.$index", $item) }}">
 </div>
 <div class="col-md-6">
 <label class="form-label fw-bold">What's Excluded</label>
+<label class="form-label small" for="exclusions-bulk">Paste multiple items, separated by commas or new lines</label>
+<textarea id="exclusions-bulk" name="exclusions_bulk" class="form-control mb-2" rows="3" placeholder="Airport transfers, Park fees, Meals">{{ old('exclusions_bulk') }}</textarea>
 <div id="exclusions-repeater">
 @if(old('exclusions_items', []))
 @foreach(old('exclusions_items', []) as $index => $item)
@@ -730,7 +734,7 @@ $(document).ready(function () {
 
         var $newDay = $(html);
         $('#itinerary-repeater').append($newDay);
-        if (window.tinymce) tinymce.init({ selector: '#itinerary-description-' + n });
+        if (window.tinymce) tinymce.init(Object.assign({ selector: '#itinerary-description-' + n }, @include('admin.partials.tinymce-notepad')));
         $newDay.find('input[name*="accommodation_name_"]').each(function () {
           var input=this, select=document.createElement('select');
           select.name=input.name; select.className='form-select accommodation-choice'; select.setAttribute('data-accommodation-choice','');
