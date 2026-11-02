@@ -165,92 +165,10 @@
         </div>
     </div>
 
-@php
-    // ---- Mobile drawer data (mirrors the desktop mega menu) ----
-    $allToursUrl  = route('tours.index');
-    $mobileSafari = $megaMenu['safari'] ?? null;
-    $mobileKili   = $megaMenu['kilimanjaro'] ?? null;
-    $mobileDay    = $megaMenu['daytrips'] ?? null;
-
-    $safariUrl   = $mobileSafari['trigger_url'] ?? $allToursUrl;
-    $safariItems = $mobileSafari['categories']  ?? [];
-    $kiliUrl     = $mobileKili['trigger_url']   ?? route('tours.category', 'kilimanjaro-climbing');
-    $kiliItems   = $mobileKili['categories']    ?? [];
-    $kiliLabel   = $mobileKili['label']         ?? 'Kilimanjaro';
-    $dayUrl      = $mobileDay['trigger_url']    ?? $allToursUrl;
-    $dayItems    = $mobileDay['categories']     ?? [];
-    $dayLabel    = $mobileDay['label']          ?? 'Day Trips';
-@endphp
-
 <!-- Mobile drawer (drops down directly below the header, above the content) -->
 <div class="av-drawer" id="avDrawer" aria-hidden="true">
     <nav class="av-drawer__panel" role="dialog" aria-modal="true" aria-label="Mobile navigation">
-        <ul class="av-drawer__list">
-            <li>
-                <a class="av-drawer__link" href="{{ route('home') }}">Home</a>
-            </li>
-
-            @if(!empty($safariItems))
-                <li class="has-dropdown">
-                    <div class="av-drawer__row">
-                        <a href="{{ $safariUrl }}">Safaris</a>
-                        <button class="av-drawer__toggle" type="button" aria-expanded="false" aria-controls="avDrawerSubSafaris" aria-label="Toggle Safaris submenu"><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
-                    </div>
-                    <ul class="av-drawer__sub" id="avDrawerSubSafaris">
-                        @foreach($safariItems as $cat)
-                            <li><a href="{{ $cat['url'] }}">{{ $cat['title'] }}</a></li>
-                        @endforeach
-                        <li><a href="{{ $safariUrl }}">View all Safaris</a></li>
-                    </ul>
-                </li>
-            @else
-                <li><a class="av-drawer__link" href="{{ $safariUrl }}">Safaris</a></li>
-            @endif
-
-            @if(!empty($kiliItems) || !empty($dayItems))
-                <li class="has-dropdown">
-                    <div class="av-drawer__row">
-                        <a href="{{ $allToursUrl }}">Tours</a>
-                        <button class="av-drawer__toggle" type="button" aria-expanded="false" aria-controls="avDrawerSubTours" aria-label="Toggle Tours submenu"><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
-                    </div>
-                    <ul class="av-drawer__sub" id="avDrawerSubTours">
-                        @if(!empty($kiliItems))
-                            <li class="av-drawer__subhead">{{ $kiliLabel }}</li>
-                            @foreach($kiliItems as $cat)
-                                <li><a href="{{ $cat['url'] }}">{{ $cat['title'] }}</a></li>
-                            @endforeach
-                            <li><a href="{{ $kiliUrl }}">View all {{ $kiliLabel }}</a></li>
-                        @endif
-                        @if(!empty($dayItems))
-                            <li class="av-drawer__subhead">{{ $dayLabel }}</li>
-                            @foreach($dayItems as $cat)
-                                <li><a href="{{ $cat['url'] }}">{{ $cat['title'] }}</a></li>
-                            @endforeach
-                            <li><a href="{{ $dayUrl }}">View all {{ $dayLabel }}</a></li>
-                        @endif
-                        <li><a href="{{ $allToursUrl }}">View all Tours</a></li>
-                    </ul>
-                </li>
-            @else
-                <li><a class="av-drawer__link" href="{{ $allToursUrl }}">Tours</a></li>
-            @endif
-
-            <li>
-                <a class="av-drawer__link" href="{{ route('destinations.index') }}">Destinations</a>
-            </li>
-
-            <li>
-                <a class="av-drawer__link" href="{{ route('page.show', 'about-us') }}">About</a>
-            </li>
-
-            <li>
-                <a class="av-drawer__link" href="{{ route('blog.index') }}">Blog</a>
-            </li>
-
-            <li>
-                <a class="av-drawer__link" href="{{ route('page.show', 'contact') }}">Contact</a>
-            </li>
-        </ul>
+        @include('frontend.partials.mobile-navigation')
 
         <a class="av-drawer__whatsapp" href="{{ $waLink }}" target="_blank" rel="noopener">
             <i class="bi bi-whatsapp" aria-hidden="true"></i> WhatsApp
