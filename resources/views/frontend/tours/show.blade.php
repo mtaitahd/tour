@@ -256,7 +256,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
             {{-- 7. HIGHLIGHTS --}}
             @if(count($tour->highlights ?? []))
                 <section class="td-section td-white-card td-highlights">
-                    <h2 class="td-heading">Tour Highlights<span class="td-heading__line" aria-hidden="true"></span></h2>
+                    <h2 class="td-heading td-package-heading"><span class="td-heading__text">Tour Highlights of {{ $tour->cardTitle() }}</span><span class="td-heading__line" aria-hidden="true"></span></h2>
                     <ul>@foreach($tour->highlights as $highlight)<li>{{ $highlight }}</li>@endforeach</ul>
                 </section>
             @endif
@@ -264,7 +264,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
             {{-- 7. TOUR FEATURES --}}
             @if(count($features))
                 <section class="td-section td-white-card">
-                    <h2 class="td-heading">Tour Features<span class="td-heading__line" aria-hidden="true"></span></h2>
+                    <h2 class="td-heading td-package-heading"><span class="td-heading__text">Tour Features of {{ $tour->cardTitle() }}</span><span class="td-heading__line" aria-hidden="true"></span></h2>
                     <div class="td-features">
                         @foreach($features as $feature)
                             <div class="td-feature">
@@ -282,7 +282,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
             {{-- 8. ACTIVITIES & TRANSPORTATION --}}
             @if(count($transportRows) || $safariCarImages->isNotEmpty() || $tour->transport_type)
                 <section class="td-section td-white-card">
-                    <h2 class="td-heading">Activities &amp; Transportation<span class="td-heading__line" aria-hidden="true"></span></h2>
+                    <h2 class="td-heading td-package-heading"><span class="td-heading__text">Activities &amp; Transportation: {{ $tour->cardTitle() }}</span><span class="td-heading__line" aria-hidden="true"></span></h2>
                     <ul class="td-transport">
                         @foreach($transportRows as $row)
                             <li>
@@ -303,7 +303,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
             {{-- 9. ACCOMMODATION & MEALS --}}
             @if($accommodationRows->isNotEmpty())
                 <section class="td-section td-white-card" id="td-accommodation">
-                    <h2 class="td-heading">Accommodation &amp; Meals<span class="td-heading__line" aria-hidden="true"></span></h2>
+                    <h2 class="td-heading td-package-heading"><span class="td-heading__text">Accommodation &amp; Meals: {{ $tour->cardTitle() }}</span><span class="td-heading__line" aria-hidden="true"></span></h2>
 
                     @if($accommodationNotice)
                         <p class="td-note">{!! $accommodationNotice !!}</p>
@@ -471,7 +471,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
             {{-- 14. RELATED LINKS --}}
             @if($relatedLinks->isNotEmpty())
                 <div class="td-side-card td-relatedlinks">
-                    <h3 class="td-side-title">Related Links</h3>
+                    <h3 class="td-side-title td-package-heading">Related Links About {{ $tour->cardTitle() }}</h3>
                     <ul>
                         @foreach($relatedLinks as $link)
                             <li><a href="{{ $link['url'] }}">{{ $link['label'] }} ›</a></li>
@@ -482,7 +482,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
 
             @if($safariCarImages->isNotEmpty())
                 <div class="td-side-card td-photo-card">
-                    <h3 class="td-side-title">{{ \App\Models\TourPackage::TRANSPORT_TYPES[$tour->transport_type] ?? 'Transport' }} Photos</h3>
+                    <h3 class="td-side-title td-package-heading">Transport Photos: {{ $tour->cardTitle() }}</h3>
                     <div class="td-transport-photos">
                         @foreach($safariCarImages as $transportPhoto)
                             <button type="button" class="td-thumb td-js-lightbox" data-group="transport" data-index="{{ $loop->index }}" aria-label="Open transport photo {{ $loop->iteration }}">
@@ -514,7 +514,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
     @if($hasDayByDay)
         <div class="td-container">
             <section class="td-section td-white-card td-panel" id="td-daybyday" data-td-section="daybyday">
-                <h2 class="td-heading">Day by Day<span class="td-heading__line" aria-hidden="true"></span></h2>
+                <h2 class="td-heading td-package-heading"><span class="td-heading__text">Day by Day: {{ $tour->cardTitle() }}</span><span class="td-heading__line" aria-hidden="true"></span></h2>
 
                 <ol class="td-days">
                     @foreach($itinerary as $index => $day)
@@ -575,7 +575,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
     @if($hasTourPrice || $isPriceOnRequest)
         <div class="td-container">
             <section class="td-section td-white-card td-panel" id="td-pricing" data-td-section="pricing">
-                <h2 class="td-heading">Pricing<span class="td-heading__line" aria-hidden="true"></span></h2>
+                <h2 class="td-heading td-package-heading"><span class="td-heading__text">Pricing of {{ $tour->cardTitle() }}</span><span class="td-heading__line" aria-hidden="true"></span></h2>
 
                 {{-- Pricing overview cards --}}
                 <div class="td-pricing-hero">
@@ -714,7 +714,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
     @if($hasInclExcl)
         <div class="td-container">
             <section class="td-section td-white-card td-panel" id="td-inclusions" data-td-section="inclusions">
-                <h2 class="td-heading">What is Included?<span class="td-heading__line" aria-hidden="true"></span></h2>
+                <h2 class="td-heading td-package-heading"><span class="td-heading__text">What is Included In {{ $tour->cardTitle() }}?</span><span class="td-heading__line" aria-hidden="true"></span></h2>
 
                 <div class=" td-inc-grid">
                     @if(count($tour->inclusions ?? []))
@@ -996,7 +996,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
     @if($relatedTours->isNotEmpty())
         <section class="td-related" aria-labelledby="td-related-title">
             <div class="td-container">
-                <h2 class="td-heading td-heading--light" id="td-related-title">Related Tours<span class="td-heading__line" aria-hidden="true"></span></h2>
+                <h2 class="td-heading td-heading--light td-package-heading" id="td-related-title"><span class="td-heading__text">Related Tours to {{ $tour->cardTitle() }}</span><span class="td-heading__line" aria-hidden="true"></span></h2>
 
                 <div class="td-related__grid">
                     @foreach($relatedTours as $relatedTour)

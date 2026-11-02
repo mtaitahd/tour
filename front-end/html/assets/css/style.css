@@ -34285,3 +34285,12 @@ body.td-lock {
   .sfb-faq-answered img { width: 30px; height: 30px; }
   .sfb-faq-answered strong { min-width: 0; font-size: 12px; overflow-wrap: anywhere; }
 }
+/* Package-specific section headings support long tour names. */
+.td-page--tour .td-package-heading { min-width: 0; line-height: 1.35; overflow-wrap: anywhere; }
+.td-page--tour .td-package-heading .td-heading__text { min-width: 0; flex: 1 1 auto; }
+.td-page--tour .td-package-heading .td-heading__line { flex: 0 0 28px; }
+@media (max-width: 767.98px) {
+  .td-page--tour h2.td-package-heading { display: block; font-size: clamp(20px, 5.4vw, 24px); }
+  .td-page--tour .td-package-heading .td-heading__line { display: block; width: 72px; margin-top: 10px; }
+  .td-page--tour h3.td-package-heading { font-size: 18px; line-height: 1.45; }
+}
