@@ -34294,3 +34294,10 @@ body.td-lock {
   .td-page--tour .td-package-heading .td-heading__line { display: block; width: 72px; margin-top: 10px; }
   .td-page--tour h3.td-package-heading { font-size: 18px; line-height: 1.45; }
 }
+/* Keep each lodge's gallery separate within the itinerary day. */
+.td-page--tour .td-acc-photo-groups { display: grid; gap: 16px; min-width: 0; }
+.td-page--tour .td-acc-photo-group + .td-acc-photo-group { border-top: 1px solid #dfe5eb; padding-top: 16px; }
+.td-page--tour .td-acc-photo-group__title { margin: 0 0 4px; font-family: 'Montserrat', 'Inter', sans-serif; font-size: 14px; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+.td-page--tour .td-acc-photo-group__type { margin: 0 0 8px; font-size: 12px; color: #68757c; }
+.td-page--tour .td-acc-photo-group .td-acc-thumbs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.td-page--tour .td-acc-photo-group .td-morelink { margin-top: 8px; font-size: 12px; }

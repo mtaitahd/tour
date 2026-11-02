@@ -71,17 +71,19 @@ foreach ($safariCarImages as $media) {
     ];
 }
 
-$accommodationPhotoData = []; // dayNumber => ['thumbs'=>[{thumb,caption,group,index}], 'count'=>N]
+$accommodationPhotoData = []; // day => separate galleries for each accommodation
 foreach ($accommodationRows as $row) {
-    $photos = [];
-    foreach ($row['tiers'] as $tier) {
+    foreach ($row['tiers'] as $tierIndex => $tier) {
+        $photos = [];
         foreach (($tier['photos'] ?? []) as $fullUrl) {
             $photos[] = ['u' => $fullUrl, 'c' => trim($tier['type'] . ' · ' . $tier['name'], ' ·')];
         }
-    }
-    if (count($photos) > 0) {
-        $tdGallery['acc-day-' . $row['day']] = $photos;
-        $accommodationPhotoData[$row['day']] = $photos;
+        if (!$photos) continue;
+        $group = 'acc-day-' . $row['day'] . '-stay-' . $tierIndex;
+        $tdGallery[$group] = $photos;
+        $accommodationPhotoData[$row['day']][] = [
+            'group' => $group, 'name' => $tier['name'], 'type' => $tier['type'], 'photos' => $photos,
+        ];
     }
 }
 
@@ -348,21 +350,9 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
 
                                 <span class="td-acc-meals" role="cell">{{ $row['meals'] !== '' ? $row['meals'] : '—' }}</span>
 
-                                <span class="td-acc-thumbs" role="cell">
-                                    @php $photos = $accommodationPhotoData[$row['day']] ?? []; @endphp
-                                    @if(count($photos))
-                                        @foreach($photos as $pi => $photo)
-                                            <button type="button" class="td-thumb td-js-lightbox"
-                                                    data-group="acc-day-{{ $row['day'] }}" data-index="{{ $pi }}"
-                                                    aria-label="Open photo: {{ $photo['c'] }}">
-                                                <img src="{{ $photo['u'] }}" alt="{{ $photo['c'] }}" loading="lazy">
-                                            </button>
-                                        @endforeach
-
-                                    @else
-                                        <span class="td-acc-nophotos">—</span>
-                                    @endif
-                                </span>
+                                <div class="td-acc-photo-groups" role="cell">
+                                    @include('frontend.partials.accommodation-photo-groups', ['groups' => $accommodationPhotoData[$row['day']] ?? []])
+                                </div>
                             </div>
                         @endforeach
                     </div>
