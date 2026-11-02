@@ -103,7 +103,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
 }
 @endphp
 
-<div class="td-page">
+<div class="td-page td-page--tour">
 
     {{-- ══ 1. BREADCRUMB ═══════════════════════════════════════════ --}}
     <div class="td-breadcrumb">
