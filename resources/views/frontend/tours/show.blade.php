@@ -531,7 +531,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                                     <div class="td-day__desc rich-text-content">{!! $day['description'] ?? '' !!}</div>
 
                                     @if(count($dayPhotos))
-                                        <div class="td-day__thumbs">
+                                        <div class="td-day__thumbs" style="--day-photo-columns: {{ min(5, count($dayPhotos)) }}">
                                             @foreach($dayPhotos as $pi => $photo)
                                                 <button type="button" class="td-thumb td-js-lightbox"
                                                         data-group="day-{{ $index + 1 }}" data-index="{{ $pi }}"
@@ -540,6 +540,9 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                                                 </button>
                                             @endforeach
                                         </div>
+                                        @if(count($dayPhotos) > 5)
+                                            <button type="button" class="td-morelink td-day__more td-js-lightbox" data-group="day-{{ $index + 1 }}" data-index="5">View all {{ count($dayPhotos) }} photos</button>
+                                        @endif
                                     @endif
                                 </div>
 

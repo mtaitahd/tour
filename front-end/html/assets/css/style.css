@@ -34326,3 +34326,11 @@ body.td-lock {
   .td-page--tour .td-acc-photo-group__title { min-height: 2.8em; }
   .td-page--tour .td-acc-photo-group .td-acc-thumbs { max-width: 420px; margin-inline: auto; }
 }
+/* Five larger destination photos per itinerary day on desktop. */
+.td-page--tour .td-day__more { display: none; }
+@media (min-width: 992px) {
+  .td-page--tour .td-day__thumbs { grid-template-columns: repeat(var(--day-photo-columns, 5), minmax(0, 1fr)); gap: 12px; }
+  .td-page--tour .td-day__thumbs > .td-thumb:nth-child(n + 6) { display: none; }
+  .td-page--tour .td-day__thumbs .td-thumb { aspect-ratio: 4 / 3; border-radius: 8px; }
+  .td-page--tour .td-day__more { display: inline-flex; justify-self: start; }
+}
