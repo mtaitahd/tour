@@ -30565,9 +30565,10 @@ body.td-lock { overflow: hidden; }
     right: 0;
     z-index: 1200;
     visibility: hidden;
-    transition: visibility .3s ease;
+    pointer-events: none;
+    transition: none;
 }
-.av-drawer.is-open { visibility: visible; }
+.av-drawer.is-open { visibility: visible; pointer-events: auto; }
 
 .av-drawer__panel {
     background: #ffffff;
