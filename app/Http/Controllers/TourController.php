@@ -771,116 +771,52 @@ class TourController extends Controller
         }
         $relatedLinks = collect($relatedLinks)->unique('label')->take(4)->values();
 
-        /* ── Related tours: scored by destination/category/duration/price ── */
-        $destIds = $tour->destinations->pluck('id');
-        $catIds  = $tour->categories->pluck('id');
-
-        $relatedRules = array_values(array_intersect(
-            ['tour_type', 'budget', 'categories'],
-            (array) ($tour->related_tour_rules ?? ['tour_type', 'budget', 'categories'])
-        ));
-
+        // Require the same duration and every matching criterion selected for this package.
+        $relatedRules = $tour->related_tour_rules ?? ['tour_type', 'budget', 'categories'];
         $relatedQuery = TourPackage::query()
             ->where('status', 'published')
             ->where('id', '!=', $tour->id)
+            ->where('duration_days', $tour->duration_days)
             ->with(['destinations', 'categories']);
 
-        $hasMatchRule = false;
-        $relatedQuery->where(function ($query) use ($tour, $relatedRules, $catIds, &$hasMatchRule) {
-            if (in_array('tour_type', $relatedRules, true)) {
-                $type = strtoupper((string) $tour->tour_type);
-                $format = strtolower((string) $tour->tour_format);
-                if ($type !== '' || $format !== '') {
-                    $query->orWhere(function ($typeQuery) use ($type, $format) {
-                        if ($type !== '') {
-                            $typeQuery->where('tour_type', $type);
-                        }
-                        if ($format !== '') {
-                            $type !== ''
-                                ? $typeQuery->orWhere('tour_format', $format)
-                                : $typeQuery->where('tour_format', $format);
+        if (in_array('tour_type', $relatedRules, true)) {
+            $relatedQuery->where('tour_type', $tour->tour_type)
+                ->where('tour_format', $tour->tour_format);
+        }
+
+        if (in_array('budget', $relatedRules, true)) {
+            $budget = strtoupper((string) $tour->package_category);
+            if (! in_array($budget, ['BUDGET', 'MID_RANGE', 'LUXURY'], true)) {
+                $level = strtolower((string) $tour->tour_level);
+                $budget = str_starts_with($level, 'budget') ? 'BUDGET' : strtoupper($level);
+            }
+
+            $relatedQuery->where(function ($query) use ($budget) {
+                $query->where('package_category', $budget)
+                    ->orWhere(function ($legacy) use ($budget) {
+                        $legacy->whereNull('package_category');
+                        if ($budget === 'BUDGET') {
+                            $legacy->where('tour_level', 'like', 'budget%');
+                        } else {
+                            $legacy->where('tour_level', strtolower($budget));
                         }
                     });
-                    $hasMatchRule = true;
-                }
-            }
-
-            if (in_array('budget', $relatedRules, true)) {
-                $budget = strtoupper((string) ($tour->package_category ?: ''));
-                if (! in_array($budget, ['BUDGET', 'MID_RANGE', 'LUXURY'], true)) {
-                    $level = strtolower((string) $tour->tour_level);
-                    $budget = str_starts_with($level, 'budget') ? 'BUDGET' : strtoupper($level);
-                }
-                if (in_array($budget, ['BUDGET', 'MID_RANGE', 'LUXURY'], true)) {
-                    $query->orWhere(function ($budgetQuery) use ($budget) {
-                        $budgetQuery->where('package_category', $budget)
-                            ->orWhere(function ($legacyQuery) use ($budget) {
-                                $legacyQuery->whereNull('package_category');
-                                if ($budget === 'BUDGET') {
-                                    $legacyQuery->where('tour_level', 'like', 'budget%');
-                                } else {
-                                    $legacyQuery->where('tour_level', strtolower($budget));
-                                }
-                            });
-                    });
-                    $hasMatchRule = true;
-                }
-            }
-
-            if (in_array('categories', $relatedRules, true) && $catIds->isNotEmpty()) {
-                $query->orWhereHas('categories', fn ($categoryQuery) => $categoryQuery->whereIn('tour_categories.id', $catIds));
-                $hasMatchRule = true;
-            }
-        });
-
-        $relatedTours = $hasMatchRule
-            ? $relatedQuery->orderByDesc('is_featured')->orderBy('order')->limit(6)->get()
-            : collect();
-
-        // Keep the previous relevance-based recommendations when no selected
-        // grouping rule applies to this tour (for example, it has no categories).
-        if (! $hasMatchRule) {
-            $candidates = TourPackage::query()
-                ->where('status', 'published')
-                ->where('id', '!=', $tour->id)
-                ->with(['destinations', 'categories'])
-                ->limit(80)
-                ->get();
-
-            $scored = $candidates->map(function (TourPackage $candidate) use ($tour, $destIds, $catIds) {
-                $score = 0;
-                $score += $candidate->destinations->pluck('id')->intersect($destIds)->count() * 4;
-                $score += $candidate->categories->pluck('id')->intersect($catIds)->count() * 3;
-                if ((int) $tour->duration_days > 0 && abs((int) $candidate->duration_days - (int) $tour->duration_days) <= 3) {
-                    $score += 2;
-                }
-                if ((float) $tour->base_price > 0 && (float) $candidate->base_price > 0
-                    && abs((float) $candidate->base_price - (float) $tour->base_price) / (float) $tour->base_price <= 0.3) {
-                    $score += 1;
-                }
-
-                return ['tour' => $candidate, 'score' => $score];
-            })->sortByDesc('score')->values();
-
-            $relatedTours = $scored->filter(fn ($item) => $item['score'] > 0)->take(6)->pluck('tour');
-        }
-        if (! empty($tour->related_tour_ids)) {
-            $relatedTours = TourPackage::query()->where('status', 'published')->where('id', '!=', $tour->id)->whereIn('id', $tour->related_tour_ids)->get();
+            });
         }
 
-        // Fallback so the section never renders nearly-empty on small catalogues.
-        if (empty($tour->related_tour_ids) && $relatedTours->count() < 3) {
-            $fillerIds = $relatedTours->pluck('id')->push($tour->id);
-            $fillers   = TourPackage::query()
-                ->where('status', 'published')
-                ->whereNotIn('id', $fillerIds)
-                ->with(['destinations', 'categories'])
-                ->orderByDesc('is_featured')
-                ->orderBy('order')
-                ->limit(6 - $relatedTours->count())
-                ->get();
-            $relatedTours = $relatedTours->concat($fillers)->values();
+        if (in_array('categories', $relatedRules, true)) {
+            $categoryIds = $tour->categories->modelKeys();
+            $relatedQuery->has('categories', '=', count($categoryIds));
+            foreach ($categoryIds as $categoryId) {
+                $relatedQuery->whereHas('categories', fn ($query) => $query->whereKey($categoryId));
+            }
         }
+
+        $relatedTours = $relatedQuery->orderByDesc('is_featured')
+            ->orderBy('order')
+            ->orderBy('id')
+            ->limit(6)
+            ->get();
 
         // Centralised "From" prices for the related-tour + minicard displays.
         $relatedFromPrices = TourPriceResolver::fromPriceMap($relatedTours);
