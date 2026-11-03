@@ -28,6 +28,14 @@
           </div>
         @endif
 
+        <form method="GET" action="{{ route('admin.accommodations.index') }}" id="accommodation-search" class="mb-3">
+          <label for="accommodation-search-name" class="form-label">Search accommodations</label>
+          <div class="input-group">
+            <input type="search" class="form-control" id="accommodation-search-name" name="search" value="{{ $search }}" placeholder="Search by name">
+            <button type="submit" class="btn btn-outline-primary">Search</button>
+          </div>
+        </form>
+        <div id="accommodation-results">
         <table class="table table-striped">
           <thead>
             <tr>
@@ -78,6 +86,39 @@
         </table>
 
         {{ $accommodations->links('pagination::bootstrap-5') }}
+        </div>
+        <script>
+          (() => {
+            const form = document.getElementById('accommodation-search');
+            const field = document.getElementById('accommodation-search-name');
+            const results = document.getElementById('accommodation-results');
+            let timer;
+            let request;
+
+            field.addEventListener('input', () => {
+              clearTimeout(timer);
+              request?.abort();
+              timer = setTimeout(async () => {
+                request = new AbortController();
+                const { signal } = request;
+                const url = new URL(form.action);
+                if (field.value.trim()) url.searchParams.set('search', field.value.trim());
+
+                try {
+                  const response = await fetch(url, { signal });
+                  if (!response.ok) return;
+                  const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+                  const filtered = page.getElementById(results.id);
+                  if (!filtered || signal.aborted) return;
+                  results.replaceChildren(...filtered.childNodes);
+                  history.replaceState(history.state, '', url);
+                } catch (error) {
+                  if (!signal.aborted) console.error(error);
+                }
+              }, 250);
+            });
+          })();
+        </script>
       </div>
     </div>
   </section>

@@ -14,14 +14,16 @@ class AccommodationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $search = trim($request->string('search')->toString());
         $accommodations = Accommodation::with('destination')
+                                        ->when($search !== '', fn ($query) => $query->where('name', 'like', '%'.$search.'%'))
                                         ->orderBy('order')
                                         ->orderBy('name')
-                                        ->paginate(20);
+                                        ->paginate(20)->withQueryString();
 
-        return view('admin.accommodations.index', compact('accommodations'));
+        return view('admin.accommodations.index', compact('accommodations', 'search'));
     }
 
     /**
