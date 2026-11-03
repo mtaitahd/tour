@@ -3,7 +3,7 @@
         <h4 class="td-acc-photo-group__title">{{ $stay['name'] }}</h4>
         <p class="td-acc-photo-group__type">{{ $stay['type'] }} · {{ count($stay['photos']) }} photos</p>
         <div class="td-acc-thumbs">
-            @foreach(array_slice($stay['photos'], 0, 3) as $index => $photo)
+            @foreach($stay['photos'] as $index => $photo)
                 <button type="button" class="td-thumb td-js-lightbox" data-group="{{ $stay['group'] }}" data-index="{{ $index }}" aria-label="Open {{ $stay['name'] }} photo {{ $index + 1 }}">
                     <img src="{{ $photo['u'] }}" alt="{{ $photo['c'] }}" loading="lazy">
                 </button>
