@@ -657,18 +657,17 @@ class TourController extends Controller
                 $imageId = $tier['image_id'] ?? $tier['existing_image_id'] ?? null;
                 $image = $imageId ? GalleryImage::find($imageId) : null;
                 $thumbUrl = null;
-                $fullUrls = [];
+                $fullUrls = $stay ? $stay->galleryImages()->map(fn ($photo) => $photo->getUrl())->filter()->all() : [];
 
-                if ($image) {
+                if ($fullUrls === [] && $image) {
                     $thumbUrl = $image->getUrl('thumb-webp') ?: $image->getUrl('thumb') ?: $image->getUrl();
                     $fullUrls[] = $image->getUrl();
                 }
 
-                if ($stay?->hero_image_id && (int) $stay->hero_image_id !== (int) $imageId) {
+                if ($fullUrls === [] && $stay?->hero_image_id) {
                     $hero = GalleryImage::find($stay->hero_image_id);
                     if ($hero) $fullUrls[] = $hero->getUrl();
                 }
-                if ($stay) foreach ($stay->galleryImages() as $photo) $fullUrls[] = $photo->getUrl();
                 $group = $tour->tour_level === 'luxury' ? 'luxury' : (str_starts_with((string) $tour->tour_level, 'budget') ? 'budget' : 'mid_range');
                 $labels = ['luxury' => ['silver'=>'High Luxury', 'gold'=>'High Exclusive', 'platinum'=>'High Elite'], 'budget'=>['silver'=>'Essential', 'gold'=>'Value', 'platinum'=>'Plus'], 'mid_range'=>['silver'=>'Classic', 'gold'=>'Comfort', 'platinum'=>'Premium']];
                 $key = strtolower($tier['tier_key'] ?? $tier['type'] ?? $tier['level'] ?? '');
@@ -680,7 +679,7 @@ class TourController extends Controller
                     'type'     => $type,
                     'tier_key' => strtolower($tier['tier_key'] ?? $tier['type'] ?? $tier['level'] ?? 'silver'),
                     'name'     => $tier['name'] ?? '',
-                    'description' => $tier['description'] ?? '',
+                    'description' => strip_tags($stay?->description ?? $tier['description'] ?? ''),
                     'amenities' => $tier['amenities'] ?? [],
                     'url'      => $tier['url'] ?? '',
                     'thumb'    => $thumbUrl,
