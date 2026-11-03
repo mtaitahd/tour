@@ -648,7 +648,14 @@ class TourController extends Controller
         $accommodationRows = $itinerary->map(function (array $day, int $index) use ($tour) {
             $tiers = collect($day['accommodations'] ?? [])->map(function (array $tier) use ($tour) {
                 $stay = !empty($tier['accommodation_id']) ? \App\Models\Accommodation::find($tier['accommodation_id']) : null;
-                $image    = ! empty($tier['image_id']) ? GalleryImage::find($tier['image_id']) : null;
+                $stayName = trim((string) ($tier['name'] ?? ''));
+                if (!$stay && $stayName !== '') {
+                    $matches = \App\Models\Accommodation::published()->where('name', $stayName)->limit(2)->get();
+                    $stay = $matches->count() === 1 ? $matches->first() : null;
+                }
+
+                $imageId = $tier['image_id'] ?? $tier['existing_image_id'] ?? null;
+                $image = $imageId ? GalleryImage::find($imageId) : null;
                 $thumbUrl = null;
                 $fullUrls = [];
 
@@ -657,7 +664,7 @@ class TourController extends Controller
                     $fullUrls[] = $image->getUrl();
                 }
 
-                if (!$image && $stay?->hero_image_id) {
+                if ($stay?->hero_image_id && (int) $stay->hero_image_id !== (int) $imageId) {
                     $hero = GalleryImage::find($stay->hero_image_id);
                     if ($hero) $fullUrls[] = $hero->getUrl();
                 }
