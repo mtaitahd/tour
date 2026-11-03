@@ -409,7 +409,7 @@
                                       return strtolower($acc['tier_key'] ?? $acc['type'] ?? '');
                                   });
                                 @endphp
-                                @php $accommodationOptions = \App\Models\Accommodation::published()->orderBy('name')->get(); $level = old('tour_level', $tourPackage->tour_level); $group = $level === 'luxury' ? 'luxury' : (str_contains($level, 'budget') || $level === 'budget' ? 'budget' : 'mid_range'); $tierLabels = $group === 'luxury' ? ['silver' => 'High Luxury', 'gold' => 'High Exclusive', 'platinum' => 'High Elite'] : ($group === 'budget' ? ['silver' => 'Essential', 'gold' => 'Value', 'platinum' => 'Plus'] : ['silver' => 'High Classic', 'gold' => 'Comfort', 'platinum' => 'Premium']); @endphp
+                                @php $accommodationOptions = \App\Models\Accommodation::published()->orderBy('name')->get(); $level = old('tour_level', $tourPackage->tour_level); $group = $level === 'luxury' ? 'luxury' : (str_contains($level, 'budget') || $level === 'budget' ? 'budget' : 'mid_range'); $tierLabels = $group === 'luxury' ? ['silver' => 'High Luxury', 'gold' => 'High Exclusive', 'platinum' => 'High Elite'] : ($group === 'budget' ? ['silver' => 'Essential', 'gold' => 'Value', 'platinum' => 'Plus'] : ['silver' => 'Classic', 'gold' => 'Comfort', 'platinum' => 'Premium']); @endphp
 @foreach($tierLabels as $tierKey => $tierLabel)
                                   @php
                                     $acc = $accommodationsByTier->get($tierKey, []);
@@ -526,7 +526,7 @@
                   <div class="row">
                     <div class="col-md-6">
                       <label class="form-label fw-bold">What's Included</label>
-                      <label class="form-label small" for="inclusions-bulk">Paste multiple items, separated by commas or new lines</label>
+                      <label class="form-label small" for="inclusions-bulk">Paste one item per line to keep commas inside sentences. For a single-line list, separate items with commas and put items containing commas in double quotes.</label>
 <textarea id="inclusions-bulk" name="inclusions_bulk" class="form-control mb-2" rows="3" placeholder="Airport transfers, Park fees, Meals">{{ old('inclusions_bulk') }}</textarea>
 <div id="inclusions-repeater">
                         @if(old('inclusions_items', $tourPackage->inclusions ?? []))
@@ -547,7 +547,7 @@
                     </div>
                     <div class="col-md-6">
                       <label class="form-label fw-bold">What's Excluded</label>
-                      <label class="form-label small" for="exclusions-bulk">Paste multiple items, separated by commas or new lines</label>
+                      <label class="form-label small" for="exclusions-bulk">Paste one item per line to keep commas inside sentences. For a single-line list, separate items with commas and put items containing commas in double quotes.</label>
 <textarea id="exclusions-bulk" name="exclusions_bulk" class="form-control mb-2" rows="3" placeholder="Airport transfers, Park fees, Meals">{{ old('exclusions_bulk') }}</textarea>
 <div id="exclusions-repeater">
                         @if(old('exclusions_items', $tourPackage->exclusions ?? []))
@@ -1243,7 +1243,7 @@
 
 @push('scripts')
 <script>
-(function(){var levelSelect=document.querySelector('[name="tour_level"]');if(!levelSelect)return;function group(){var v=levelSelect.value;return v==='luxury'?'luxury':(v.indexOf('budget')===0||v==='budget'?'budget':'mid_range');}function filter(){var g=group();document.querySelectorAll('[data-accommodation-choice] option[data-level-group]').forEach(function(o){o.hidden=o.dataset.levelGroup!=='all'&&o.dataset.levelGroup!==g;});var labels={luxury:{silver:'High Luxury',gold:'High Exclusive',platinum:'High Elite'},mid_range:{silver:'High Classic',gold:'Comfort',platinum:'Premium'},budget:{silver:'Essential',gold:'Value',platinum:'Plus'}};document.querySelectorAll('.accommodation-tier-row').forEach(function(row){var key=row.dataset.tierKey,label=row.querySelector('label.form-label.small.mb-1');if(label&&labels[g][key])label.textContent=labels[g][key];});}window.filterAccommodationOptions=filter;levelSelect.addEventListener('change',filter);filter();})();
+(function(){var levelSelect=document.querySelector('[name="tour_level"]');if(!levelSelect)return;function group(){var v=levelSelect.value;return v==='luxury'?'luxury':(v.indexOf('budget')===0||v==='budget'?'budget':'mid_range');}function filter(){var g=group();document.querySelectorAll('[data-accommodation-choice] option[data-level-group]').forEach(function(o){o.hidden=o.dataset.levelGroup!=='all'&&o.dataset.levelGroup!==g;});var labels={luxury:{silver:'High Luxury',gold:'High Exclusive',platinum:'High Elite'},mid_range:{silver:'Classic',gold:'Comfort',platinum:'Premium'},budget:{silver:'Essential',gold:'Value',platinum:'Plus'}};document.querySelectorAll('.accommodation-tier-row').forEach(function(row){var key=row.dataset.tierKey,label=row.querySelector('label.form-label.small.mb-1');if(label&&labels[g][key])label.textContent=labels[g][key];});}window.filterAccommodationOptions=filter;levelSelect.addEventListener('change',filter);filter();})();
 </script>
 @endpush
 @endsection
@@ -1544,7 +1544,6 @@ $(window).on('resize', function () {
       var selected = number === currentStep;
       button.classList.toggle('btn-success', selected);
       button.classList.toggle('btn-outline-secondary', !selected);
-      button.disabled = number > currentStep;
       if (selected) button.setAttribute('aria-current', 'step');
       else button.removeAttribute('aria-current');
     });
@@ -1586,7 +1585,7 @@ $(window).on('resize', function () {
   indicators.forEach(function (button) {
     button.addEventListener('click', function () {
       var target = Number(button.dataset.stepIndicator);
-      if (target < currentStep) updateStep(target, true);
+      if (target !== currentStep) updateStep(target, true);
     });
   });
 

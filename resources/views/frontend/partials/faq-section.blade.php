@@ -7,7 +7,7 @@
                         <img class="sfb-faq-expert__photo" src="{{ $faqExpert['image'] }}" alt="{{ $faqExpert['name'] }}" loading="lazy">
                         <span class="sfb-faq-expert__badge">Local Specialist</span>
                         <strong class="sfb-faq-expert__name">{{ $faqExpertHeading ?? $faqExpert['name'] }}</strong>
-                        <p>{{ $faqExpert['bio'] }}</p>
+                        <p>{{ $faqExpertBio ?? $faqExpert['bio'] }}</p>
                         <a href="{{ $faqExpert['link'] }}">More about {{ Str::before($faqExpert['name'], ' ') }}</a>
                     </div>
 

@@ -178,6 +178,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                      These rules are the safety net for that: never wider than the
                      column, never distorted, and a sensible rhythm around them. --}}
                 <style>
+                    #td-overview .td-overview { font-size: clamp(17px, 1.5vw, 21px); }
                     .td-overview img {
                         max-width: 100%;
                         height: auto;
@@ -859,14 +860,25 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                         <input type="date" id="tdFormTravelDate" name="travel_date" class="form-control form-control-lg" value="{{ old('travel_date') }}">
                     </div>
 
+                    @php
+                        $accommodationPreferences = $accommodationRows->flatMap(fn ($row) => $row['tiers'])
+                            ->filter(fn ($tier) => filled($tier['name']) && filled($tier['type']))
+                            ->mapWithKeys(fn ($tier) => [strtoupper($tier['tier_key']) => $tier['type']])
+                            ->only(['SILVER', 'GOLD', 'PLATINUM'])
+                            ->sortKeys();
+                    @endphp
+                    @if($accommodationPreferences->isNotEmpty())
                     <div class="td-form__field">
                         <label class="form-label fw-medium">Accommodation preference</label>
                         <div class="td-radio-row">
-                            @foreach(['SILVER' => 'Silver', 'GOLD' => 'Gold', 'PLATINUM' => 'Platinum'] as $accValue => $accLabel)
-                                <label class="td-radio"><input type="radio" name="accommodation" value="{{ $accValue }}"> {{ $accLabel }}</label>
+                            @foreach(['SILVER', 'GOLD', 'PLATINUM'] as $accValue)
+                                @if($accommodationPreferences->has($accValue))
+                                    <label class="td-radio"><input type="radio" name="accommodation" value="{{ $accValue }}" @checked(old('accommodation') === $accValue)> {{ $accommodationPreferences[$accValue] }}</label>
+                                @endif
                             @endforeach
                         </div>
                     </div>
+                    @endif
 
                     <div class="td-form__field">
                         <label class="form-label fw-medium">Type of Room</label>
@@ -983,7 +995,12 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
     <script data-cfasync="false" src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     {{-- ══ FAQ ══ --}}
-    @include('frontend.partials.faq-section', ['faqSubject' => $faqSubject, 'faqHeading' => count($faqs) . ' Questions About ' . $tour->cardTitle(), 'faqExpertHeading' => $tour->cardTitle() . ' — Local Specialist'])
+    @include('frontend.partials.faq-section', [
+        'faqSubject' => $faqSubject,
+        'faqHeading' => count($faqs) . ' Questions About ' . $tour->cardTitle(),
+        'faqExpertHeading' => $tour->cardTitle(),
+        'faqExpertBio' => 'Born and raised in Tanzania, our local specialists have planned hundreds of trips including ' . $tour->cardTitle() . ' across the most famous destinations. Every answer below reflects years of first-hand guiding experience.',
+    ])
 
     {{-- ══ 18. RELATED TOURS ════════════════════════════════════════ --}}
     @if($relatedTours->isNotEmpty())

@@ -876,13 +876,15 @@ public function edit(TourPackage $tourPackage)
 
     private function parsePastedList(array $items, ?string $bulk): ?array
     {
-        $values = [];
-        foreach (array_merge($items, [$bulk]) as $item) {
-            foreach (preg_split('/[,\r\n]+/', (string) $item) as $value) {
-                $value = trim($value);
-                if ($value !== '' && !in_array($value, $values, true)) $values[] = $value;
-            }
-        }
+        $bulk = trim((string) $bulk);
+        $bulkItems = preg_match('/\R/', $bulk)
+            ? preg_split('/\R/', $bulk)
+            : str_getcsv($bulk, ',', '"', '');
+
+        $values = array_values(array_unique(array_filter(
+            array_map(fn ($item) => trim((string) $item), array_merge($items, $bulkItems)),
+            fn ($item) => $item !== ''
+        )));
         return $values ?: null;
     }
 

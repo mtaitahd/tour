@@ -663,9 +663,10 @@ class TourController extends Controller
                 }
                 if ($stay) foreach ($stay->galleryImages() as $photo) $fullUrls[] = $photo->getUrl();
                 $group = $tour->tour_level === 'luxury' ? 'luxury' : (str_starts_with((string) $tour->tour_level, 'budget') ? 'budget' : 'mid_range');
-                $labels = ['luxury' => ['silver'=>'High Luxury', 'gold'=>'High Exclusive', 'platinum'=>'High Elite'], 'budget'=>['silver'=>'Essential', 'gold'=>'Value', 'platinum'=>'Plus'], 'mid_range'=>['silver'=>'High Classic', 'gold'=>'Comfort', 'platinum'=>'Premium']];
+                $labels = ['luxury' => ['silver'=>'High Luxury', 'gold'=>'High Exclusive', 'platinum'=>'High Elite'], 'budget'=>['silver'=>'Essential', 'gold'=>'Value', 'platinum'=>'Plus'], 'mid_range'=>['silver'=>'Classic', 'gold'=>'Comfort', 'platinum'=>'Premium']];
                 $key = strtolower($tier['tier_key'] ?? $tier['type'] ?? $tier['level'] ?? '');
                 $type = $tier['type'] ?? $tier['level'] ?? '';
+                if (strcasecmp($type, 'High Classic') === 0) $type = 'Classic';
                 if (in_array(strtolower($type), ['silver', 'gold', 'platinum'], true) || $type === '') $type = $labels[$group][$key] ?? '';
 
                 return [
