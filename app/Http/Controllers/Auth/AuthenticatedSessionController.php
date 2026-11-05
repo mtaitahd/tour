@@ -28,16 +28,24 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        if ($request->user()->hasValidRole() && ! $request->user()->hasAnyPermission()) {
+        $user = $request->user();
+
+        if (! $user->is_suspended && $user->must_change_password) {
+            return redirect()->route('forced-password-change');
+        }
+
+        if ($user->is_suspended || ($user->hasValidRole() && ! $user->hasAnyPermission())) {
             Auth::guard('web')->logout();
 
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            abort(403, 'Your account has not been assigned any permissions. Contact your admin.');
+            abort(403, $user->is_suspended
+                ? 'Your account is inactive. Contact your admin.'
+                : 'Your account has not been assigned any permissions. Contact your admin.');
         }
 
-        return redirect()->intended($request->user()->panelHome());
+        return redirect()->intended($user->panelHome());
     }
 
     /**

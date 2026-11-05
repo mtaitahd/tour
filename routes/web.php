@@ -74,6 +74,9 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
         Route::get('users', [\App\Http\Controllers\Admin\ManageUsersController::class, 'index'])->name('users.index');
         Route::get('users/create', [\App\Http\Controllers\Admin\ManageUsersController::class, 'create'])->name('users.create');
         Route::post('users', [\App\Http\Controllers\Admin\ManageUsersController::class, 'store'])->name('users.store');
+        Route::get('users/{user}/edit', [\App\Http\Controllers\Admin\ManageUsersController::class, 'edit'])->name('users.edit');
+        Route::patch('users/{user}', [\App\Http\Controllers\Admin\ManageUsersController::class, 'update'])->name('users.update');
+        Route::delete('users/{user}', [\App\Http\Controllers\Admin\ManageUsersController::class, 'destroy'])->name('users.destroy');
         Route::post('users/{user}/suspend', [\App\Http\Controllers\Admin\ManageUsersController::class, 'suspend'])->name('users.suspend');
         Route::post('users/{user}/activate', [\App\Http\Controllers\Admin\ManageUsersController::class, 'activate'])->name('users.activate');
         Route::post('users/{user}/reset-password', [\App\Http\Controllers\Admin\ManageUsersController::class, 'resetPassword'])->name('users.reset-password');

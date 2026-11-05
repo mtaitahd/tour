@@ -59,7 +59,7 @@
                           <label for="add-role" class="form-label">Role</label>
                           <select id="add-role" name="role" class="form-select">
                             <option value="{{ \App\Models\User::ROLE_PACKAGE_EDITOR }}" @selected(old('role') === \App\Models\User::ROLE_PACKAGE_EDITOR)>Package Editor</option>
-                            <option value="{{ \App\Models\User::ROLE_SUPER_ADMIN }}" @selected(old('role') === \App\Models\User::ROLE_SUPER_ADMIN)>Admin</option>
+                            @if(auth()->user()->isSuperAdmin()) <option value="{{ \App\Models\User::ROLE_SUPER_ADMIN }}" @selected(old('role') === \App\Models\User::ROLE_SUPER_ADMIN)>Admin</option> @endif
                           </select>
                           <div class="form-text">Admin always holds every module.</div>
                         </div>
@@ -168,7 +168,7 @@
                     </td>
                     <td>
                       @if ($user->is_suspended)
-                        <span class="badge bg-danger">Suspended</span>
+                        <span class="badge bg-danger">Inactive</span>
                       @else
                         <span class="badge bg-success">Active</span>
                       @endif
@@ -191,10 +191,17 @@
                     <td>{{ $user->created_at?->format('d M Y') }}</td>
                     <td>
                       <div class="d-flex flex-wrap gap-1">
-                        @if ($isSuper)
+                        @if ($isSuper || auth()->id() === $user->id)
                           {{-- Super Admin accounts cannot be managed/suspended here. --}}
                           <span class="text-muted small mt-1">—</span>
                         @else
+                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <form method="POST" action="{{ route('admin.users.destroy', $user) }}"
+                              onsubmit="return confirm('Permanently delete this user?');">
+                          @csrf
+                          @method('DELETE')
+                          <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
                         <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
                                 data-bs-target="#permissions{{ $user->id }}">
                           <i class="bi bi-shield-check"></i> Permissions
@@ -203,9 +210,9 @@
                         <form method="POST" action="{{ $user->is_suspended ? route('admin.users.activate', $user) : route('admin.users.suspend', $user) }}">
                           @csrf
                           @if ($user->is_suspended)
-                            <button type="submit" class="btn btn-sm btn-success">Reactivate</button>
+                            <button type="submit" class="btn btn-sm btn-success">Make Active</button>
                           @else
-                            <button type="submit" class="btn btn-sm btn-warning">Suspend</button>
+                            <button type="submit" class="btn btn-sm btn-warning">Make Inactive</button>
                           @endif
                         </form>
 

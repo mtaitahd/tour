@@ -184,6 +184,10 @@ class TourPackageController extends Controller
             'gallery_image_ids'                             => 'nullable|array',
             'gallery_image_ids.*'                           => 'integer|exists:media,id',
             'safari_car_image_ids'                          => 'nullable|array|max:10',
+            'transport_types_present' => 'sometimes|accepted',
+            'transport_types' => 'nullable|array|max:10',
+            'transport_types.*' => ['required', 'distinct', \Illuminate\Validation\Rule::in(array_keys(TourPackage::TRANSPORT_TYPES))],
+            'transport_other' => 'nullable|string|max:80',
             'transport_type' => ['nullable', \Illuminate\Validation\Rule::in(array_keys(TourPackage::TRANSPORT_TYPES))],
             'safari_car_image_ids.*'                        => 'integer|exists:media,id',
             'itinerary_days'                                => 'nullable|array',
@@ -366,6 +370,7 @@ class TourPackageController extends Controller
             'package_duration_type' => $request->input('package_duration_type') ?: null,
             'tour_type'            => $request->input('tour_type') ? strtoupper($request->input('tour_type')) : null,
             'package_category'     => $request->input('package_category') ?: null,
+            ...$this->selectedTransport($request),
             'transport_type'       => $request->input('transport_type'),
             'tour_format'          => $this->resolveTourFormat($request),
             'mountain_id'          => $request->input('mountain_id'),
@@ -523,6 +528,10 @@ public function edit(TourPackage $tourPackage)
             'gallery_image_ids'                             => 'nullable|array',
             'gallery_image_ids.*'                           => 'integer|exists:media,id',
             'safari_car_image_ids'                          => 'nullable|array|max:10',
+            'transport_types_present' => 'sometimes|accepted',
+            'transport_types' => 'nullable|array|max:10',
+            'transport_types.*' => ['required', 'distinct', \Illuminate\Validation\Rule::in(array_keys(TourPackage::TRANSPORT_TYPES))],
+            'transport_other' => 'nullable|string|max:80',
             'transport_type' => ['nullable', \Illuminate\Validation\Rule::in(array_keys(TourPackage::TRANSPORT_TYPES))],
             'safari_car_image_ids.*'                        => 'integer|exists:media,id',
             'itinerary_days'                                => 'nullable|array',
@@ -714,6 +723,7 @@ public function edit(TourPackage $tourPackage)
             'package_duration_type' => $request->input('package_duration_type') ?: null,
             'tour_type'            => $request->input('tour_type') ? strtoupper($request->input('tour_type')) : null,
             'package_category'     => $request->input('package_category') ?: null,
+            ...$this->selectedTransport($request),
             'transport_type'       => $request->input('transport_type', $tourPackage->transport_type),
             'tour_format'          => $this->resolveTourFormat($request, $tourPackage),
             'mountain_id'          => $request->input('mountain_id'),
@@ -872,6 +882,23 @@ public function edit(TourPackage $tourPackage)
             ->all();
 
         return $normalized ?: null;
+    }
+
+    private function selectedTransport(Request $request): array
+    {
+        if (!$request->boolean('transport_types_present')) {
+            return [];
+        }
+
+        $keys = $request->input('transport_types', []);
+        $other = trim((string) $request->input('transport_other'));
+        if (in_array('other', $keys, true) && $other === '') {
+            throw ValidationException::withMessages(['transport_other' => 'Specify the other transport type.']);
+        }
+
+        return ['transport_types' => collect($keys)->mapWithKeys(fn ($key) => [
+            $key => $key === 'other' ? $other : TourPackage::TRANSPORT_TYPES[$key],
+        ])->all()];
     }
 
     private function parsePastedList(array $items, ?string $bulk): ?array

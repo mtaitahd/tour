@@ -209,6 +209,15 @@
 
 {{-- Physical Rating, Tour Level and Available Months moved to Step 1's
      Tour Categories block so every classification control lives together. --}}
+@foreach(['starting_point' => 'Starting Point', 'ending_point' => 'Ending Point'] as $field => $label)
+<div class="row mb-3">
+  <label for="{{ $field }}" class="col-sm-2 col-form-label">{{ $label }}</label>
+  <div class="col-sm-10">
+    <input id="{{ $field }}" type="text" name="{{ $field }}" class="form-control" maxlength="255" value="{{ old($field, $draft?->{$field}) }}">
+  </div>
+</div>
+@endforeach
+
 <div class="row mb-3">
   <label class="col-sm-2 col-form-label fw-bold">Hero Image (main cover)</label>
   <div class="col-sm-10"><x-media-picker name="hero_image_id" :selected="old('hero_image_id')" label="Select from Media Library" /><small class="text-muted d-block mt-1">Choose an existing image from the library.</small></div>

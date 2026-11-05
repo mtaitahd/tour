@@ -659,6 +659,17 @@ class TourController extends Controller
                 $thumbUrl = null;
                 $fullUrls = $stay ? $stay->galleryImages()->map(fn ($photo) => $photo->getUrl())->filter()->all() : [];
 
+                if ($fullUrls === [] && $stayName !== '') {
+                    $folders = \App\Models\MediaCategory::where('name', $stay?->name ?? $stayName)
+                        ->whereHas('parent', fn ($query) => $query->whereNull('parent_id')->where('name', 'Accommodations'))
+                        ->limit(2)
+                        ->get();
+                    if ($folders->count() === 1) {
+                        $fullUrls = GalleryImage::whereHas('categories', fn ($query) => $query->whereKey($folders->first()->id))
+                            ->orderBy('id')->get()->map(fn ($photo) => $photo->getUrl())->filter()->all();
+                    }
+                }
+
                 if ($fullUrls === [] && $image) {
                     $thumbUrl = $image->getUrl('thumb-webp') ?: $image->getUrl('thumb') ?: $image->getUrl();
                     $fullUrls[] = $image->getUrl();

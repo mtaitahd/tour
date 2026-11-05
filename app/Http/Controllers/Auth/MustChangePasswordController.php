@@ -25,7 +25,7 @@ class MustChangePasswordController extends Controller
     {
         $request->validate([
             'current_password' => ['required', 'string'],
-            'password'         => ['required', 'string', 'min:8', 'confirmed'],
+            'password'         => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
         ]);
 
         $user = $request->user();

@@ -322,7 +322,7 @@
         @csrf
 
         <div class="form-group mb-3">
-          <label for="email">Email</label>
+          <label for="email">Account email address</label>
           <div class="input-group">
             <div class="input-group-prepend">
               <span class="input-group-text"><i class="fas fa-user"></i></span>

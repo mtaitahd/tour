@@ -12,7 +12,8 @@
 $hasDayByDay  = $itinerary->isNotEmpty();
 $hasRates     = $hasTourPrice && $seasonPricing->isNotEmpty();
 $hasInclExcl  = count($tour->inclusions ?? []) > 0 || count($tour->exclusions ?? []) > 0;
-$hasGetting   = (bool) ($mapEmbedUrl || trim((string) $tour->starting_point) !== '' || trim((string) $tour->ending_point) !== '' || count($transportRows) > 0);
+$transportLabels = $tour->transport_types ?? array_filter([\App\Models\TourPackage::TRANSPORT_TYPES[$tour->transport_type] ?? null]);
+$hasGetting   = (bool) ($mapEmbedUrl || trim((string) $tour->starting_point) !== '' || trim((string) $tour->ending_point) !== '' || count($transportRows) > 0 || $transportLabels);
 
 $tdTabs = [['id' => 'overview', 'label' => 'Overview']];
 if ($hasDayByDay) { $tdTabs[] = ['id' => 'daybyday', 'label' => 'Day by Day']; }
@@ -212,7 +213,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
             </section>
 
             {{-- 6. ROUTE --}}
-            @if(count($routeMapDays) > 0 || count($routePoints) > 2 || $mapEmbedUrl)
+            @if(count($routeMapDays) > 0 || count($routePoints) > 2 || $mapEmbedUrl || filled($tour->starting_point) || filled($tour->ending_point))
                 <section class="td-section td-white-card" id="td-route">
                     <h2 class="td-heading">Route<span class="td-heading__line" aria-hidden="true"></span></h2>
 
@@ -283,7 +284,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
             @endif
 
             {{-- 8. ACTIVITIES & TRANSPORTATION --}}
-            @if(count($transportRows) || $safariCarImages->isNotEmpty() || $tour->transport_type)
+            @if(count($transportRows) || $safariCarImages->isNotEmpty() || $transportLabels)
                 <section class="td-section td-white-card">
                     <h2 class="td-heading td-package-heading"><span class="td-heading__text">Activities &amp; Transportation: {{ $tour->cardTitle() }}</span><span class="td-heading__line" aria-hidden="true"></span></h2>
                     <ul class="td-transport">
@@ -293,10 +294,10 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                                 <span>{{ $row['label'] }} <strong>{{ $row['value'] }}</strong></span>
                             </li>
                         @endforeach
-                        @if($safariCarImages->isNotEmpty() || $tour->transport_type)
+                        @if($safariCarImages->isNotEmpty() || $transportLabels)
                             <li>
                                 <span class="td-transport__icon">{!! $iconSvg('vehicle') !!}</span>
-                                <span>{{ \App\Models\TourPackage::TRANSPORT_TYPES[$tour->transport_type] ?? 'Transport' }}</span>
+                                <span>{{ implode(', ', $transportLabels) ?: 'Transport' }}</span>
                             </li>
                         @endif
                     </ul>
@@ -759,7 +760,7 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                         @foreach($transportRows as $row)
                             <li><strong>{{ rtrim($row['label'], ':') }}</strong><span>{{ $row['value'] }}</span></li>
                         @endforeach
-                        @if($safariCarImages->isNotEmpty() || $tour->transport_type)
+                        @if($safariCarImages->isNotEmpty() || $transportLabels)
                             <li><strong>Transportation</strong><span>Game-drive vehicle</span></li>
                         @endif
                     </ul>

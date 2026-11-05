@@ -56,7 +56,7 @@
                 <label for="role" class="form-label">Role</label>
                 <select id="role" name="role" class="form-select">
                   <option value="{{ \App\Models\User::ROLE_PACKAGE_EDITOR }}" @selected(old('role') === \App\Models\User::ROLE_PACKAGE_EDITOR)>Package Editor</option>
-                  <option value="{{ \App\Models\User::ROLE_SUPER_ADMIN }}" @selected(old('role') === \App\Models\User::ROLE_SUPER_ADMIN)>Admin</option>
+                  @if(auth()->user()->isSuperAdmin()) <option value="{{ \App\Models\User::ROLE_SUPER_ADMIN }}" @selected(old('role') === \App\Models\User::ROLE_SUPER_ADMIN)>Admin</option> @endif
                 </select>
                 <div class="form-text">Admin always holds every module.</div>
               </div>

@@ -14,10 +14,7 @@ use Illuminate\View\View;
 /**
  * Super Admin management of Package Editor accounts.
  *
- * Phase 0 supports create, suspend, reactivate and reset/setup password only —
- * editors are never permanently deleted so ownership and audit history survive.
- * The target must always be a package_editor account; Super Admin accounts
- * cannot be modified here.
+ * Super Admin accounts are protected from changes in this screen.
  */
 class ManageUsersController extends Controller
 {
@@ -59,6 +56,7 @@ class ManageUsersController extends Controller
         ]);
 
         $role = $validated['role'];
+        abort_if($role === User::ROLE_SUPER_ADMIN && !$request->user()->isSuperAdmin(), 403);
 
         $user = new User();
         $user->name = $validated['name'];
@@ -79,6 +77,40 @@ class ManageUsersController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('status', "{$label} \"{$user->name}\" created. They must change the temporary password on first login.");
+    }
+
+    public function edit(User $user): View
+    {
+        $this->authorizeManageable($user);
+
+        return view('admin.users.edit', compact('user'));
+    }
+
+    public function update(Request $request, User $user): RedirectResponse
+    {
+        $this->authorizeManageable($user);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'lowercase', 'max:255', Rule::unique('users', 'email')->ignore($user)],
+        ]);
+
+        if ($user->email !== $validated['email']) {
+            $user->email_verified_at = null;
+        }
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->save();
+
+        return redirect()->route('admin.users.index')->with('status', 'User updated.');
+    }
+
+    public function destroy(User $user): RedirectResponse
+    {
+        $this->authorizeManageable($user);
+        $user->delete();
+
+        return redirect()->route('admin.users.index')->with('status', 'User deleted.');
     }
 
     public function updatePermissions(Request $request, User $user): RedirectResponse
@@ -138,5 +170,7 @@ class ManageUsersController extends Controller
         if ($user->isSuperAdmin()) {
             abort(403, 'Super Admin accounts cannot be managed here.');
         }
+
+        abort_if(auth()->id() === $user->id, 403, 'You cannot manage your own account here.');
     }
 }

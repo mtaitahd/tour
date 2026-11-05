@@ -24,6 +24,7 @@ class TourPackage extends Model implements HasMedia
 
     protected $fillable = [
         'transport_type',
+        'transport_types',
         // Core
         'slug',
         'title',
@@ -86,6 +87,7 @@ class TourPackage extends Model implements HasMedia
     ];
 
     protected $casts = [
+        'transport_types' => 'array',
         'departure_dates'  => 'array',
         'available_months' => 'array',
         'highlights'       => 'array',
