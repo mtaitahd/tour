@@ -679,12 +679,11 @@ class TourController extends Controller
                     $hero = GalleryImage::find($stay->hero_image_id);
                     if ($hero) $fullUrls[] = $hero->getUrl();
                 }
-                $group = $tour->tour_level === 'luxury' ? 'luxury' : (str_starts_with((string) $tour->tour_level, 'budget') ? 'budget' : 'mid_range');
-                $labels = ['luxury' => ['silver'=>'High Luxury', 'gold'=>'High Exclusive', 'platinum'=>'High Elite'], 'budget'=>['silver'=>'Essential', 'gold'=>'Value', 'platinum'=>'Plus'], 'mid_range'=>['silver'=>'Classic', 'gold'=>'Comfort', 'platinum'=>'Premium']];
+                $labels = \App\Models\Accommodation::tourTiers($tour->tour_level);
                 $key = strtolower($tier['tier_key'] ?? $tier['type'] ?? $tier['level'] ?? '');
                 $type = $tier['type'] ?? $tier['level'] ?? '';
                 if (strcasecmp($type, 'High Classic') === 0) $type = 'Classic';
-                if (in_array(strtolower($type), ['silver', 'gold', 'platinum'], true) || $type === '') $type = $labels[$group][$key] ?? '';
+                if (in_array(strtolower($type), ['silver', 'gold', 'platinum'], true) || $type === '') $type = $labels[$key] ?? '';
 
                 return [
                     'type'     => $type,

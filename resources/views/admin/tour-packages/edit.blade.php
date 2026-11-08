@@ -409,7 +409,7 @@
                                       return strtolower($acc['tier_key'] ?? $acc['type'] ?? '');
                                   });
                                 @endphp
-                                @php $accommodationOptions = \App\Models\Accommodation::published()->orderBy('name')->get(); $level = old('tour_level', $tourPackage->tour_level); $group = $level === 'luxury' ? 'luxury' : (str_contains($level, 'budget') || $level === 'budget' ? 'budget' : 'mid_range'); $tierLabels = $group === 'luxury' ? ['silver' => 'High Luxury', 'gold' => 'High Exclusive', 'platinum' => 'High Elite'] : ($group === 'budget' ? ['silver' => 'Essential', 'gold' => 'Value', 'platinum' => 'Plus'] : ['silver' => 'Classic', 'gold' => 'Comfort', 'platinum' => 'Premium']); @endphp
+                                @php $accommodationOptions = \App\Models\Accommodation::published()->orderBy('name')->get(); $level = old('tour_level', $tourPackage->tour_level); $tierLabels = \App\Models\Accommodation::tourTiers($level); @endphp
 @foreach($tierLabels as $tierKey => $tierLabel)
                                   @php
                                     $acc = $accommodationsByTier->get($tierKey, []);
@@ -440,8 +440,7 @@
                                         <option value="">Choose {{ $tierLabel }} accommodation</option>
                                         @if($selectedAccommodationName && !$accommodationOptions->contains('name', $selectedAccommodationName))<option value="{{ $selectedAccommodationName }}" selected>{{ $selectedAccommodationName }} (saved entry)</option>@endif
                                         @foreach($accommodationOptions as $accommodationOption)
-                                          @php $optionTier = strtolower((string) $accommodationOption->tier); $optionGroup = str_contains($optionTier, 'luxury') || str_contains($optionTier, 'exclusive') || str_contains($optionTier, 'elite') ? 'luxury' : (str_contains($optionTier, 'classic') || str_contains($optionTier, 'comfort') || str_contains($optionTier, 'premium') ? 'mid_range' : (str_contains($optionTier, 'essential') || str_contains($optionTier, 'value') || str_contains($optionTier, 'plus') ? 'budget' : 'all')); @endphp
-                                          <option value="{{ $accommodationOption->name }}" data-level-group="{{ $optionGroup }}" @selected($selectedAccommodationName === $accommodationOption->name)>{{ $accommodationOption->name }}{{ $accommodationOption->tier ? ' · ' . $accommodationOption->tier : '' }}</option>
+                                          <option value="{{ $accommodationOption->name }}" data-accommodation-tier="{{ $accommodationOption->tier }}" @selected($selectedAccommodationName === $accommodationOption->name)>{{ $accommodationOption->name }}{{ $accommodationOption->tier ? ' · ' . $accommodationOption->tier : '' }}</option>
                                         @endforeach
                                       </select>
                                     </div>
@@ -1036,8 +1035,7 @@
           var catalog=@json(\App\Models\Accommodation::published()->orderBy('name')->get(['name','tier'])->values());
           catalog.forEach(function(item){
             var tier=String(item.tier||'').toLowerCase();
-            var group=(tier.indexOf('luxury')>=0||tier.indexOf('exclusive')>=0||tier.indexOf('elite')>=0)?'luxury':((tier.indexOf('classic')>=0||tier.indexOf('comfort')>=0||tier.indexOf('premium')>=0)?'mid_range':((tier.indexOf('essential')>=0||tier.indexOf('value')>=0||tier.indexOf('plus')>=0)?'budget':'all'));
-            var option=new Option(item.name+(item.tier?' · '+item.tier:''),item.name); option.dataset.levelGroup=group; select.add(option);
+            var option=new Option(item.name+(item.tier?' · '+item.tier:''),item.name); option.dataset.accommodationTier=tier; select.add(option);
           });
           input.replaceWith(select);
         });
@@ -1243,7 +1241,7 @@
 
 @push('scripts')
 <script>
-(function(){var levelSelect=document.querySelector('[name="tour_level"]');if(!levelSelect)return;function group(){var v=levelSelect.value;return v==='luxury'?'luxury':(v.indexOf('budget')===0||v==='budget'?'budget':'mid_range');}function filter(){var g=group();document.querySelectorAll('[data-accommodation-choice] option[data-level-group]').forEach(function(o){o.hidden=o.dataset.levelGroup!=='all'&&o.dataset.levelGroup!==g;});var labels={luxury:{silver:'High Luxury',gold:'High Exclusive',platinum:'High Elite'},mid_range:{silver:'Classic',gold:'Comfort',platinum:'Premium'},budget:{silver:'Essential',gold:'Value',platinum:'Plus'}};document.querySelectorAll('.accommodation-tier-row').forEach(function(row){var key=row.dataset.tierKey,label=row.querySelector('label.form-label.small.mb-1');if(label&&labels[g][key])label.textContent=labels[g][key];});}window.filterAccommodationOptions=filter;levelSelect.addEventListener('change',filter);filter();})();
+@include('admin.tour-packages.partials.accommodation-filter')
 </script>
 @endpush
 @endsection

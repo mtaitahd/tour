@@ -50,6 +50,7 @@ class TourPackageController extends Controller
             'draft_id' => 'nullable|integer|exists:tour_packages,id',
             'title'    => 'nullable|string|max:255',
             'slug'     => 'nullable|string|max:255',
+            'tour_level' => 'nullable|in:budget_camping,budget_lodge,mid_range,luxury',
         ]);
 
         $tourPackage = null;
@@ -91,6 +92,7 @@ class TourPackageController extends Controller
             'title'         => $title !== '' ? $title : 'Untitled tour draft',
             'slug'          => $slug,
             'status'        => 'draft',
+            'tour_level'    => $request->input('tour_level') ?? $tourPackage->tour_level ?? 'mid_range',
             // Some production databases still define trip_details as NOT NULL
             // without a default. The field stays out of the form; persist an
             // empty JSON array so incomplete drafts can be inserted safely.
@@ -701,7 +703,7 @@ public function edit(TourPackage $tourPackage)
             'currency'           => $this->resolveCurrency($request),
             'season_pricing'     => !empty($seasonPricing) ? $seasonPricing : null,
             'physical_rating'    => $request->input('physical_rating', 'moderate'),
-            'tour_level'         => $request->input('tour_level', 'mid_range'),
+            'tour_level'         => $request->input('tour_level') ?? $tourPackage->tour_level ?? 'mid_range',
             'is_group_departure' => $request->has('is_group_departure') ? 1 : $tourPackage->is_group_departure,
             'available_months'   => $this->normalizeMonths($request->input('available_months')),
             'starting_point'     => $request->starting_point,

@@ -10,6 +10,18 @@ use Illuminate\Support\Collection;
 
 class Accommodation extends Model
 {
+    public const TOUR_TIERS = [
+        'mid_range' => ['silver' => 'Classic', 'gold' => 'Comfort', 'platinum' => 'Premium'],
+        'luxury' => ['silver' => 'High Luxury', 'gold' => 'High Exclusive', 'platinum' => 'High Elite'],
+        'budget_lodge' => ['silver' => 'Essential', 'gold' => 'Value', 'platinum' => 'Plus'],
+        'budget_camping' => ['silver' => 'Camping', 'gold' => 'Camping', 'platinum' => 'Camping'],
+    ];
+
+    public static function tourTiers(?string $level): array
+    {
+        return self::TOUR_TIERS[$level === 'budget' ? 'budget_lodge' : $level] ?? self::TOUR_TIERS['mid_range'];
+    }
+
     use HasFactory;
 
     protected $fillable = [

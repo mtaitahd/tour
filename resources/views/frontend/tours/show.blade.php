@@ -862,11 +862,11 @@ if ($accommodationRows->isNotEmpty() && !$accommodationRows->first()['hasStay'] 
                     </div>
 
                     @php
+                        $bookingTiers = \App\Models\Accommodation::tourTiers($tour->tour_level);
                         $accommodationPreferences = $accommodationRows->flatMap(fn ($row) => $row['tiers'])
-                            ->filter(fn ($tier) => filled($tier['name']) && filled($tier['type']))
-                            ->mapWithKeys(fn ($tier) => [strtoupper($tier['tier_key']) => $tier['type']])
-                            ->only(['SILVER', 'GOLD', 'PLATINUM'])
-                            ->sortKeys();
+                            ->filter(fn ($tier) => filled($tier['name']) && isset($bookingTiers[$tier['tier_key']]))
+                            ->mapWithKeys(fn ($tier) => [strtoupper($tier['tier_key']) => $bookingTiers[$tier['tier_key']]])
+                            ->unique();
                     @endphp
                     @if($accommodationPreferences->isNotEmpty())
                     <div class="td-form__field">
