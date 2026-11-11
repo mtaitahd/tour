@@ -1039,7 +1039,6 @@
           });
           input.replaceWith(select);
         });
-        if(window.filterAccommodationOptions)window.filterAccommodationOptions();
 
       // Clone the hidden template pickers and drop each into its slot, with the
       // "__INDEX__" placeholder replaced by this day's real index. See the
@@ -1065,6 +1064,7 @@
       // every .media-picker-sortable on the page), except Sortable.js itself, which
       // must be initialized per-container explicitly rather than delegated, since it
       // attaches directly to each container element.
+      if (window.filterAccommodationOptions) window.filterAccommodationOptions();
       pickerNodes.find('.media-picker-sortable').each(function () {
         if (typeof Sortable !== 'undefined') {
           new Sortable(this, { animation: 150, ghostClass: 'bg-light' });

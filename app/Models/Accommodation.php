@@ -12,7 +12,7 @@ class Accommodation extends Model
 {
     public const TOUR_TIERS = [
         'mid_range' => ['silver' => 'Classic', 'gold' => 'Comfort', 'platinum' => 'Premium'],
-        'luxury' => ['silver' => 'High Luxury', 'gold' => 'High Exclusive', 'platinum' => 'High Elite'],
+        'luxury' => ['silver' => 'Luxury', 'gold' => 'Exclusive', 'platinum' => 'Elite'],
         'budget_lodge' => ['silver' => 'Essential', 'gold' => 'Value', 'platinum' => 'Plus'],
         'budget_camping' => ['silver' => 'Camping', 'gold' => 'Camping', 'platinum' => 'Camping'],
     ];

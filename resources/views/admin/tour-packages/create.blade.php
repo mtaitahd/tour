@@ -754,7 +754,6 @@ $(document).ready(function () {
           });
           input.replaceWith(select);
         });
-        if(window.filterAccommodationOptions)window.filterAccommodationOptions();
 
         var templateHtml = document.getElementById('itinerary-day-picker-template').innerHTML;
         var pickerNodes = $('<div>' + templateHtml.replace(/__INDEX__/g, n) + '</div>').children();
@@ -763,6 +762,7 @@ $(document).ready(function () {
         ['silver', 'gold', 'platinum'].forEach(function (tier, i) {
             $newDay.find('.acc-tier-picker-slot[data-tier="' + tier + '"]').append(pickerNodes.eq(i + 1));
         });
+        if (window.filterAccommodationOptions) window.filterAccommodationOptions();
         pickerNodes.find('.media-picker-sortable').each(function () {
             if (typeof Sortable !== 'undefined') new Sortable(this, { animation: 150, ghostClass: 'bg-light' });
         });

@@ -53,8 +53,8 @@
                 <label class="col-sm-2 col-form-label">Tier</label>
                 <div class="col-sm-10">
                   <input type="text" name="tier" list="accommodation-tier-options" class="form-control" value="{{ old('tier') }}"
-                         placeholder="e.g. High Luxury, Comfort, Essential">
-                  <datalist id="accommodation-tier-options"><option value="High Luxury"><option value="High Exclusive"><option value="High Elite"><option value="Classic"><option value="Comfort"><option value="Premium"><option value="Essential"><option value="Value"><option value="Plus"><option value="Camping"><option value="None"></datalist>
+                         placeholder="e.g. Luxury, Comfort, Essential">
+                  <datalist id="accommodation-tier-options"><option value="Luxury"><option value="Exclusive"><option value="Elite"><option value="Classic"><option value="Comfort"><option value="Premium"><option value="Essential"><option value="Value"><option value="Plus"><option value="Camping"><option value="None"></datalist>
                 </div>
               </div>
 

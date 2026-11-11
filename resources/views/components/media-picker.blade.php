@@ -31,7 +31,7 @@
   @endif
 
   <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#picker-{{ $pickerId }}">
-    <i class="bi bi-images"></i> {{ $label }}
+    <i class="bi bi-images"></i> <span data-media-picker-label>{{ $label }}</span>
   </button>
 
   @include('admin.media.partials.modal-picker', [
