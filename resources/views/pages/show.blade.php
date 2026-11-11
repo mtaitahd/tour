@@ -95,10 +95,10 @@ $countryList = ['Afghanistan','Albania','Algeria','Argentina','Australia','Austr
 @section('title', $page->meta_title ?? ($page->title . ' | ' . $siteName))
 
 @section('extra-head')
-    @if($page->meta_description)
+    @if(!$page->isSiteInfo() && $page->meta_description)
         <meta name="description" content="{{ $page->meta_description }}">
     @endif
-    @if($page->meta_keywords)
+    @if(!$page->isSiteInfo() && $page->meta_keywords)
         <meta name="keywords" content="{{ $page->meta_keywords }}">
     @endif
 @endsection

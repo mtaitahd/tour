@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use App\Models\Destination;
+use App\Models\Setting;
 use App\Models\TourCategory;
 use App\Pricing\LevelCatalog;
 use App\Services\ListingTitles;
@@ -67,8 +68,10 @@ class AppServiceProvider extends ServiceProvider
                 $meta['canonical']   = route('pages.index'); // always point to clean /pages
             }
             elseif (request()->routeIs('home')) {
-                $meta['title'] = 'Afro-Vertex Tours & Safaris - Best Africa Safaris & Adventures';
-                $meta['description'] = 'Experience unforgettable safaris, Kilimanjaro climbs, Zanzibar beaches, and gorilla trekking with Afro-Vertex Tours.';
+                $meta['title'] = Setting::get('site_name', 'Afro-Vertex Tours & Safaris') . ' | East Africa Safaris, Climbs & Beach Tours';
+                $meta['description'] = trim((string) Setting::get('meta_description'))
+                    ?: 'Discover Tanzania safaris, Kilimanjaro climbs, Zanzibar beaches and gorilla trekking with Afro-Vertex Tours.';
+                $meta['og_image'] = Setting::imageUrl('hero_image_id') ?: asset('front-end/html/assets/img/avt-hero.webp');
                 $meta['keywords'] = 'safari, kilimanjaro, zanzibar, tanzania tours, africa travel';
                 $meta['canonical']   = route('home');
             }

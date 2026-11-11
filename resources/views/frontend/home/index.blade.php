@@ -5,12 +5,6 @@
     use App\Models\User;
 @endphp
 
-@section('title', Setting::get('site_name', 'Afro-Vertex Tours & Safaris') . ' – Best Safaris, Climbs & Beach Tours in East Africa')
-
-@section('extra-head')
-    <meta name="description" content="{{ Setting::get('meta_description', 'Discover Tanzania safaris, Kilimanjaro climbs, Zanzibar beaches and gorilla trekking with Afro-Vertex Tours.') }}">
-    <meta name="keywords" content="safari tanzania, kilimanjaro climb, zanzibar beach, uganda gorillas, serengeti migration, east africa tours">
-@endsection
 @section('page-content')
 
     <!-- Hero Section -->

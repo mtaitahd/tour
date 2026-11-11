@@ -1,16 +1,5 @@
 @extends('frontend.layouts.app')
 
-@section('title', $page->meta_title ?? 'About Us | Afro-Vertex Tours & Safaris')
-
-@section('extra-head')
-    @if($page->meta_description)
-        <meta name="description" content="{{ $page->meta_description }}">
-    @endif
-    @if($page->meta_keywords)
-        <meta name="keywords" content="{{ $page->meta_keywords }}">
-    @endif
-@endsection
-
 @section('page-content')
     <!-- Breadcrumb -->
     <div class="breadcrumb-bar breadcrumb-bg-02 text-center">
@@ -48,9 +37,9 @@
 
                 <div class="row justify-content-center">
                     <div>
-                        <h1 class="display-5 fw-bold mb-4">
+                        <h2 class="display-5 fw-bold mb-4">
                             {{ $page->extra_heading ?? 'Discover the Heart of East Africa with Afro-Vertex Tours' }}
-                        </h1>
+                        </h2>
                         <p class="lead text-gray-700 mb-4">
                             {!! $page->extra_subheading ?? 'We are passionate local specialists dedicated to creating authentic, responsible, and unforgettable travel experiences across Tanzania, Kenya, Uganda, and Rwanda.' !!}
                         </p>

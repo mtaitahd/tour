@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Important: CSRF token for AJAX -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php
+        $siteInfoDescription = null;
+        $siteInfoTitle = null;
+        if (isset($page) && $page instanceof \App\Models\Page && $page->isSiteInfo()) {
+            $siteInfoTitle = trim((string) $page->meta_title) ?: $page->title . ' | Afro-Vertex Tours & Safaris';
+            $siteInfoDescription = trim((string) $page->meta_description)
+                ?: match ($page->slug) {
+                    'about-us' => 'Meet the Afro-Vertex Tours & Safaris team and learn how our local specialists plan trips across East Africa.',
+                    'contact' => 'Contact Afro-Vertex Tours & Safaris to ask about Tanzania safaris, Kilimanjaro climbs, and custom trips.',
+                    'why-choose-us' => 'Learn how Afro-Vertex Tours & Safaris plans and guides trips across East Africa.',
+                    'terms-and-conditions' => 'Read the terms and conditions for booking and travelling with Afro-Vertex Tours & Safaris.',
+                };
+        }
+    @endphp
     <!-- Title -->
     <title>
         @if(isset($managerList) && $managerList instanceof \App\Models\ManagerList)
@@ -18,7 +32,7 @@
         @elseif(isset($tourCategory) && $tourCategory instanceof \App\Models\TourCategory)
             {{ $tourCategory->meta_title ?? $tourCategory->name . ' Tours | Afro-Vertex Tours & Safaris' }}
         @elseif(isset($page) && $page instanceof \App\Models\Page)
-            {{ $page->meta_title ?? $page->title . ' | Afro-Vertex Tours & Safaris' }}
+            {{ $siteInfoTitle ?? $page->meta_title ?? $page->title . ' | Afro-Vertex Tours & Safaris' }}
         @else
             {{ $meta['title'] ?? config('app.name', 'Afro-Vertex Tours & Safaris') }}
         @endif
@@ -37,7 +51,7 @@
         @elseif(isset($tourCategory) && $tourCategory instanceof \App\Models\TourCategory)
             {{ $tourCategory->meta_description ?? Str::limit(strip_tags($tourCategory->description ?? ''), 160) }}
         @elseif(isset($page) && $page instanceof \App\Models\Page)
-            {{ $page->meta_description ?? Str::limit(strip_tags($page->content ?? ''), 160) }}
+            {{ $siteInfoDescription ?? $page->meta_description ?? Str::limit(strip_tags($page->content ?? ''), 160) }}
         @else
             {{ $meta['description'] ?? 'Discover the best safaris, climbs, and beach holidays in East Africa with Afro-Vertex Tours & Safaris.' }}
         @endif
@@ -92,7 +106,7 @@
         @elseif(isset($tourCategory) && $tourCategory instanceof \App\Models\TourCategory)
             {{ $tourCategory->meta_title ?? $tourCategory->name . ' Tours' }}
         @elseif(isset($page) && $page instanceof \App\Models\Page)
-            {{ $page->meta_title ?? $page->title }}
+            {{ $siteInfoTitle ?? $page->meta_title ?? $page->title }}
         @else
             {{ $meta['title'] ?? config('app.name') }}
         @endif
@@ -110,7 +124,7 @@
         @elseif(isset($tourCategory) && $tourCategory instanceof \App\Models\TourCategory)
             {{ $tourCategory->meta_description ?? Str::limit(strip_tags($tourCategory->description ?? ''), 200) }}
         @elseif(isset($page) && $page instanceof \App\Models\Page)
-            {{ $page->meta_description ?? Str::limit(strip_tags($page->content ?? ''), 200) }}
+            {{ $siteInfoDescription ?? $page->meta_description ?? Str::limit(strip_tags($page->content ?? ''), 200) }}
         @else
             {{ $meta['description'] ?? 'Discover East Africa adventures with Afro-Vertex Tours & Safaris' }}
         @endif
@@ -129,6 +143,8 @@
             $ogImage = $destination->heroUrl();
         } elseif (isset($page) && $page instanceof \App\Models\Page && $page->hasHeroImage()) {
             $ogImage = $page->heroUrl();
+        } elseif ($siteInfoDescription !== null) {
+            $ogImage = asset('front-end/html/assets/img/avt-hero.webp');
         }
     @endphp
 
