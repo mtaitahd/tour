@@ -236,6 +236,8 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
 
     // ── Settings (module: settings) ─────────────────────────────────────
     Route::middleware('permission:settings')->group(function () {
+        Route::get('/landing-page/{section?}', [\App\Http\Controllers\Admin\LandingPageController::class, 'edit'])->name('landing.edit');
+        Route::post('/landing-page/{section}', [\App\Http\Controllers\Admin\LandingPageController::class, 'update'])->name('landing.update');
         Route::get('/settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings.index');
         Route::post('/settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
         Route::get('/sitemap', [\App\Http\Controllers\Admin\SitemapController::class, 'index'])->name('sitemap.index');
@@ -243,17 +245,17 @@ Route::middleware(['auth', 'panel-access', 'active', 'force-password-change'])->
 
         // ── Website Content editors (homepage buttons/captions, Traveller
         //    Stories, YouTube subscribe, footer links, start/end points) ──
-        Route::get('/homepage-content', [\App\Http\Controllers\Admin\HomepageContentController::class, 'home'])->name('homepage-content');
-        Route::post('/homepage-content', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateHome']);
+        Route::get('/homepage-content', fn () => redirect()->route('admin.landing.edit', 'hero'))->name('homepage-content');
+        Route::post('/homepage-content', fn () => redirect()->route('admin.landing.edit', 'hero')->with('success', 'Use Landing Page to edit this section.'));
 
-        Route::get('/traveller-stories', [\App\Http\Controllers\Admin\HomepageContentController::class, 'travellers'])->name('traveller-stories');
-        Route::post('/traveller-stories', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateTravellers']);
+        Route::get('/traveller-stories', fn () => redirect()->route('admin.landing.edit', 'reviews'))->name('traveller-stories');
+        Route::post('/traveller-stories', fn () => redirect()->route('admin.landing.edit', 'reviews')->with('success', 'Use Landing Page to edit this section.'));
 
-        Route::get('/subscribe', [\App\Http\Controllers\Admin\HomepageContentController::class, 'subscribe'])->name('subscribe-content');
-        Route::post('/subscribe', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateSubscribe']);
+        Route::get('/subscribe', fn () => redirect()->route('admin.landing.edit', 'subscribe'))->name('subscribe-content');
+        Route::post('/subscribe', fn () => redirect()->route('admin.landing.edit', 'subscribe')->with('success', 'Use Landing Page to edit this section.'));
 
-        Route::get('/footer', [\App\Http\Controllers\Admin\HomepageContentController::class, 'footer'])->name('footer-settings');
-        Route::post('/footer', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateFooter']);
+        Route::get('/footer', fn () => redirect()->route('admin.landing.edit', 'footer'))->name('footer-settings');
+        Route::post('/footer', fn () => redirect()->route('admin.landing.edit', 'footer')->with('success', 'Use Landing Page to edit this section.'));
 
         Route::get('/start-end-points', [\App\Http\Controllers\Admin\HomepageContentController::class, 'startEndPoints'])->name('start-end-points');
         Route::post('/start-end-points', [\App\Http\Controllers\Admin\HomepageContentController::class, 'updateStartEndPoints']);

@@ -185,68 +185,13 @@
          ══════════════════════════════════════════════════════════════════════ -->
     <section class="sae" id="sae" role="region" aria-label="Safari Atlas Explorer — Explore Africa's top safari countries">
         @php
-        $saeCountries = [
-            [
-                'id'=>'tanzania','rank'=>1,'name'=>'Tanzania','slug'=>'tanzania',
-                'rating'=>4.9,'reviewCount'=>'2,847',
-                'description'=>"Home to the Serengeti, Ngorongoro Crater, Mount Kilimanjaro and the islands of Zanzibar, Tanzania offers an extraordinary range of adventures. Witness the Great Migration, explore wildlife-rich national parks with professional local guides, climb Africa's highest mountain or finish your journey beside the Indian Ocean.",
-                'priceRange'=>'From $238 per person/day','bestTime'=>'June to October & January to February','highSeason'=>'July to October',
-                'heroImage'=>asset('public/safari-countries/tanzania.webp'),
-                'heroImageAlt'=>'Serengeti Great Migration with wildebeest herds crossing the savannah',
-                'safariPageUrl'=>route('tours.index'),'countryPageUrl'=>route('destination.show','tanzania'),
-                'tourCount'=>124,
-                'destinations'=>[
-                    ['name'=>'Serengeti','cat'=>'Wildlife'],
-                    ['name'=>'Ngorongoro','cat'=>'Crater'],
-                    ['name'=>'Zanzibar','cat'=>'Beach'],
-                ],
-            ],
-            [
-                'id'=>'kenya','rank'=>2,'name'=>'Kenya','slug'=>'kenya',
-                'rating'=>4.8,'reviewCount'=>'2,341',
-                'description'=>"Kenya is the birthplace of the safari experience. From the vast plains of the Maasai Mara to the flamingo-lined shores of Lake Nakuru and the snow-capped peak of Mount Kenya, this iconic destination delivers classic African wildlife encounters combined with vibrant cultural heritage.",
-                'priceRange'=>'From $215 per person/day','bestTime'=>'July to October & January to February','highSeason'=>'July to October',
-                'heroImage'=>asset('public/safari-countries/kenya.webp'),
-                'heroImageAlt'=>'Maasai Mara savannah landscape with acacia trees at golden hour',
-                'safariPageUrl'=>route('tours.index'),'countryPageUrl'=>route('destination.show','kenya'),
-                'tourCount'=>108,
-                'destinations'=>[
-                    ['name'=>'Maasai Mara','cat'=>'Wildlife'],
-                    ['name'=>'Amboseli','cat'=>'Safari'],
-                    ['name'=>'Diani Beach','cat'=>'Beach'],
-                ],
-            ],
-            [
-                'id'=>'uganda','rank'=>3,'name'=>'Uganda','slug'=>'uganda',
-                'rating'=>4.7,'reviewCount'=>'1,658',
-                'description'=>"Known as the Pearl of Africa, Uganda is home to endangered mountain gorillas in Bwindi Impenetrable Forest, chimpanzees in Kibale and the powerful Murchison Falls. Combine primate trekking with savannah safaris, water sports on Lake Victoria and lush crater-lake scenery.",
-                'priceRange'=>'From $265 per person/day','bestTime'=>'June to September & December to February','highSeason'=>'June to September',
-                'heroImage'=>asset('public/safari-countries/uganda.jpg'),
-                'heroImageAlt'=>'Mountain gorilla in Bwindi Impenetrable Forest Uganda',
-                'safariPageUrl'=>route('tours.index'),'countryPageUrl'=>route('destination.show','uganda'),
-                'tourCount'=>73,
-                'destinations'=>[
-                    ['name'=>'Bwindi','cat'=>'Gorillas'],
-                    ['name'=>'Murchison Falls','cat'=>'Adventure'],
-                    ['name'=>'Jinja','cat'=>'Water'],
-                ],
-            ],
-            [
-                'id'=>'rwanda','rank'=>4,'name'=>'Rwanda','slug'=>'rwanda',
-                'rating'=>4.8,'reviewCount'=>'1,203',
-                'description'=>"Rwanda offers intimate gorilla trekking experiences in Volcanoes National Park alongside golden monkey encounters and the dramatic canopy walk in Nyungwe Forest. The Land of a Thousand Hills also features Akagera's savannah Big Five and the tranquil shores of Lake Kivu.",
-                'priceRange'=>'From $310 per person/day','bestTime'=>'June to September & December to February','highSeason'=>'June to September',
-                'heroImage'=>asset('public/safari-countries/rwanda.jpg'),
-                'heroImageAlt'=>'Gorilla trekking experience in Volcanoes National Park Rwanda',
-                'safariPageUrl'=>route('tours.index'),'countryPageUrl'=>route('destination.show','rwanda'),
-                'tourCount'=>41,
-                'destinations'=>[
-                    ['name'=>'Volcanoes NP','cat'=>'Gorillas'],
-                    ['name'=>'Nyungwe','cat'=>'Forest'],
-                    ['name'=>'Akagera','cat'=>'Savannah'],
-                ],
-            ],
-        ];
+        $saeCountries = \App\Support\LandingDefaults::rows('atlas');
+        $atlasOverrides = Setting::json('landing_atlas_countries');
+        foreach ($saeCountries as &$country) {
+            $override = collect($atlasOverrides)->firstWhere('id', $country['id']);
+            if ($override) $country = array_replace($country, array_filter($override, fn ($value) => filled($value)));
+        }
+        unset($country);
         $saeCount = count($saeCountries);
         $saeFirst = $saeCountries[0];
         @endphp
@@ -255,9 +200,9 @@
 
             {{-- ── Heading ────────────────────────────────────── --}}
             <header class="sae__header wow fadeInUp" data-wow-delay="0.1s">
-                <p class="sae__eyebrow">Explore Africa</p>
-                <h2 class="sae__title">Find Your Wild Side</h2>
-                <p class="sae__subtitle">Four remarkable countries. Four completely different ways to experience Africa.</p>
+                <p class="sae__eyebrow">{{ Setting::get('landing_sae_eyebrow_1', 'Explore Africa') }}</p>
+                <h2 class="sae__title">{{ Setting::get('landing_sae_title_1', 'Find Your Wild Side') }}</h2>
+                <p class="sae__subtitle">{{ Setting::get('landing_sae_subtitle_1', 'Four remarkable countries. Four completely different ways to experience Africa.') }}</p>
             </header>
 
             {{-- ── Country Journey Rail ───────────────────────── --}}
@@ -791,6 +736,12 @@
     <!-- Worldwide Group Travellers -->
     @php
         $wwgtCountries = config('countries.countries', []);
+        $wwgtOverrides = Setting::json('landing_country_links');
+        foreach ($wwgtCountries as &$country) {
+            $override = collect($wwgtOverrides)->firstWhere('code', $country['code']);
+            if ($override) $country = array_replace($country, array_filter($override, fn ($value) => filled($value)));
+        }
+        unset($country);
         $wwgtFeaturedCodes = config('countries.featured', []);
         $wwgtFeatured = collect($wwgtCountries)->filter(function ($c) use ($wwgtFeaturedCodes) {
             return in_array($c['code'], $wwgtFeaturedCodes, true);
@@ -867,10 +818,10 @@
         <div class="container hiw__container">
             <div class="hiw__head hiw__head--left wow fadeInUp" data-wow-delay="0.2s">
                 <div class="hiw__eyebrow">
-                    <span class="hiw__eyebrow-text">How It Works</span>
+                    <span class="hiw__eyebrow-text">{{ Setting::get('landing_hiw_eyebrow_text_1', 'How It Works') }}</span>
                 </div>
-                <h2 class="hiw__title">Your Safari, Made Simple</h2>
-                <p class="hiw__desc">Three easy steps from dream trip to departure day — we handle the details so you can focus on the adventure.</p>
+                <h2 class="hiw__title">{{ Setting::get('landing_hiw_title_1', 'Your Safari, Made Simple') }}</h2>
+                <p class="hiw__desc">{{ Setting::get('landing_hiw_desc_1', 'Three easy steps from dream trip to departure day — we handle the details so you can focus on the adventure.') }}</p>
             </div>
 
             <div class="hiw__cards-wrap">
@@ -893,8 +844,8 @@
                             </svg>
                         </div>
                         <span class="hiw-card__num">01</span>
-                        <h3 class="hiw-card__title">Find Your Tour</h3>
-                        <p class="hiw-card__desc">Explore handpicked safaris or search for the adventure that fits you.</p>
+                        <h3 class="hiw-card__title">{{ Setting::get('landing_hiw_card_title_1', 'Find Your Tour') }}</h3>
+                        <p class="hiw-card__desc">{{ Setting::get('landing_hiw_card_desc_1', 'Explore handpicked safaris or search for the adventure that fits you.') }}</p>
                         <span class="hiw-card__pattern" aria-hidden="true"></span>
                     </article>
 
@@ -912,8 +863,8 @@
                             </svg>
                         </div>
                         <span class="hiw-card__num">02</span>
-                        <h3 class="hiw-card__title">Book &amp; Confirm</h3>
-                        <p class="hiw-card__desc">Choose your dates and travelers, then reserve your place with confidence.</p>
+                        <h3 class="hiw-card__title">{{ Setting::get('landing_hiw_card_title_2', 'Book & Confirm') }}</h3>
+                        <p class="hiw-card__desc">{{ Setting::get('landing_hiw_card_desc_2', 'Choose your dates and travelers, then reserve your place with confidence.') }}</p>
                         <span class="hiw-card__pattern" aria-hidden="true"></span>
                     </article>
 
@@ -932,8 +883,8 @@
                             </svg>
                         </div>
                         <span class="hiw-card__num">03</span>
-                        <h3 class="hiw-card__title">Enjoy the Journey</h3>
-                        <p class="hiw-card__desc">Meet your guide, explore East Africa, and create lasting memories.</p>
+                        <h3 class="hiw-card__title">{{ Setting::get('landing_hiw_card_title_3', 'Enjoy the Journey') }}</h3>
+                        <p class="hiw-card__desc">{{ Setting::get('landing_hiw_card_desc_3', 'Meet your guide, explore East Africa, and create lasting memories.') }}</p>
                         <span class="hiw-card__pattern" aria-hidden="true"></span>
                     </article>
                 </div>
@@ -1078,9 +1029,9 @@
             <div class="container">
                 <div class="wow fadeInUp" data-wow-delay="0.2s">
                     <div class="section-header-six section-header-six--left">
-                        <span class="badge badge-soft-primary rounded-pill mb-2">Why Choose Us</span>
-                        <h2>The Local Specialists You Can Trust<span class="text-primary">.</span></h2>
-                        <p class="section-header-six__desc">Over a decade of on-the-ground experience, trusted partnerships, and a genuine love for the places we call home.</p>
+                        <span class="badge badge-soft-primary rounded-pill mb-2">{{ Setting::get('landing_why_eyebrow', 'Why Choose Us') }}</span>
+                        <h2>{{ Setting::get('landing_why_title', 'The Local Specialists You Can Trust') }}<span class="text-primary">.</span></h2>
+                        <p class="section-header-six__desc">{{ Setting::get('landing_why_subtitle', 'Over a decade of on-the-ground experience, trusted partnerships, and a genuine love for the places we call home.') }}</p>
                     </div>
                 </div>
 

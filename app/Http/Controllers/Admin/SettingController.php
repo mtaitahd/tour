@@ -31,6 +31,10 @@ class SettingController extends Controller
      */
     public function update(Request $request)
     {
+        $allowed = ['site_name', 'logo_image_id', 'default_currency', 'timezone', 'footer_phone',
+            'whatsapp_number', 'site_email', 'wechat_id', 'line_id', 'ga_id', 'enable_sitemap'];
+        $request->merge(['settings' => array_intersect_key((array) $request->input('settings', []), array_flip($allowed))]);
+
         $request->validate([
             'settings' => 'required|array',
             'settings.*' => 'nullable',
@@ -41,19 +45,13 @@ class SettingController extends Controller
             'settings.our_story_image_id'       => 'nullable|integer|exists:media,id',
             'settings.get_to_know_image_id'     => 'nullable|integer|exists:media,id',
             'settings.activities_menu_image_id' => 'nullable|integer|exists:media,id',
-            'why_choose_us_cards.*.icon'        => 'nullable|string|max:100',
-            'why_choose_us_cards.*.title'       => 'nullable|string|max:255',
-            'why_choose_us_cards.*.description' => 'nullable|string',
-            'partner_logos.*.name'          => 'nullable|string|max:255',
-            'partner_logos.*.link'          => 'nullable|url|max:255',
-            'partner_logos.*.logo_image_id' => 'nullable|integer|exists:media,id',
         ]);
 
         // Capture previous selections for every Media-Library-backed setting before
         // the generic settings loop below overwrites them, so usage can be
         // forgotten/recorded correctly for whichever ones actually changed — same
         // convention as the logo image swap.
-        $imageSettingKeys = ['logo_image_id', 'hero_image_id', 'our_story_image_id', 'get_to_know_image_id', 'activities_menu_image_id'];
+        $imageSettingKeys = ['logo_image_id'];
         $previousImageValues = [];
         foreach ($imageSettingKeys as $key) {
             $previousImageValues[$key] = Setting::get($key);
@@ -91,55 +89,6 @@ class SettingController extends Controller
                     $mediaLibrary->recordUsage($newImage->id, $settingRow, $key);
                 }
             }
-        }
-
-        // Handle "Why Choose Us" cards repeater (homepage) — plain text only (icon
-        // class + title + description), no images, so unlike a media-backed field this
-        // needs no usage tracking at all.
-        if ($request->has('why_choose_us_cards')) {
-            $cards = [];
-
-            foreach ($request->why_choose_us_cards as $cardData) {
-                $card = [
-                    'icon'        => $cardData['icon'] ?? '',
-                    'title'       => $cardData['title'] ?? '',
-                    'description' => $cardData['description'] ?? '',
-                ];
-
-                if (!empty($card['title']) || !empty($card['description'])) {
-                    $cards[] = $card;
-                }
-            }
-
-            Setting::set('why_choose_us_cards', json_encode($cards));
-        }
-
-        // Handle Partner Logos repeater (footer) — fixed slots, same reasoning as
-        // Page::custom_data's Team Members: each slot needs its own Media Library
-        // picker, which can't be safely cloned via JS, so a fixed number of slots are
-        // always pre-rendered in the form instead of a fully dynamic add/remove list.
-        if ($request->has('partner_logos')) {
-            $partners = [];
-
-            foreach ($request->partner_logos as $partnerData) {
-                $partner = [
-                    'name'           => $partnerData['name'] ?? '',
-                    'link'           => $partnerData['link'] ?? '',
-                    'logo_image_id'  => $partnerData['logo_image_id'] ?? null,
-                ];
-
-                if (!empty($partner['name']) || !empty($partner['logo_image_id'])) {
-                    $partners[] = $partner;
-                }
-            }
-
-            Setting::set('partner_logos', json_encode($partners));
-
-            // Usage tracking for the logos, as one ordered set — same mechanism as
-            // Destination/TourPackage galleries and Page's team_photo set.
-            $partnerLogosSetting = Setting::where('key', 'partner_logos')->first();
-            $partnerLogoIds = collect($partners)->pluck('logo_image_id')->filter()->values()->all();
-            $mediaLibrary->setOrderedUsages($partnerLogosSetting, 'partner_logo', $partnerLogoIds);
         }
 
         return redirect()->route('admin.settings.index')

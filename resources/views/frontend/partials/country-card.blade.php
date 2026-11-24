@@ -4,7 +4,7 @@
       $wwgtC            => ['code' => 'US', 'name' => 'United States']
       $wwgtFeaturedFlag => bool  (true = one of the first 24 shown by default)
 --}}
-<a href="{{ route('tours.index') }}"
+<a href="{{ $wwgtC['url'] ?? route('tours.index') }}"
    class="wwgt-country{{ $wwgtFeaturedFlag ? '' : ' wwgt-country--more' }}"
    data-name="{{ \Illuminate\Support\Str::lower($wwgtC['name']) }}"
    data-raw="{{ $wwgtC['name'] }}"

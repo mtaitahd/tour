@@ -152,6 +152,7 @@ class HomeController extends Controller
                     }
 
                     $galleryImages[] = [
+                        'photo_image_id' => $entry['image']->id,
                         'url'         => $url,
                         'alt'         => $alt,
                         'caption'     => $caption,
@@ -162,37 +163,22 @@ class HomeController extends Controller
                 }
             }
 
+            $selectedGallery = Setting::json('landing_gallery_photos');
+            if ($selectedGallery !== []) {
+                $images = \App\Models\GalleryImage::whereIn('id', array_column($selectedGallery, 'photo_image_id'))->get()->keyBy('id');
+                $galleryImages = collect($selectedGallery)->filter(fn ($row) => $images->has($row['photo_image_id'] ?? null))
+                    ->map(fn ($row) => [
+                        'url' => $images[$row['photo_image_id']]->getUrl(),
+                        'alt' => ($row['alt'] ?? '') ?: ($row['caption'] ?? ''),
+                        'caption' => $row['caption'] ?? '',
+                        'country' => $row['country'] ?? '',
+                        'destination' => $row['destination'] ?? '',
+                        'category' => ($row['category'] ?? '') ?: 'Wildlife',
+                    ])->values()->all();
+            }
+
             // General East-Africa safari FAQs for the homepage FAQ section.
-            $faqs = collect([
-                [
-                    'question' => 'Why should I choose a Tanzania safari tour?',
-                    'answer'   => 'Tanzania combines the Serengeti, the Ngorongoro Crater and Mount Kilimanjaro in one country, so you can pair world-class wildlife viewing with a mountain climb or a Zanzibar beach escape. Parks are long established, guides are locally trained, and routes suit both first-time and returning travellers.',
-                ],
-                [
-                    'question' => 'Which are the best destinations for a safari?',
-                    'answer'   => 'The Serengeti is famous for big cats and the Great Migration, while the Ngorongoro Crater offers exceptionally dense wildlife in a single caldera. Tarangire is known for large elephant herds and baobabs, Lake Manyara for tree-climbing lions, and the nearby coast adds Zanzibar for a relaxing finish.',
-                ],
-                [
-                    'question' => 'What time of year is best for going on safari?',
-                    'answer'   => 'The June to October dry season is the classic window: vegetation is thin, animals gather around water sources, and game drives are at their best. Calving season from January to February is superb for predators, while the March to May long rains bring lower prices and lush green landscapes.',
-                ],
-                [
-                    'question' => 'What wildlife can I expect to see?',
-                    'answer'   => 'Tanzania’s northern parks host all of the Big Five – elephant, lion, leopard, buffalo and rhino – alongside cheetahs, giraffes, zebras, wildebeest and hippos. Seasonal flamingo flocks, troops of baboons and more than 500 bird species make every drive different.',
-                ],
-                [
-                    'question' => 'What does a typical safari day look like?',
-                    'answer'   => 'Days usually start before sunrise with coffee, followed by a morning game drive when wildlife is most active. After a midday rest at your lodge or camp, you head out again for an afternoon drive or guided walk, ending with sundowners and dinner under canvas or stars.',
-                ],
-                [
-                    'question' => 'How much will the safari cost?',
-                    'answer'   => 'Costs depend on the season, comfort level, group size and the parks you visit. Budget camping safaris start from a few hundred dollars per day, while luxury lodges sit at the other end of the range – every Afro-Vertex quote itemises park fees, guide, vehicle and meals up front.',
-                ],
-                [
-                    'question' => 'What should I consider when choosing a safari tour?',
-                    'answer'   => 'Look at trip length, which parks are included, accommodation style, private versus group travel, and how demanding the itinerary is. Travelling in high season costs more but maximises wildlife sightings, and an operator with licensed local guides will always get you closer – safely.',
-                ],
-            ]);
+            $faqs = collect(Setting::json('landing_home_faqs', \App\Support\LandingDefaults::rows('faq')));
 
             $faqExpertName = Setting::get('faq_expert_name', 'Afro-Vertex Local Specialists');
             $faqExpert = [

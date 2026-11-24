@@ -275,6 +275,11 @@
 
     {{-- Settings --}}
     @if($can('settings'))
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('admin.landing.*') ? 'active' : '' }}" href="{{ route('admin.landing.edit') }}">
+                <i class="fas fa-home"></i><span>Landing Page</span>
+            </a>
+        </li>
         <li class="nav-item {{ $currentPage === 'settings' ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('admin.settings.index') }}">
                 <i class="fas fa-fw fa-cog"></i>
@@ -299,22 +304,6 @@
             </a>
             <div id="website-content-nav" class="collapse {{ in_array($currentPage, $websiteContentPages) ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
                 @if($can('settings'))
-                <a class="nav-link" href="{{ route('admin.homepage-content') }}">
-                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
-                    <span>Homepage Buttons &amp; Captions</span>
-                </a>
-                <a class="nav-link" href="{{ route('admin.traveller-stories') }}">
-                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
-                    <span>Traveller Stories</span>
-                </a>
-                <a class="nav-link" href="{{ route('admin.subscribe-content') }}">
-                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
-                    <span>Subscribe Section</span>
-                </a>
-                <a class="nav-link" href="{{ route('admin.footer-settings') }}">
-                    <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
-                    <span>Footer</span>
-                </a>
                 <a class="nav-link" href="{{ route('admin.start-end-points') }}">
                     <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
                     <span>Start &amp; End Points</span>
@@ -330,7 +319,7 @@
                 @if($can('pages'))
                     <a class="nav-link {{ $currentPage === 'our-story' ? 'active' : '' }}" href="{{ route('admin.our-story.edit') }}">
                         <i class="fas fa-fw fa-circle" style="font-size:0.5rem;"></i>
-                        <span>Our Story Images &amp; Captions</span>
+                        <span>About Page Story</span>
                     </a>
                 @endif
             </div>

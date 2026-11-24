@@ -196,7 +196,7 @@
             <a class="avf-copy-logo" href="{{ route('home') }}" aria-label="{{ $siteName }} home">
                 <img src="{{ $logo }}" alt="{{ $siteName }}">
             </a>
-            <p class="avf-copy-text">&copy; {{ date('Y') }} {{ $siteName }}. All Rights Reserved.</p>
+            <p class="avf-copy-text">&copy; {{ date('Y') }} {{ $siteName }}. {{ Setting::get('landing_footer_copyright', 'All Rights Reserved.') }}</p>
             <ul class="avf-copy-links">
                 @foreach ($copyLinks as $cl)
                     <li><a href="{{ $cl['url'] }}">{{ $cl['label'] }}</a></li>
