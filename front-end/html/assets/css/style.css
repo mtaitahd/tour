@@ -27183,6 +27183,11 @@ table.table.dataTable > thead > tr th {
   text-decoration: none;
 }
 
+.sfb-tour-card .google-review-link {
+  position: relative;
+  z-index: 4;
+}
+
 .sfb-tour-card__image-wrap {
   position: relative;
   min-height: 340px;

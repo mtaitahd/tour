@@ -219,11 +219,7 @@
                             <div class="col-md-6 col-lg-4">
                                 <div class="card border-0 shadow-sm h-100">
                                     <div class="card-body">
-                                        <div class="d-flex align-items-center fs-12 mb-3">
-                                            @for ($i = 1; $i <= 5; $i++)
-                                                <i class="ti ti-star-filled {{ $i <= $testimonial->rating ? 'text-warning' : 'text-gray-3' }}"></i>
-                                            @endfor
-                                        </div>
+                                        @include('frontend.partials.google-review-link')
                                         <p class="mb-4">"{{ $testimonial->content }}"</p>
                                         <div class="d-flex align-items-center">
                                             <div class="avatar avtar-lg me-2">

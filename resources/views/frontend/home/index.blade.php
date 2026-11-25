@@ -224,7 +224,7 @@
                     >
                         <span class="sae__marker-num">{{ str_pad($c['rank'], 2, '0', STR_PAD_LEFT) }}</span>
                         <span class="sae__marker-name">{{ $c['name'] }}</span>
-                        <span class="sae__marker-rating">{{ number_format($c['rating'], 1) }}</span>
+
                     </button>
                     @endforeach
                 </div>
@@ -279,11 +279,7 @@
 
                         <h3 class="sae__country-name" data-sae-name>{{ $saeFirst['name'] }}</h3>
 
-                        <div class="sae__rating">
-                            <span class="sae__stars" aria-hidden="true">★★★★★</span>
-                            <span class="sae__score" data-sae-score>{{ $saeFirst['rating'] }}</span>
-                            <span class="sae__rating-label">Traveller Rating</span>
-                        </div>
+                        @include('frontend.partials.google-review-link')
 
                         <p class="sae__rank-label" data-sae-rank-label>Ranked #{{ $saeFirst['rank'] }} of {{ $saeCount }} safari countries</p>
 
@@ -375,7 +371,6 @@
             var progFill  = root.querySelector('.sae__rail-progress-fill');
 
             var elName     = root.querySelector('[data-sae-name]');
-            var elScore    = root.querySelector('[data-sae-score]');
             var elRankLbl  = root.querySelector('[data-sae-rank-label]');
             var elDesc     = root.querySelector('[data-sae-desc]');
             var elPrice    = root.querySelector('[data-sae-price]');
@@ -465,7 +460,6 @@
                     });
 
                     elName.textContent   = item.name;
-                    elScore.textContent  = item.rating;
                     elRankLbl.textContent = 'Ranked #' + item.rank + ' of ' + count + ' safari countries';
                     elDesc.textContent   = item.description;
                     elPrice.textContent  = item.priceRange;
@@ -478,11 +472,7 @@
                     elGuide.href         = item.countryPageUrl;
                     elSealRank.textContent = '#' + item.rank;
 
-                    var full = Math.floor(item.rating);
-                    var stars = '';
-                    for (var s = 0; s < full; s++) stars += '★';
-                    if (item.rating % 1 >= 0.5) stars += '★';
-                    root.querySelector('.sae__stars').textContent = stars;
+
 
                     buildRoute(item.destinations);
 
@@ -710,10 +700,7 @@
                                  onerror="this.onerror=null;this.src='{{ asset('public/assets/images/logo-icon.png') }}';">
                             <div class="afro-tour-card__foot-info">
                                 <strong>Afro-Vertex Tours &amp; Safaris</strong>
-                                <span>
-                                    <span class="afro-tour-card__stars">★★★★★</span>
-                                    {{ number_format($avgOperatorRating, 1) }}/5 – {{ $operatorReviews }} Review{{ Str::plural('s', $operatorReviews) }}
-                                </span>
+                                @include('frontend.partials.google-review-link')
                             </div>
                         </footer>
                     </article>
@@ -1760,40 +1747,7 @@
                 </div>
             </div>
 
-            <div class="testi-carousel-wrap mt-4 wow fadeInUp" data-wow-delay="0.35s">
-                <div class="owl-carousel testi-carousel">
-                    @forelse($testimonials as $testimonial)
-                        <div class="testi-card">
-                            <div class="testi-card__stars">
-                                @for ($i = 1; $i <= 5; $i++)
-                                    <i class="ti ti-star-filled {{ $i <= $testimonial->rating ? 'text-warning' : 'text-gray-3' }}"></i>
-                                @endfor
-                            </div>
-                            <p class="testi-card__text">"{{ $testimonial->content }}"</p>
-                            <a href="{{ route('page.show', 'contact') }}" class="testi-card__more">Read More</a>
-                            <div class="testi-card__person">
-                                <div class="avatar avtar-lg me-2">
-                                    @if($testimonial->hasAvatar())
-                                        <img src="{{ $testimonial->avatarUrl('thumb') }}" class="rounded-circle" alt="{{ $testimonial->name }}">
-                                    @else
-                                        <img src="{{ asset('front-end/html/assets/img/users/user-28.jpg') }}" class="rounded-circle" alt="{{ $testimonial->name }}">
-                                    @endif
-                                </div>
-                                <div>
-                                    <h6 class="testi-card__name mb-0">{{ $testimonial->name }}</h6>
-                                    @if($testimonial->location)
-                                        <span class="testi-card__loc d-block text-muted">{{ $testimonial->location }}</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="testi-card testi-card--empty">
-                            <p class="text-muted mb-0">No reviews yet. Be the first to leave one!</p>
-                        </div>
-                    @endforelse
-                </div>
-            </div>
+            <div class="mt-4">@include('frontend.partials.google-review-link')</div>
         </div>
     </section>
 

@@ -423,9 +423,6 @@
                                 $extraDestinations = max(0, $tourDestinations->count() - 4);
                                 $tourLevel = trim(str_replace('_', ' ', (string) $SingleTour->tour_level));
                                 $tourType = $SingleTour->categories->take(2)->pluck('name')->implode(', ');
-                                $cardRating = $tourRatings->get($SingleTour->id);
-                                $cardRatingValue = $cardRating ? number_format((float) $cardRating->avg_rating, 1) : null;
-                                $cardReviewCount = $cardRating ? (int) $cardRating->review_count : 0;
                                 $durationText = $SingleTour->duration_days
                                     ? $SingleTour->duration_days . ' ' . Str::plural('day', $SingleTour->duration_days) . ($SingleTour->duration_nights ? ' / ' . $SingleTour->duration_nights . ' ' . Str::plural('night', $SingleTour->duration_nights) : '')
                                     : 'Flexible duration';
@@ -469,16 +466,7 @@
                                     </div>
 
                                     <div class="sfb-tour-card__footer">
-                                        <div class="sfb-tour-card__rating">
-                                            <span class="sfb-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-                                            @if($cardRatingValue)
-                                                <strong>{{ $cardRatingValue }}</strong>
-                                                <span>{{ $cardReviewCount }} {{ Str::plural('review', $cardReviewCount) }}</span>
-                                            @else
-                                                <strong>New</strong>
-                                                <span>No reviews yet</span>
-                                            @endif
-                                        </div>
+                                        @include('frontend.partials.google-review-link')
                                         <div class="sfb-tour-card__price">
                                             @php $cardPrice = $fromPrices[$SingleTour->id] ?? null; @endphp
                                             @if($cardPrice)
