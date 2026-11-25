@@ -163,9 +163,13 @@
                 <div class="afro-about__photos wow fadeInUp" data-wow-delay="0.4s">
                     <div class="afro-about__photos-bg" aria-hidden="true"></div>
                     @foreach ($homePolaroids as $i => $polaroid)
+                    @php
+                        $polaroidImage = !empty($polaroid['photo_image_id']) ? \App\Models\GalleryImage::find($polaroid['photo_image_id']) : null;
+                        $polaroidSrc = $polaroidImage?->getUrl() ?: ($polaroid['src'] ?? '');
+                    @endphp
                     <div class="afro-about__polaroid {{ $polaroidClasses[$i % 3] }}">
                         <div class="afro-about__polaroid-img-wrap">
-                            <img src="{{ $polaroid['src'] }}" alt="{{ $polaroid['caption'] ?: 'Tanzania safari experience' }}" class="afro-about__polaroid-img" loading="lazy" width="600" height="450">
+                            <img src="{{ $polaroidSrc }}" alt="{{ $polaroid['caption'] ?: 'Tanzania safari experience' }}" class="afro-about__polaroid-img" loading="lazy" width="600" height="450">
                         </div>
                         @if (!empty($polaroid['caption']))
                         <span class="afro-about__polaroid-caption">{{ $polaroid['caption'] }}</span>
@@ -185,13 +189,7 @@
          ══════════════════════════════════════════════════════════════════════ -->
     <section class="sae" id="sae" role="region" aria-label="Safari Atlas Explorer — Explore Africa's top safari countries">
         @php
-        $saeCountries = \App\Support\LandingDefaults::rows('atlas');
-        $atlasOverrides = Setting::json('landing_atlas_countries');
-        foreach ($saeCountries as &$country) {
-            $override = collect($atlasOverrides)->firstWhere('id', $country['id']);
-            if ($override) $country = array_replace($country, array_filter($override, fn ($value) => filled($value)));
-        }
-        unset($country);
+        $saeCountries = \App\Support\HomepageAtlas::countries();
         $saeCount = count($saeCountries);
         $saeFirst = $saeCountries[0];
         @endphp
@@ -255,10 +253,10 @@
                         </div>
                         <span class="sae__rank-hero" aria-hidden="true">{{ str_pad($c['rank'], 2, '0', STR_PAD_LEFT) }}</span>
                         <div class="sae__location-tag">
-                            <span class="sae__location-continent">Africa</span>
+                            <span class="sae__location-continent">{{ $c['continentLabel'] }}</span>
                             <span class="sae__location-slash">/</span>
                             <span class="sae__location-country">{{ $c['name'] }}</span>
-                            <span class="sae__location-tours">{{ $c['tourCount'] }} curated journeys</span>
+                            <span class="sae__location-tours">{{ $c['tourCount'] }} {{ Str::plural('tour', $c['tourCount']) }}</span>
                         </div>
                     </div>
                     @endforeach
@@ -318,11 +316,11 @@
                         {{-- CTAs --}}
                         <div class="sae__actions">
                             <a class="sae__btn sae__btn--primary" data-sae-primary href="{{ $saeFirst['safariPageUrl'] }}">
-                                <span data-sae-primary-text>Explore {{ $saeFirst['name'] }} Safaris</span>
+                                <span data-sae-primary-text>{{ $saeFirst['primaryLabel'] }}</span>
                                 <svg class="sae__btn-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>
                             </a>
                             <a class="sae__btn sae__btn--secondary" data-sae-secondary href="{{ $saeFirst['countryPageUrl'] }}">
-                                <span data-sae-secondary-text>Country Guide</span>
+                                <span data-sae-secondary-text>{{ $saeFirst['secondaryLabel'] }}</span>
                             </a>
                         </div>
                     </div>
@@ -465,8 +463,8 @@
                     elPrice.textContent  = item.priceRange;
                     elBest.textContent   = item.bestTime;
                     elSeason.textContent = item.highSeason;
-                    elPriTxt.textContent = 'Explore ' + item.name + ' Safaris';
-                    elSecTxt.textContent = 'Country Guide';
+                    elPriTxt.textContent = item.primaryLabel;
+                    elSecTxt.textContent = item.secondaryLabel;
                     elPriBtn.href        = item.safariPageUrl;
                     elSecBtn.href        = item.countryPageUrl;
                     elGuide.href         = item.countryPageUrl;

@@ -36,7 +36,7 @@
               @elseif($field['type'] === 'checkbox')
                 <input type="checkbox" id="landing-{{ $key }}" name="settings[{{ $key }}]" value="1" @checked($value)>
               @elseif($field['type'] === 'list')
-                @php($rows = old("settings.$key", \App\Models\Setting::json($key, $field['rows'] ?? \App\Support\LandingDefaults::rows($field['defaults'] ?? $key))))
+                @php($rows = old("settings.$key", $section === 'atlas' && $key === 'landing_atlas_countries' ? $field['rows'] : \App\Models\Setting::json($key, $field['rows'] ?? \App\Support\LandingDefaults::rows($field['defaults'] ?? $key))))
                 <div data-landing-list data-next-index="{{ count($rows) }}">
                   <div data-rows>
                     @foreach($rows as $index => $row)

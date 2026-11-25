@@ -17,6 +17,9 @@ class LandingPageController extends Controller
             Setting::get('site_name', 'Afro-Vertex Tours & Safaris') . ' | East Africa Safaris, Climbs & Beach Tours';
         $sections['seo']['fields']['home_meta_title']['blank_uses_default'] = true;
         abort_unless(isset($sections[$section]), 404);
+        if ($section === 'atlas') {
+            $sections[$section]['fields']['landing_atlas_countries']['rows'] = \App\Support\HomepageAtlas::countries();
+        }
         if ($section === 'gallery' && Setting::get('landing_gallery_photos') === null) {
             $homepage = app(\App\Http\Controllers\HomeController::class)->index()->getData();
             $sections[$section]['fields']['landing_gallery_photos']['rows'] = $homepage['galleryImages'];

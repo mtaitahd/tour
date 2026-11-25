@@ -1,26 +1,30 @@
 <?php
 
 return array (
-  'seo' => [
+  'seo' =>
+  array (
     'title' => 'Homepage SEO',
-    'fields' => [
-      'home_meta_title' => [
+    'fields' =>
+    array (
+      'home_meta_title' =>
+      array (
         'label' => 'SEO Title',
         'type' => 'text',
         'default' => '',
         'max' => 255,
         'hint' => 'The title shown in the browser tab and supplied to search engines.',
-      ],
-      'meta_description' => [
+      ),
+      'meta_description' =>
+      array (
         'label' => 'Meta Description',
         'type' => 'text',
         'default' => 'Discover Tanzania safaris, Kilimanjaro climbs, Zanzibar beaches and gorilla trekking with Afro-Vertex Tours.',
         'blank_uses_default' => true,
         'max' => 1000,
         'hint' => 'A short summary of the homepage for search engines and link previews.',
-      ],
-    ],
-  ],
+      ),
+    ),
+  ),
   'hero' =>
   array (
     'title' => 'Hero',
@@ -163,14 +167,18 @@ Sustainable Tourism',
         array (
           0 => 'id',
           1 => 'name',
-          2 => 'description',
-          3 => 'priceRange',
-          4 => 'bestTime',
-          5 => 'highSeason',
-          6 => 'heroImage',
-          7 => 'heroImageAlt',
-          8 => 'safariPageUrl',
-          9 => 'countryPageUrl',
+          2 => 'continentLabel',
+          3 => 'description',
+          4 => 'priceRange',
+          5 => 'bestTime',
+          6 => 'highSeason',
+          7 => 'photo_image_id',
+          8 => 'heroImage',
+          9 => 'heroImageAlt',
+          10 => 'primaryLabel',
+          11 => 'safariPageUrl',
+          12 => 'secondaryLabel',
+          13 => 'countryPageUrl',
         ),
         'defaults' => 'atlas',
       ),
