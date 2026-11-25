@@ -13,6 +13,9 @@ class LandingPageController extends Controller
     public function edit(string $section = 'hero')
     {
         $sections = config('landing');
+        $sections['seo']['fields']['home_meta_title']['default'] =
+            Setting::get('site_name', 'Afro-Vertex Tours & Safaris') . ' | East Africa Safaris, Climbs & Beach Tours';
+        $sections['seo']['fields']['home_meta_title']['blank_uses_default'] = true;
         abort_unless(isset($sections[$section]), 404);
         if ($section === 'gallery' && Setting::get('landing_gallery_photos') === null) {
             $homepage = app(\App\Http\Controllers\HomeController::class)->index()->getData();
@@ -36,7 +39,7 @@ class LandingPageController extends Controller
                 'image' => ['nullable', 'integer', Rule::exists('media', 'id')],
                 'list' => ['nullable', 'array', 'max:100'],
                 'checkbox' => ['nullable', 'boolean'],
-                default => ['nullable', 'string', 'max:20000'],
+                default => ['nullable', 'string', 'max:'.($field['max'] ?? 20000)],
             };
             if ($field['type'] === 'list') {
                 $rules["settings.$key.*"] = ['array:'.implode(',', $field['columns'])];

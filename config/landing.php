@@ -1,6 +1,26 @@
 <?php
 
 return array (
+  'seo' => [
+    'title' => 'Homepage SEO',
+    'fields' => [
+      'home_meta_title' => [
+        'label' => 'SEO Title',
+        'type' => 'text',
+        'default' => '',
+        'max' => 255,
+        'hint' => 'The title shown in the browser tab and supplied to search engines.',
+      ],
+      'meta_description' => [
+        'label' => 'Meta Description',
+        'type' => 'text',
+        'default' => 'Discover Tanzania safaris, Kilimanjaro climbs, Zanzibar beaches and gorilla trekking with Afro-Vertex Tours.',
+        'blank_uses_default' => true,
+        'max' => 1000,
+        'hint' => 'A short summary of the homepage for search engines and link previews.',
+      ],
+    ],
+  ],
   'hero' =>
   array (
     'title' => 'Hero',

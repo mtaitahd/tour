@@ -68,7 +68,8 @@ class AppServiceProvider extends ServiceProvider
                 $meta['canonical']   = route('pages.index'); // always point to clean /pages
             }
             elseif (request()->routeIs('home')) {
-                $meta['title'] = Setting::get('site_name', 'Afro-Vertex Tours & Safaris') . ' | East Africa Safaris, Climbs & Beach Tours';
+                $meta['title'] = trim((string) Setting::get('home_meta_title'))
+                    ?: Setting::get('site_name', 'Afro-Vertex Tours & Safaris') . ' | East Africa Safaris, Climbs & Beach Tours';
                 $meta['description'] = trim((string) Setting::get('meta_description'))
                     ?: 'Discover Tanzania safaris, Kilimanjaro climbs, Zanzibar beaches and gorilla trekking with Afro-Vertex Tours.';
                 $meta['og_image'] = Setting::imageUrl('hero_image_id') ?: asset('front-end/html/assets/img/avt-hero.webp');

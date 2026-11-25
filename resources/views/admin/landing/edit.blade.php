@@ -47,8 +47,9 @@
                   <button type="button" class="btn btn-sm btn-outline-primary" data-add-row>Add Item</button>
                 </div>
               @else
-                <textarea class="form-control" rows="3" id="landing-{{ $key }}" name="settings[{{ $key }}]">{{ $value }}</textarea>
+                <textarea class="form-control" rows="3" id="landing-{{ $key }}" name="settings[{{ $key }}]" @if(isset($field['max'])) maxlength="{{ $field['max'] }}" @endif>{{ $value }}</textarea>
               @endif
+              @if(isset($field['hint']))<small class="text-muted d-block">{{ $field['hint'] }}</small>@endif
             </div>
           @endforeach
           <button class="btn btn-primary" type="submit">Save {{ $editor['title'] }}</button>
